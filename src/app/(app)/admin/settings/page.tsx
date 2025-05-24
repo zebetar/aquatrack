@@ -101,13 +101,6 @@ export default function AdminSettingsPage() {
     setIsSavingRate(false);
   };
 
-  const handleNotImplemented = (featureName: string) => {
-    toast({
-      title: "Feature Not Implemented",
-      description: `${featureName} functionality is not available in this mock application.`,
-    });
-  };
-
   const handleAdminEmailChange = async (values: AdminChangeEmailFormValues) => {
     setIsSavingEmail(true);
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -122,6 +115,17 @@ export default function AdminSettingsPage() {
     toast({ title: "Mock Action", description: "Password change simulated (not implemented)." });
     adminPasswordForm.reset();
     setIsSavingPassword(false);
+  };
+
+  const handleToggleTheme = () => {
+    const htmlElement = document.documentElement;
+    if (htmlElement.classList.contains('dark')) {
+      htmlElement.classList.remove('dark');
+      toast({ title: "Theme Changed", description: "Switched to Light Mode." });
+    } else {
+      htmlElement.classList.add('dark');
+      toast({ title: "Theme Changed", description: "Switched to Dark Mode." });
+    }
   };
 
   const PasswordVisibilityToggle = ({ isVisible, toggle }: { isVisible: boolean, toggle: () => void }) => (
@@ -370,7 +374,7 @@ export default function AdminSettingsPage() {
                     <h3 className="font-medium">System Theme</h3>
                     <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
                   </div>
-                  <Button variant="outline" onClick={() => handleNotImplemented('System Theme Toggle')}><Palette className="mr-2 h-4 w-4"/>Toggle Theme</Button>
+                  <Button variant="outline" onClick={handleToggleTheme}><Palette className="mr-2 h-4 w-4"/>Toggle Theme</Button>
                 </div>
               </CardContent>
             </AccordionContent>
