@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,10 +18,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, differenceInMinutes, set } from "date-fns";
+import { format, differenceInMinutes, set, parse } from "date-fns";
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import type { Customer } from "@/types";
+import type { Customer, WaterUsageRecord } from "@/types";
 import { useState } from "react";
 
 const logUsageFormSchema = z.object({
@@ -28,8 +29,12 @@ const logUsageFormSchema = z.object({
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)"),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)"),
 }).refine(data => {
-  const start = new Date(`2000-01-01T${data.startTime}:00`);
-  const end = new Date(`2000-01-01T${data.endTime}:00`);
+  // Check if startTime and endTime are valid before parsing
+  if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.startTime) || !/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.endTime)) {
+    return true; // Let individual field validation handle this
+  }
+  const start = parse(data.startTime, "HH:mm", new Date());
+  const end = parse(data.endTime, "HH:mm", new Date());
   return end > start;
 }, {
   message: "End time must be after start time.",
@@ -40,7 +45,7 @@ type LogUsageFormValues = z.infer<typeof logUsageFormSchema>;
 
 interface LogUsageFormProps {
   customer: Customer;
-  onSuccess?: () => void; // Callback for successful submission
+  onSuccess?: (newRecord: WaterUsageRecord) => void; 
 }
 
 export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
@@ -56,48 +61,74 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     },
   });
 
-  const { watch } = form;
+  const { watch, getValues } = form;
   const watchedDate = watch("date");
   const watchedStartTime = watch("startTime");
   const watchedEndTime = watch("endTime");
 
   const calculateDurationAndCost = () => {
-    if (!watchedDate || !watchedStartTime || !watchedEndTime || !logUsageFormSchema.safeParse(form.getValues()).success) {
-      return { durationHours: 0, cost: 0 };
+    const currentValues = getValues();
+    const parseResult = logUsageFormSchema.safeParse(currentValues);
+
+    if (!parseResult.success || !currentValues.date || !currentValues.startTime || !currentValues.endTime) {
+      return { durationHours: 0, cost: 0, actualStartTime: new Date(), actualEndTime: new Date() };
     }
     
-    const [startH, startM] = watchedStartTime.split(':').map(Number);
-    const [endH, endM] = watchedEndTime.split(':').map(Number);
+    const [startH, startM] = currentValues.startTime.split(':').map(Number);
+    const [endH, endM] = currentValues.endTime.split(':').map(Number);
 
-    const startDate = set(new Date(watchedDate), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
-    const endDate = set(new Date(watchedDate), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+    const actualStartTime = set(new Date(currentValues.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
+    const actualEndTime = set(new Date(currentValues.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
     
-    if (endDate <= startDate) return { durationHours: 0, cost: 0 };
+    if (actualEndTime <= actualStartTime) return { durationHours: 0, cost: 0, actualStartTime, actualEndTime };
 
-    const durationMinutes = differenceInMinutes(endDate, startDate);
+    const durationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
     const durationHours = durationMinutes / 60;
     const cost = durationHours * CORE_WATER_RATE_PER_HOUR;
-    return { durationHours, cost };
+    return { durationHours, cost, actualStartTime, actualEndTime };
   };
 
   const { durationHours, cost } = calculateDurationAndCost();
 
   async function onSubmit(values: LogUsageFormValues) {
     setIsLoading(true);
-    // Here you would typically call a server action or API endpoint
-    // For demo, simulate success and show a toast
-    console.log("Log Usage Data:", { ...values, customerId: customer.id, durationHours, cost });
+    
+    const { 
+      durationHours: finalDuration, 
+      cost: finalCost, 
+      actualStartTime, 
+      actualEndTime 
+    } = calculateDurationAndCost(); // Recalculate with final form values
+
+    const newUsageRecord: WaterUsageRecord = {
+      id: `usage-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
+      customerId: customer.id,
+      customerName: customer.name,
+      date: values.date, // The specific day of usage
+      startTime: actualStartTime, // Full JS Date object for start
+      endTime: actualEndTime,   // Full JS Date object for end
+      durationHours: finalDuration,
+      cost: finalCost,
+      recordedBy: "admin001", // Mock admin ID
+      createdAt: new Date(),
+    };
+
+    console.log("Log Usage Data (New Record):", newUsageRecord);
 
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     toast({
       title: "Usage Logged Successfully!",
-      description: `Logged ${durationHours.toFixed(2)} hours for ${customer.name}. Cost: PKR ${cost.toLocaleString('en-US')}.`,
+      description: `Logged ${finalDuration.toFixed(2)} hours for ${customer.name}. Cost: PKR ${finalCost.toLocaleString('en-US')}.`,
     });
     setIsLoading(false);
-    onSuccess?.(); // Call the onSuccess callback if provided (e.g., to close dialog)
-    form.reset();
+    onSuccess?.(newUsageRecord); 
+    form.reset({ // Reset form to defaults after submission
+        date: new Date(),
+        startTime: format(new Date(), "HH:mm"),
+        endTime: format(new Date(Date.now() + 60 * 60 * 1000), "HH:mm"),
+    });
   }
 
   return (
@@ -178,7 +209,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
             </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full" disabled={isLoading || !form.formState.isValid}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Log Usage
         </Button>

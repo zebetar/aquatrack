@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -8,20 +9,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Droplets } from "lucide-react";
 import { LogUsageForm } from "./log-usage-form";
-import type { Customer } from "@/types";
+import type { Customer, WaterUsageRecord } from "@/types";
 import { useState } from "react";
 
 interface LogUsageDialogProps {
   customer: Customer;
+  onUsageLogged?: (newRecord: WaterUsageRecord) => void;
 }
 
-export function LogUsageDialog({ customer }: LogUsageDialogProps) {
+export function LogUsageDialog({ customer, onUsageLogged }: LogUsageDialogProps) {
   const [open, setOpen] = useState(false);
+
+  const handleSuccess = (newRecord: WaterUsageRecord) => {
+    onUsageLogged?.(newRecord);
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -37,8 +42,7 @@ export function LogUsageDialog({ customer }: LogUsageDialogProps) {
             Enter the date, start time, and end time of water supply.
           </DialogDescription>
         </DialogHeader>
-        <LogUsageForm customer={customer} onSuccess={() => setOpen(false)} />
-        {/* DialogClose is handled by form's onSuccess or manually */}
+        <LogUsageForm customer={customer} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );
