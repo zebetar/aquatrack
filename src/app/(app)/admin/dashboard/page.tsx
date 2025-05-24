@@ -17,7 +17,7 @@ import { format, isThisMonth } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
-import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog'; // New Import
+import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog';
 
 const KeyMetricCard = ({ 
   title, 
@@ -55,7 +55,7 @@ const KeyMetricCard = ({
     href || onClick ? "hover:shadow-lg transition-all duration-150 ease-in-out hover:border-primary" : ""
   );
 
-  if (href && !onClick) { // Prioritize onClick if both are present for cards that become dialog triggers
+  if (href && !onClick) {
     return (
       <Link href={href} className="block h-full group">
         <Card className={cardClasses}>
@@ -92,8 +92,8 @@ export default function AdminDashboardPage() {
   const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
   const [customersWithMonthlyUsageData, setCustomersWithMonthlyUsageData] = useState<CustomerMonthlyUsage[]>([]);
 
-  const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false); // New state for outstanding bills dialog
-  const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]); // New state for dialog data
+  const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
+  const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]);
 
 
   const loadDashboardData = useCallback(() => {
@@ -104,7 +104,10 @@ export default function AdminDashboardPage() {
 
     setTotalCustomers(customers.length);
 
-    const currentMonthUsageRecords = usageRecords.filter(record => isThisMonth(new Date(record.date)));
+    const currentMonthUsageRecords = usageRecords.filter(record => {
+      const recordDate = new Date(record.date); // record.date is already a Date object from the store
+      return !isNaN(recordDate.getTime()) && isThisMonth(recordDate);
+    });
     const currentSupply = currentMonthUsageRecords.reduce((sum, record) => sum + record.durationHours, 0);
     const currentRevenue = currentMonthUsageRecords.reduce((sum, record) => sum + record.cost, 0);
     
@@ -116,13 +119,17 @@ export default function AdminDashboardPage() {
     const totalDue = customersWithDues.reduce((sum, customer) => sum + customer.balance, 0);
     setOutstandingBillsValue(totalDue);
     
-    setRecentNotifications(notifications.slice(0, 3)); 
+    const validNotifications = notifications.filter(activity => {
+        const activityDate = new Date(activity.createdAt); // activity.createdAt is already a Date object
+        return !isNaN(activityDate.getTime());
+    });
+    setRecentNotifications(validNotifications.slice(0, 3)); 
 
     // Prepare data for monthly supply dialog
     const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
     customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
 
-    currentMonthUsageRecords.forEach(record => {
+    currentMonthUsageRecords.forEach(record => { // currentMonthUsageRecords is already filtered for valid dates
       const entry = customerUsageMap.get(record.customerId);
       if (entry) {
         entry.usageHours += record.durationHours;
@@ -165,7 +172,7 @@ export default function AdminDashboardPage() {
       value: `PKR ${outstandingBillsValue.toLocaleString('en-US')}`, 
       icon: BarChart3, 
       description: 'Total amount due',
-      onClick: () => setIsOutstandingBillsDialogOpen(true) // Changed from href to onClick
+      onClick: () => setIsOutstandingBillsDialogOpen(true)
     },
   ];
 
@@ -201,7 +208,8 @@ export default function AdminDashboardPage() {
                     <BellRing className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-sm">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{format(activity.createdAt, 'PP p')}</p>
+                      {/* Ensure activity.createdAt is a valid Date object before formatting */}
+                      <p className="text-xs text-muted-foreground">{!isNaN(new Date(activity.createdAt).getTime()) ? format(new Date(activity.createdAt), 'PP p') : 'Invalid date'}</p>
                        {activity.linkTo && (
                          <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary">
                            <Link href={activity.linkTo}>View</Link>
