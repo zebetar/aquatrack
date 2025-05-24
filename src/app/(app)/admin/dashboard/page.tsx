@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [monthlySupply, setMonthlySupply] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
-  const [outstandingBills, setOutstandingBills] = useState(0);
+  const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
   const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
 
   const loadDashboardData = useCallback(() => {
@@ -82,22 +82,20 @@ export default function AdminDashboardPage() {
     const currentMonthUsage = usageRecords.filter(record => isThisMonth(new Date(record.date)));
     const currentSupply = currentMonthUsage.reduce((sum, record) => sum + record.durationHours, 0);
     
-    // Revenue calculation should consider only current month's usage that led to cost
     const currentRevenue = currentMonthUsage.reduce((sum, record) => sum + record.cost, 0);
     
     setMonthlySupply(currentSupply);
     setMonthlyRevenue(currentRevenue);
 
     const totalDue = customers.reduce((sum, customer) => sum + (customer.balance > 0 ? customer.balance : 0), 0);
-    setOutstandingBills(totalDue);
+    setOutstandingBillsValue(totalDue);
     
-    setRecentNotifications(notifications.slice(0, 3)); // Show top 3 recent notifications
+    setRecentNotifications(notifications.slice(0, 3)); 
 
   }, []);
 
   useEffect(() => {
     loadDashboardData();
-    // Interval to refresh data periodically, e.g., every 30 seconds
     const intervalId = setInterval(loadDashboardData, 30000);
     return () => clearInterval(intervalId);
   }, [loadDashboardData]);
@@ -112,7 +110,13 @@ export default function AdminDashboardPage() {
     },
     { title: 'Monthly Supply (Hours)', value: `${monthlySupply.toFixed(1)} hrs`, icon: Droplets, description: 'Current month' },
     { title: 'Monthly Revenue', value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, icon: CreditCard, description: 'Current month' },
-    { title: 'Outstanding Bills', value: `PKR ${outstandingBills.toLocaleString('en-US')}`, icon: BarChart3, description: 'Total amount due' },
+    { 
+      title: 'Outstanding Bills', 
+      value: `PKR ${outstandingBillsValue.toLocaleString('en-US')}`, 
+      icon: BarChart3, 
+      description: 'Total amount due',
+      href: '/admin/reports/outstanding-bills' // Added href here
+    },
   ];
 
   return (
@@ -127,6 +131,7 @@ export default function AdminDashboardPage() {
             icon={metric.icon}
             description={metric.description}
             href={metric.href}
+            className={metric.href ? "hover:ring-2 hover:ring-primary/50" : ""}
           />
         ))}
       </div>
