@@ -71,7 +71,7 @@ export function CustomerDetailsView({
   return (
     <div className="space-y-6">
       <Card>
-        <Accordion type="single" collapsible defaultValue="customer-info" className="w-full">
+        <Accordion type="single" collapsible className="w-full"> {/* Removed defaultValue */}
           <AccordionItem value="customer-info">
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <AccordionTrigger className="flex-1 py-0">
@@ -211,4 +211,3 @@ export function CustomerDetailsView({
     </div>
   );
 }
-
