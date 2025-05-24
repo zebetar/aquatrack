@@ -1,56 +1,119 @@
 
+"use client";
+
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BellRing, CheckCircle2 } from 'lucide-react';
+import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Loader2, Palette } from 'lucide-react'; // Added more icons
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import type { Notification } from '@/types'; // Assuming Notification type exists
+import type { Notification } from '@/types';
+import { useState, useEffect, useCallback } from 'react';
+import { getAllAdminNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
+import { format } from 'date-fns';
+import Link from 'next/link';
 
-// Placeholder data - now an empty array
-const mockNotifications: Notification[] = [];
-
+const NotificationIcon = ({ type }: { type: Notification['type']}) => {
+  switch(type) {
+    case 'USAGE_LOGGED': return <Droplets className="h-5 w-5" />;
+    case 'PAYMENT_RECORDED': return <CreditCard className="h-5 w-5" />;
+    case 'CUSTOMER_ADDED': return <UserPlus className="h-5 w-5" />;
+    case 'CUSTOMER_UPDATED': return <UserCog className="h-5 w-5" />;
+    case 'BILL_REMINDER': return <BellRing className="h-5 w-5 text-destructive" />;
+    case 'ANNOUNCEMENT': return <Palette className="h-5 w-5" />; // Changed icon for announcement
+    default: return <BellRing className="h-5 w-5" />;
+  }
+};
 
 export default function AdminNotificationsPage() {
-  // In a real app, you'd fetch notifications and handle marking as read
-  const notifications = mockNotifications;
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchNotifications = useCallback(() => {
+    setIsLoading(true);
+    // Simulate delay
+    setTimeout(() => {
+      const adminNotifications = getAllAdminNotifications();
+      setNotifications(adminNotifications);
+      setIsLoading(false);
+    }, 100);
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkAsRead = (notificationId: string) => {
+    markNotificationAsRead(notificationId, 'admin001'); // Assuming 'admin001' is the admin's userId
+    fetchNotifications(); // Re-fetch to update UI
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllNotificationsAsRead('admin001');
+    fetchNotifications();
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading notifications...</p>
+      </div>
+    );
+  }
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <>
-      <PageHeader title="Admin Notifications" description="Log of sent notifications and system alerts." />
-      <Card className="shadow-md">
+      <PageHeader title="Admin Notifications" description="Log of system events and admin-relevant notifications." />
+      <Card className="shadow-md glassmorphism-card">
         <CardHeader>
-          <CardTitle>Notification Log</CardTitle>
-          <CardDescription>Recent system-generated notifications and alerts.</CardDescription>
+           <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Notification Log</CardTitle>
+              <CardDescription>
+                You have {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}.
+              </CardDescription>
+            </div>
+            {unreadCount > 0 && (
+              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
+                Mark all as read
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {notifications.length === 0 ? (
-            <p className="text-muted-foreground py-4 text-center">No notifications yet.</p>
+            <p className="text-muted-foreground py-8 text-center">No notifications yet.</p>
           ) : (
-            <ScrollArea className="h-[400px] pr-4">
-              <ul className="space-y-3">
+            <ScrollArea className="h-[calc(100vh-20rem)] pr-4">
+              <ul className="space-y-4">
                 {notifications.map((notification) => (
                   <li
                     key={notification.id}
-                    className={`flex items-start space-x-3 rounded-md border p-3 ${
-                      !notification.isRead ? 'bg-accent/50 border-primary/50' : 'bg-card'
+                    className={`flex items-start space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
+                      !notification.isRead ? 'bg-primary/10 border-primary/50' : 'bg-card/80'
                     }`}
                   >
-                    <div className={`mt-1 shrink-0 ${!notification.isRead ? 'text-primary' : 'text-muted-foreground'}`}>
-                      {notification.type === 'PAYMENT_RECORDED' && <CheckCircle2 className="h-5 w-5" />}
-                      {notification.type === 'USAGE_LOGGED' && <BellRing className="h-5 w-5" />}
-                      {notification.type === 'ANNOUNCEMENT' && <BellRing className="h-5 w-5" />}
+                    <div className={`mt-1 shrink-0 p-2 rounded-full ${!notification.isRead ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                      <NotificationIcon type={notification.type} />
                     </div>
                     <div className="flex-1">
-                      <p className={`text-sm ${!notification.isRead ? 'font-semibold' : ''}`}>
+                      <p className={`text-sm ${!notification.isRead ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
                         {notification.message}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(notification.createdAt).toLocaleString()}
+                      <p className="text-xs text-muted-foreground/80 mt-1">
+                        {format(new Date(notification.createdAt), 'PP p')}
                       </p>
+                      {notification.linkTo && (
+                         <Button variant="link" size="sm" asChild className="px-0 h-auto mt-1 text-primary">
+                           <Link href={notification.linkTo}>View Details</Link>
+                         </Button>
+                      )}
                     </div>
                     {!notification.isRead && (
-                      <Button variant="ghost" size="sm" className="text-xs">
-                        Mark as read
+                      <Button variant="ghost" size="sm" className="text-xs self-start" onClick={() => handleMarkAsRead(notification.id)}>
+                        <CheckCircle2 className="mr-1 h-3 w-3"/> Mark read
                       </Button>
                     )}
                   </li>

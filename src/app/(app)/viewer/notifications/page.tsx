@@ -6,65 +6,62 @@ import type { Notification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BellRing, CheckCircle2, Droplets, CreditCard, Loader2 } from 'lucide-react'; 
+import { BellRing, CheckCircle2, Droplets, CreditCard, UserCog, Palette, Loader2 } from 'lucide-react'; 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-// import { getMockNotificationsByUserId } from '@/lib/mock-data-store'; // Assuming this would exist
-
-// Placeholder for mock notifications until a store function is available
-const getMyNotifications = async (viewerId: string): Promise<Notification[]> => {
-  await new Promise(resolve => setTimeout(resolve, 100)); // Simulate fetch
-  // In a real app, this would fetch from a store: getMockNotificationsByUserId(viewerId)
-  return []; // Return empty for now
-}
-
+import { getMockNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
+import { format } from 'date-fns';
 
 const NotificationIcon = ({ type }: { type: Notification['type']}) => {
   switch(type) {
     case 'USAGE_LOGGED': return <Droplets className="h-5 w-5" />;
     case 'PAYMENT_RECORDED': return <CreditCard className="h-5 w-5" />;
-    case 'BILL_REMINDER': return <BellRing className="h-5 w-5 text-destructive" />; // text-destructive might not work as intended if not themed
-    case 'ANNOUNCEMENT': return <BellRing className="h-5 w-5" />;
+    case 'CUSTOMER_UPDATED': return <UserCog className="h-5 w-5" />;
+    case 'BILL_REMINDER': return <BellRing className="h-5 w-5 text-destructive" />;
+    case 'ANNOUNCEMENT': return <Palette className="h-5 w-5" />;
     default: return <BellRing className="h-5 w-5" />;
   }
-}
+};
 
 export default function ViewerNotificationsPage() {
   const { user, loading: authLoading } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const viewerUserId = user?.authUID || user?.customerId || user?.id;
+
   const loadNotifications = useCallback(async () => {
-    if (!user || !user.id) { // Using user.id as generic userId for notifications
+    if (!viewerUserId) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    const fetchedNotifications = await getMyNotifications(user.id); // Use generic user.id
+    await new Promise(resolve => setTimeout(resolve, 100)); // Simulate fetch
+    const fetchedNotifications = getMockNotificationsByUserId(viewerUserId);
     setNotifications(fetchedNotifications || []);
     setIsLoading(false);
-  }, [user]);
+  }, [viewerUserId]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && viewerUserId) {
       loadNotifications();
+    } else if (!authLoading && !viewerUserId) {
+        setIsLoading(false); // No user, so stop loading
     }
-  }, [authLoading, loadNotifications]);
+  }, [authLoading, loadNotifications, viewerUserId]);
 
-  // Mock mark as read function
   const handleMarkAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? {...n, isRead: true} : n)
-    );
-    // In a real app, you'd also update this in the backend/store
+    if (!viewerUserId) return;
+    markNotificationAsRead(notificationId, viewerUserId);
+    loadNotifications(); 
   };
   
-  // Mock mark all as read
   const handleMarkAllAsRead = () => {
-     setNotifications(prev => prev.map(n => ({...n, isRead: true })));
+    if (!viewerUserId) return;
+    markAllNotificationsAsRead(viewerUserId);
+    loadNotifications();
   };
-
 
   if (isLoading || authLoading) {
     return (
@@ -78,13 +75,16 @@ export default function ViewerNotificationsPage() {
   if (!user) {
       return <p>Not authenticated. Please log in.</p>
   }
+  if (!viewerUserId) {
+      return <p>Could not identify user for notifications.</p>
+  }
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <>
       <PageHeader title="My Notifications" description="Updates on your account, usage, and billing." />
-      <Card className="shadow-md">
+      <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
@@ -110,7 +110,7 @@ export default function ViewerNotificationsPage() {
                   <li
                     key={notification.id}
                     className={`flex items-start space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
-                      !notification.isRead ? 'bg-accent/50 border-primary/50' : 'bg-card'
+                      !notification.isRead ? 'bg-primary/10 border-primary/50' : 'bg-card/80'
                     }`}
                   >
                     <div className={`mt-1 shrink-0 p-2 rounded-full ${!notification.isRead ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
@@ -121,7 +121,7 @@ export default function ViewerNotificationsPage() {
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground/80 mt-1">
-                        {new Date(notification.createdAt).toLocaleString()}
+                        {format(new Date(notification.createdAt), 'PP p')}
                       </p>
                       {notification.linkTo && (
                          <Button variant="link" size="sm" asChild className="px-0 h-auto mt-1 text-primary">

@@ -3,17 +3,19 @@
 
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3 } from 'lucide-react'; // Removed ListChecks, Zap as they were unused
+import { Users, Droplets, CreditCard, BarChart3, BellRing } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link'; // Added Link import
+import Link from 'next/link';
 import { 
   getAllMockCustomers, 
   getAllMockUsageRecords,
-  getAllMockPayments
+  getAllMockPayments,
+  getAllAdminNotifications
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, Payment } from '@/types';
+import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification } from '@/types';
 import { format, isThisMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const KeyMetricCard = ({ 
   title, 
@@ -45,9 +47,9 @@ const KeyMetricCard = ({
 
   if (href) {
     return (
-      <Link href={href} className="block h-full cursor-pointer group">
+      <Link href={href} className="block h-full group">
         <Card className={cn(
-          "shadow-md key-metric-card h-full transition-all duration-150 ease-in-out group-hover:shadow-lg group-hover:border-primary", 
+          "shadow-md hover:shadow-lg transition-all duration-150 ease-in-out hover:border-primary glassmorphism-card", 
           className
         )}>
           {cardInnerContent}
@@ -56,19 +58,10 @@ const KeyMetricCard = ({
     );
   }
   return (
-    <Card className={cn("shadow-md key-metric-card h-full", className)}>
+    <Card className={cn("shadow-md glassmorphism-card", className)}>
       {cardInnerContent}
     </Card>
   );
-};
-
-
-type RecentActivityItem = {
-  id: string;
-  type: 'usage' | 'payment' | 'customer';
-  description: string;
-  date: Date;
-  icon: React.ElementType;
 };
 
 export default function AdminDashboardPage() {
@@ -76,54 +69,37 @@ export default function AdminDashboardPage() {
   const [monthlySupply, setMonthlySupply] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [outstandingBills, setOutstandingBills] = useState(0);
-  const [recentActivities, setRecentActivities] = useState<RecentActivityItem[]>([]);
+  const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
 
   const loadDashboardData = useCallback(() => {
     const customers = getAllMockCustomers();
     const usageRecords = getAllMockUsageRecords();
     const payments = getAllMockPayments();
+    const notifications = getAllAdminNotifications();
 
     setTotalCustomers(customers.length);
 
     const currentMonthUsage = usageRecords.filter(record => isThisMonth(new Date(record.date)));
     const currentSupply = currentMonthUsage.reduce((sum, record) => sum + record.durationHours, 0);
+    
+    // Revenue calculation should consider only current month's usage that led to cost
     const currentRevenue = currentMonthUsage.reduce((sum, record) => sum + record.cost, 0);
+    
     setMonthlySupply(currentSupply);
     setMonthlyRevenue(currentRevenue);
 
     const totalDue = customers.reduce((sum, customer) => sum + (customer.balance > 0 ? customer.balance : 0), 0);
     setOutstandingBills(totalDue);
     
-    const activities: RecentActivityItem[] = [];
-    usageRecords.forEach(r => activities.push({ 
-        id: `usage-${r.id}`, 
-        type: 'usage', 
-        description: `Usage logged: ${r.durationHours.toFixed(1)} hrs for ${r.customerName}`, 
-        date: new Date(r.createdAt),
-        icon: Droplets
-    }));
-    payments.forEach(p => activities.push({ 
-        id: `payment-${p.id}`, 
-        type: 'payment', 
-        description: `Payment recorded: PKR ${p.amountPaid.toLocaleString()} from ${p.customerName}`, 
-        date: new Date(p.createdAt),
-        icon: CreditCard
-    }));
-    customers.forEach(c => activities.push({
-        id: `customer-${c.id}`,
-        type: 'customer',
-        description: `New customer added: ${c.name}`,
-        date: new Date(c.createdAt),
-        icon: Users
-    }));
-
-    activities.sort((a,b) => b.date.getTime() - a.date.getTime());
-    setRecentActivities(activities.slice(0, 5));
+    setRecentNotifications(notifications.slice(0, 3)); // Show top 3 recent notifications
 
   }, []);
 
   useEffect(() => {
     loadDashboardData();
+    // Interval to refresh data periodically, e.g., every 30 seconds
+    const intervalId = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(intervalId);
   }, [loadDashboardData]);
 
   const metrics = [
@@ -132,7 +108,7 @@ export default function AdminDashboardPage() {
       value: totalCustomers.toString(), 
       icon: Users, 
       description: `${totalCustomers} active`,
-      href: '/admin/customers' // Added href to make this card a link
+      href: '/admin/customers'
     },
     { title: 'Monthly Supply (Hours)', value: `${monthlySupply.toFixed(1)} hrs`, icon: Droplets, description: 'Current month' },
     { title: 'Monthly Revenue', value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, icon: CreditCard, description: 'Current month' },
@@ -150,31 +126,39 @@ export default function AdminDashboardPage() {
             value={metric.value}
             icon={metric.icon}
             description={metric.description}
-            href={metric.href} // Pass href to KeyMetricCard
+            href={metric.href}
           />
         ))}
       </div>
       <div className="mt-6">
-        <Card className="shadow-md"> 
+        <Card className="shadow-md glassmorphism-card"> 
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Recent Notifications</CardTitle>
           </CardHeader>
           <CardContent>
-            {recentActivities.length === 0 ? (
-              <p className="text-muted-foreground">No recent activity found.</p>
+            {recentNotifications.length === 0 ? (
+              <p className="text-muted-foreground">No recent notifications.</p>
             ) : (
               <ul className="space-y-3">
-                {recentActivities.map(activity => (
-                  <li key={activity.id} className="flex items-start space-x-3">
-                    <activity.icon className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
+                {recentNotifications.map(activity => (
+                  <li key={activity.id} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/30">
+                    <BellRing className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
                     <div>
-                      <p className="text-sm">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">{format(activity.date, 'PP p')}</p>
+                      <p className="text-sm">{activity.message}</p>
+                      <p className="text-xs text-muted-foreground">{format(activity.createdAt, 'PP p')}</p>
+                       {activity.linkTo && (
+                         <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary">
+                           <Link href={activity.linkTo}>View</Link>
+                         </Button>
+                      )}
                     </div>
                   </li>
                 ))}
               </ul>
             )}
+            <Button variant="outline" asChild className="mt-4">
+              <Link href="/admin/notifications">View All Notifications</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

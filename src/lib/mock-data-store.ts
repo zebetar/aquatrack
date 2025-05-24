@@ -1,11 +1,11 @@
 
-import type { Customer, WaterUsageRecord, Payment } from '@/types';
-import { CORE_WATER_RATE_PER_HOUR } from './constants';
+import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
 
 interface MockDataStore {
   customers: Customer[];
   usageRecords: WaterUsageRecord[];
   payments: Payment[];
+  notifications: Notification[];
 }
 
 const STORAGE_KEY = 'aquaTrackMockDataStore';
@@ -15,6 +15,7 @@ let store: MockDataStore = {
   customers: [],
   usageRecords: [],
   payments: [],
+  notifications: [],
 };
 
 function loadStoreFromLocalStorage(): void {
@@ -24,37 +25,39 @@ function loadStoreFromLocalStorage(): void {
       if (serializedStore) {
         const parsedStore: MockDataStore = JSON.parse(serializedStore);
         
-        // Convert date strings back to Date objects
-        parsedStore.customers = parsedStore.customers.map(c => ({
+        store.customers = parsedStore.customers?.map(c => ({
           ...c,
           createdAt: new Date(c.createdAt),
-        }));
-        parsedStore.usageRecords = parsedStore.usageRecords.map(ur => ({
+        })) || [];
+        store.usageRecords = parsedStore.usageRecords?.map(ur => ({
           ...ur,
           date: new Date(ur.date),
           startTime: new Date(ur.startTime),
           endTime: new Date(ur.endTime),
           createdAt: new Date(ur.createdAt),
-        }));
-        parsedStore.payments = parsedStore.payments.map(p => ({
+        })) || [];
+        store.payments = parsedStore.payments?.map(p => ({
           ...p,
           paymentDate: new Date(p.paymentDate),
           createdAt: new Date(p.createdAt),
-        }));
+        })) || [];
+        store.notifications = parsedStore.notifications?.map(n => ({
+          ...n,
+          createdAt: new Date(n.createdAt),
+        })) || [];
         
-        store = parsedStore;
         console.log("Mock data store loaded from localStorage.");
       } else {
         console.log("No mock data found in localStorage, initializing empty store.");
-        store = { customers: [], usageRecords: [], payments: [] };
+        store = { customers: [], usageRecords: [], payments: [], notifications: [] };
       }
     } catch (error) {
       console.error("Error loading mock data store from localStorage:", error);
-      store = { customers: [], usageRecords: [], payments: [] };
+      store = { customers: [], usageRecords: [], payments: [], notifications: [] };
     }
   } else {
     console.warn("localStorage not available, mock data store will be in-memory for this session.");
-    store = { customers: [], usageRecords: [], payments: [] };
+    store = { customers: [], usageRecords: [], payments: [], notifications: [] };
   }
 }
 
@@ -106,12 +109,13 @@ export function getAllMockCustomers(): Customer[] {
 export function updateCustomerEmail(customerId: string, newEmail: string): void {
   const customerIndex = store.customers.findIndex(c => c.id === customerId);
   if (customerIndex > -1) {
+    const processedNewEmail = newEmail.trim().toLowerCase();
     store.customers[customerIndex] = {
       ...store.customers[customerIndex],
-      email: newEmail,
+      email: processedNewEmail,
     };
     saveStoreToLocalStorage();
-    console.log(`Customer ${customerId} email updated in mock store to ${newEmail}`);
+    console.log(`Customer ${customerId} email updated in mock store to ${processedNewEmail}`);
   } else {
     console.warn(`Attempted to update email for non-existent customer ID: ${customerId}`);
   }
@@ -124,6 +128,7 @@ export function deleteMockCustomer(customerId: string): void {
   if (store.customers.length < initialCustomerCount) {
     store.usageRecords = store.usageRecords.filter(ur => ur.customerId !== customerId);
     store.payments = store.payments.filter(p => p.customerId !== customerId);
+    store.notifications = store.notifications.filter(n => n.userId === customerId || n.message.includes(`Customer ID: ${customerId}`)); // Basic cleanup
     
     saveStoreToLocalStorage();
     console.log(`Customer ${customerId} and associated data deleted from mock store.`);
@@ -167,7 +172,7 @@ export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageR
 }
 
 export function getAllMockUsageRecords(): WaterUsageRecord[] {
-  return [...store.usageRecords];
+  return [...store.usageRecords].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 // --- Payment Functions ---
@@ -205,8 +210,48 @@ export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
 }
 
 export function getAllMockPayments(): Payment[] {
-  return [...store.payments];
+  return [...store.payments].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
+
+// --- Notification Functions ---
+export function addMockNotification(notification: Notification): void {
+  store.notifications.unshift(notification); // Add to the beginning for recent first
+  if (store.notifications.length > 100) { // Limit stored notifications
+    store.notifications.pop();
+  }
+  saveStoreToLocalStorage();
+}
+
+export function getMockNotificationsByUserId(userId: string): Notification[] {
+  return store.notifications
+    .filter(n => n.userId === userId)
+    .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function getAllAdminNotifications(): Notification[] {
+  // For admins, show system notifications or notifications targeted to 'admin001'
+  return store.notifications
+    .filter(n => n.userId === 'admin001' || n.type === 'ANNOUNCEMENT' || n.type === 'CUSTOMER_ADDED' || n.type === 'CUSTOMER_UPDATED')
+    .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function markNotificationAsRead(notificationId: string, userId: string): void {
+    const notificationIndex = store.notifications.findIndex(n => n.id === notificationId && n.userId === userId);
+    if (notificationIndex > -1) {
+        store.notifications[notificationIndex].isRead = true;
+        saveStoreToLocalStorage();
+    }
+}
+
+export function markAllNotificationsAsRead(userId: string): void {
+    store.notifications.forEach(n => {
+        if (n.userId === userId) {
+            n.isRead = true;
+        }
+    });
+    saveStoreToLocalStorage();
+}
+
 
 // --- Utility Functions ---
 export function clearAllMockData(): void {
@@ -214,6 +259,7 @@ export function clearAllMockData(): void {
     customers: [],
     usageRecords: [],
     payments: [],
+    notifications: [],
   };
   saveStoreToLocalStorage();
   console.log("Mock data store cleared from memory and localStorage.");
