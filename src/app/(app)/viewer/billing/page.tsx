@@ -1,31 +1,56 @@
 
+"use client";
+
 import { PageHeader } from '@/components/shared/page-header';
 import type { Payment, Customer } from '@/types'; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/auth-context';
+import { getMockPaymentsByCustomerId, getMockCustomerById } from '@/lib/mock-data-store';
+import { Loader2 } from 'lucide-react';
 
-// Placeholder data fetching functions - now returning empty/null
-async function getMyPayments(viewerId: string): Promise<Payment[]> {
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return [];
-}
+export default function ViewerBillingPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [customerProfile, setCustomerProfile] = useState<Customer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-async function getMyCustomerProfile(viewerId: string): Promise<Customer | null> {
-  await new Promise(resolve => setTimeout(resolve, 100));
-   // For cleared data, return a default "empty" profile or null
-  return null; 
-  // Or if you want a shell with 0 balance:
-  // return { id: 'clearedCust', name: 'N/A', contactInfo: 'N/A', createdAt: new Date(), balance: 0, authUID: viewerId };
-}
+  const loadBillingData = useCallback(async () => {
+    if (!user || !user.customerId) {
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 200)); // Simulate async fetch
+    const paymentData = getMockPaymentsByCustomerId(user.customerId);
+    const profileData = getMockCustomerById(user.customerId);
+    
+    setPayments(paymentData || []);
+    setCustomerProfile(profileData || null);
+    setIsLoading(false);
+  }, [user]);
 
+  useEffect(() => {
+    if (!authLoading) {
+      loadBillingData();
+    }
+  }, [authLoading, loadBillingData]);
 
-export default async function ViewerBillingPage() {
-  // In a real app, get viewerId from auth context
-  const viewerId = 'viewer001'; // This would come from auth context
-  const payments = await getMyPayments(viewerId);
-  const customerProfile = await getMyCustomerProfile(viewerId);
+  if (isLoading || authLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading billing information...</p>
+      </div>
+    );
+  }
+  
+  if (!user) {
+      return <p>Not authenticated. Please log in.</p>
+  }
 
   const totalPaid = payments.reduce((sum, payment) => sum + payment.amountPaid, 0);
 
@@ -76,16 +101,17 @@ export default async function ViewerBillingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.length === 0 && (
+                {payments.length === 0 ? (
                   <TableRow><TableCell colSpan={3} className="text-center h-24">No payment records found.</TableCell></TableRow>
+                ) : (
+                  payments.map(payment => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
+                      <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
+                      <TableCell className="text-green-600">Recorded</TableCell> 
+                    </TableRow>
+                  ))
                 )}
-                {payments.map(payment => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
-                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                    <TableCell className="text-green-600">Recorded</TableCell> 
-                  </TableRow>
-                ))}
               </TableBody>
             </Table>
           </ScrollArea>

@@ -1,32 +1,83 @@
 
+"use client";
+
 import { PageHeader } from '@/components/shared/page-header';
 import type { Notification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BellRing, CheckCircle2, Droplets, CreditCard } from 'lucide-react'; 
+import { BellRing, CheckCircle2, Droplets, CreditCard, Loader2 } from 'lucide-react'; 
 import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/auth-context';
+// import { getMockNotificationsByUserId } from '@/lib/mock-data-store'; // Assuming this would exist
 
-// Placeholder data fetching function - now returns empty array
-async function getMyNotifications(viewerId: string): Promise<Notification[]> {
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return [];
+// Placeholder for mock notifications until a store function is available
+const getMyNotifications = async (viewerId: string): Promise<Notification[]> => {
+  await new Promise(resolve => setTimeout(resolve, 100)); // Simulate fetch
+  // In a real app, this would fetch from a store: getMockNotificationsByUserId(viewerId)
+  return []; // Return empty for now
 }
+
 
 const NotificationIcon = ({ type }: { type: Notification['type']}) => {
   switch(type) {
     case 'USAGE_LOGGED': return <Droplets className="h-5 w-5" />;
     case 'PAYMENT_RECORDED': return <CreditCard className="h-5 w-5" />;
-    case 'BILL_REMINDER': return <BellRing className="h-5 w-5 text-destructive" />;
+    case 'BILL_REMINDER': return <BellRing className="h-5 w-5 text-destructive" />; // text-destructive might not work as intended if not themed
     case 'ANNOUNCEMENT': return <BellRing className="h-5 w-5" />;
     default: return <BellRing className="h-5 w-5" />;
   }
 }
 
-export default async function ViewerNotificationsPage() {
-  // In a real app, get viewerId from auth context
-  const viewerId = 'viewer001'; // This would come from auth context
-  const notifications = await getMyNotifications(viewerId);
+export default function ViewerNotificationsPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadNotifications = useCallback(async () => {
+    if (!user || !user.id) { // Using user.id as generic userId for notifications
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    const fetchedNotifications = await getMyNotifications(user.id); // Use generic user.id
+    setNotifications(fetchedNotifications || []);
+    setIsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      loadNotifications();
+    }
+  }, [authLoading, loadNotifications]);
+
+  // Mock mark as read function
+  const handleMarkAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === notificationId ? {...n, isRead: true} : n)
+    );
+    // In a real app, you'd also update this in the backend/store
+  };
+  
+  // Mock mark all as read
+  const handleMarkAllAsRead = () => {
+     setNotifications(prev => prev.map(n => ({...n, isRead: true })));
+  };
+
+
+  if (isLoading || authLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading notifications...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+      return <p>Not authenticated. Please log in.</p>
+  }
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -42,7 +93,11 @@ export default async function ViewerNotificationsPage() {
                 You have {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}.
               </CardDescription>
             </div>
-            {/* No need for 'Mark all as read' if no notifications or unread */}
+            {unreadCount > 0 && (
+              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
+                Mark all as read
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -75,7 +130,7 @@ export default async function ViewerNotificationsPage() {
                       )}
                     </div>
                     {!notification.isRead && (
-                      <Button variant="ghost" size="sm" className="text-xs self-start">
+                      <Button variant="ghost" size="sm" className="text-xs self-start" onClick={() => handleMarkAsRead(notification.id)}>
                         <CheckCircle2 className="mr-1 h-3 w-3"/> Mark read
                       </Button>
                     )}
