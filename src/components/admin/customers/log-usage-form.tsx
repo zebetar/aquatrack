@@ -22,7 +22,7 @@ import { format, differenceInMinutes, set, parse } from "date-fns";
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import type { Customer, WaterUsageRecord } from "@/types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 const logUsageFormSchema = z.object({
   date: z.date({ required_error: "Date is required." }),
@@ -58,44 +58,44 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
       startTime: format(new Date(), "HH:mm"),
       endTime: format(new Date(Date.now() + 60 * 60 * 1000), "HH:mm"),
     },
-    mode: "onChange", // Validate on change to update duration/cost display
+    mode: "onChange", 
   });
 
-  const { watch, getValues, formState } = form;
-  const watchedDate = watch("date");
-  const watchedStartTime = watch("startTime");
-  const watchedEndTime = watch("endTime");
+  const { getValues, watch } = form;
+  const watchedValues = watch(); // Watch all form values
 
   const calculatedMetrics = useMemo(() => {
-    const currentValues = getValues();
-    const parseResult = logUsageFormSchema.safeParse(currentValues);
+    // Use watchedValues for calculating metrics to ensure it's always based on the latest form state
+    const parseResult = logUsageFormSchema.safeParse(watchedValues);
 
-    if (!parseResult.success || !currentValues.date || !currentValues.startTime || !currentValues.endTime) {
-      return { durationHours: 0, cost: 0, actualStartTime: new Date(), actualEndTime: new Date(), isValid: false };
+    if (!parseResult.success || !watchedValues.date || !watchedValues.startTime || !watchedValues.endTime) {
+      return { durationHours: 0, cost: 0, isValid: false };
     }
     
-    const [startH, startM] = currentValues.startTime.split(':').map(Number);
-    const [endH, endM] = currentValues.endTime.split(':').map(Number);
+    const [startH, startM] = watchedValues.startTime.split(':').map(Number);
+    const [endH, endM] = watchedValues.endTime.split(':').map(Number);
 
-    const actualStartTime = set(new Date(currentValues.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
-    const actualEndTime = set(new Date(currentValues.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+    const actualStartTime = set(new Date(watchedValues.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
+    const actualEndTime = set(new Date(watchedValues.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
     
     if (actualEndTime <= actualStartTime) {
-      return { durationHours: 0, cost: 0, actualStartTime, actualEndTime, isValid: false };
+      return { durationHours: 0, cost: 0, isValid: false };
     }
 
     const durationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
     const durationHours = durationMinutes / 60;
     const cost = durationHours * CORE_WATER_RATE_PER_HOUR;
-    return { durationHours, cost, actualStartTime, actualEndTime, isValid: true };
-  }, [watchedDate, watchedStartTime, watchedEndTime, getValues]);
+    return { durationHours, cost, isValid: true };
+  }, [watchedValues]); // Depend on the watchedValues object
 
   const { durationHours, cost } = calculatedMetrics;
+  
+  // Determine if the form is currently valid by parsing current (watched) values
+  const isFormCurrentlyValid = logUsageFormSchema.safeParse(watchedValues).success;
 
   async function onSubmit(values: LogUsageFormValues) {
     setIsLoading(true);
     
-    // Re-calculate with final values from validated form to be absolutely sure
     const finalCalculation = (() => {
         const [startH, startM] = values.startTime.split(':').map(Number);
         const [endH, endM] = values.endTime.split(':').map(Number);
@@ -122,7 +122,6 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
       createdAt: new Date(),
     };
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     toast({
@@ -216,7 +215,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
             </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading || !formState.isValid}>
+        <Button type="submit" className="w-full" disabled={isLoading || !isFormCurrentlyValid}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Log Usage
         </Button>
@@ -224,3 +223,4 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     </Form>
   );
 }
+
