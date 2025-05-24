@@ -12,9 +12,10 @@ import {
 } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
 import { format, isThisMonth } from 'date-fns';
+import { cn } from '@/lib/utils';
 
-const KeyMetricCard = ({ title, value, icon: Icon, description }: { title: string, value: string, icon: React.ElementType, description?: string }) => (
-  <Card className="shadow-md">
+const KeyMetricCard = ({ title, value, icon: Icon, description, className }: { title: string, value: string, icon: React.ElementType, description?: string, className?: string }) => (
+  <Card className={cn("shadow-md key-metric-card", className)}> {/* Added key-metric-card for specific dark mode styling */}
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
       <Icon className="h-5 w-5 text-muted-foreground" />
@@ -111,7 +112,8 @@ export default function AdminDashboardPage() {
         ))}
       </div>
       <div className="mt-6">
-        <Card className="shadow-md">
+        {/* This card can also be made glassmorphic if desired by adding className="glassmorphic" */}
+        <Card className="shadow-md"> 
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>

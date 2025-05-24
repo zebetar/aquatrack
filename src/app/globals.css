@@ -1,106 +1,108 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif; /* Set Montserrat as base */
 }
 
 @layer base {
   :root {
-    /* Light Theme: Inspired by the provided image */
-    --background: 0 0% 100%; /* White main content background */
-    --foreground: 210 40% 15%; /* Dark Blue-Gray text */
+    /* Light Theme: Clean and modern with a hint of aquatic colors */
+    --background: 0 0% 97%; /* Very light gray/off-white */
+    --foreground: 210 30% 20%; /* Dark desaturated blue for text */
     
-    --card: 200 100% 97%; /* Very Light Sky Blue for dashboard cards */
-    --card-foreground: 210 40% 25%; /* Darker Blue-Gray text on cards */
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 210 30% 20%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 210 40% 15%;
+    --popover-foreground: 210 30% 20%;
     
-    --primary: 180 65% 45%; /* Vibrant Teal for primary actions */
+    --primary: 193 100% 45%; /* Brighter Teal for light mode primary */
     --primary-foreground: 0 0% 100%; /* White text on primary */
     
-    --secondary: 200 50% 90%; /* Light Blue-Gray for secondary elements */
-    --secondary-foreground: 210 40% 30%; /* Darker text on secondary */
+    --secondary: 200 70% 90%; /* Light Sky Blue */
+    --secondary-foreground: 193 100% 25%; /* Darker Teal text */
     
-    --muted: 200 50% 94%; /* Very light blue-gray for muted backgrounds */
-    --muted-foreground: 210 30% 50%; /* Medium gray text for muted foreground */
+    --muted: 200 50% 94%;
+    --muted-foreground: 210 30% 50%;
     
-    --accent: 190 70% 80%; /* Lighter teal for accents */
-    --accent-foreground: 180 65% 25%; /* Darker teal text on accent */
+    --accent: 5 100% 75%; /* Lighter Coral Pink for accents */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 200 30% 85%; /* Soft blue-gray border, like on cards */
-    --input: 200 30% 88%; /* Slightly adjusted for input fields */
-    --ring: 180 65% 50%; /* Primary color for rings */
+    --border: 200 30% 85%;
+    --input: 200 30% 90%;
+    --ring: 193 100% 50%; /* Teal for rings */
 
-    --chart-1: 180 65% 45%; /* Teal */
-    --chart-2: 170 80% 40%; /* Green-Teal */
-    --chart-3: 200 70% 50%; /* Sky Blue */
-    --chart-4: 190 60% 60%; /* Desaturated Teal */
-    --chart-5: 210 80% 55%; /* Bright Blue */
+    --chart-1: 193 100% 45%; /* Teal */
+    --chart-2: 5 100% 69%;   /* Coral Pink */
+    --chart-3: 210 80% 55%;  /* Bright Blue */
+    --chart-4: 180 65% 50%;  /* Softer Teal-Green */
+    --chart-5: 30 100% 70%;  /* Orange-Yellow */
     
     --radius: 0.5rem;
 
     /* Sidebar specific colors for light mode */
-    --sidebar-background: 195 53% 48%; /* Main blue-teal of the sidebar */
-    --sidebar-foreground: 0 0% 100%; /* White text for inactive sidebar items */
-    --sidebar-primary: 175 72% 55%; /* Bright active teal for sidebar item background */
-    --sidebar-primary-foreground: 195 53% 15%; /* Dark text for active sidebar item */
-    --sidebar-accent: 195 53% 58%; /* Hover/accent for sidebar items */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 195 53% 40%; /* Border for sidebar elements */
-    --sidebar-ring: 175 72% 60%;
+    --sidebar-background: 210 40% 92%; /* Light grayish blue */
+    --sidebar-foreground: 210 30% 25%; 
+    --sidebar-primary: 193 100% 45%;   /* Active Teal */
+    --sidebar-primary-foreground: 0 0% 100%; 
+    --sidebar-accent: 193 100% 88%;    /* Hover light teal */
+    --sidebar-accent-foreground: 193 100% 25%;
+    --sidebar-border: 210 30% 80%;
+    --sidebar-ring: 193 100% 50%;
   }
 
   .dark {
-    /* Dark Theme: Complementary to the light theme */
-    --background: 210 30% 12%; /* Deep Dark Blue */
-    --foreground: 200 50% 90%; /* Light Blue-Gray text */
+    /* Dark Theme: Bioluminescent Ocean */
+    --background: 187 20% 13%; /* #1A2526 Dark Navy */
+    --foreground: 193 15% 95%; /* Light Tealish White for text */
     
-    --card: 210 30% 18%; /* Slightly lighter Deep Dark Blue for cards */
-    --card-foreground: 200 50% 90%;
+    /* Default card style for elements not using glassmorphism */
+    --card: 193 25% 18%; /* Darker Tealish Blue */
+    --card-foreground: 193 15% 95%;
     
-    --popover: 210 30% 10%; /* Darker popover background */
-    --popover-foreground: 200 50% 90%;
+    --popover: 187 20% 10%; /* Even darker for popovers */
+    --popover-foreground: 193 15% 95%;
     
-    --primary: 175 72% 55%; /* Vibrant Teal (consistent with light mode sidebar active) */
-    --primary-foreground: 195 53% 15%; /* Dark text on primary */
+    --primary: 193 100% 50%; /* #00D4FF Bioluminescent Teal */
+    --primary-foreground: 187 20% 10%; /* Dark text on bright teal */
     
-    --secondary: 200 20% 35%; /* Muted Dark Blue-Gray */
-    --secondary-foreground: 200 40% 80%;
+    --secondary: 5 100% 69%; /* #FF6F61 Coral Pink */
+    --secondary-foreground: 0 0% 100%; 
     
-    --muted: 200 20% 25%; /* Darker muted background */
-    --muted-foreground: 200 30% 65%;
+    --muted: 193 25% 22%; /* Dark muted teal */
+    --muted-foreground: 193 15% 70%; /* Muted light teal text */
     
-    --accent: 170 80% 45%; /* Neon-ish Cyan/Green for dark mode accent */
-    --accent-foreground: 210 30% 12%; /* Dark text on accent */
+    --accent: 5 100% 69%;   /* #FF6F61 Coral Pink for accents */
+    --accent-foreground: 0 0% 100%; /* Dark text on pink */
     
-    --destructive: 0 70% 50%;
+    --destructive: 0 70% 55%; /* Darker Red */
     --destructive-foreground: 0 0% 98%;
     
-    --border: 200 20% 30%; /* Subtle border in dark mode */
-    --input: 200 20% 30%;
-    --ring: 175 72% 60%; /* Primary for rings */
+    --border: 193 100% 25%; /* Teal border for inputs/etc */
+    --input: 193 30% 20%;  /* Dark teal input background */
+    --ring: 193 100% 60%;   /* Brighter Teal for rings */
 
-    --chart-1: 175 72% 55%; /* Teal */
-    --chart-2: 170 80% 45%; /* Neon-ish Cyan/Green */
-    --chart-3: 200 50% 70%; /* Light Blue for dark bg */
-    --chart-4: 190 60% 50%; /* Desaturated Teal for dark */
-    --chart-5: 210 80% 65%; /* Brighter Blue for dark */
+    --chart-1: 193 100% 50%; /* Bioluminescent Teal */
+    --chart-2: 5 100% 69%;   /* Coral Pink */
+    --chart-3: 220 100% 70%; /* Luminous Blue */
+    --chart-4: 160 100% 50%; /* Seafoam Green */
+    --chart-5: 270 100% 70%; /* Deep Purple */
 
     /* Sidebar specific colors for dark mode */
-    --sidebar-background: 205 45% 20%; /* Darker blue for dark mode sidebar */
-    --sidebar-foreground: 190 60% 92%; /* Light text for dark sidebar */
-    --sidebar-primary: 175 72% 55%; /* Consistent vibrant Teal for active item */
-    --sidebar-primary-foreground: 195 53% 15%; /* Dark text on active */
-    --sidebar-accent: 205 45% 30%; /* Hover for dark sidebar items */
-    --sidebar-accent-foreground: 190 60% 95%;
-    --sidebar-border: 205 45% 15%;
-    --sidebar-ring: 175 72% 60%;
+    --sidebar-background: 187 20% 10%; /* Very Dark Navy, slightly darker than main bg */
+    --sidebar-foreground: 193 15% 85%; 
+    --sidebar-primary: 193 100% 50%;   /* Active Teal */
+    --sidebar-primary-foreground: 187 20% 10%; 
+    --sidebar-accent: 193 100% 50%; /* Hover Teal */
+    --sidebar-accent-foreground: 187 20% 10%;
+    --sidebar-border: 193 100% 15%;
+    --sidebar-ring: 193 100% 60%;
   }
 }
 
@@ -110,5 +112,37 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 16px; /* Base body font size */
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold; /* Make headings bold by default */
+  }
+  /* Specific for CardTitle to be 24px bold, handled by Card component, but can be reinforced */
+  .card-title { /* You might need to add this class to CardTitle component if not already targetable */
+    @apply text-2xl font-bold; /* 24px for 1rem=16px */
+  }
+}
+
+@layer components {
+  /* Glassmorphism for cards in dark mode */
+  .dark .card.glassmorphic { /* Add a 'glassmorphic' class to cards that need this effect */
+    background-color: rgba(0, 212, 255, 0.1); /* Teal, very transparent */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); /* Safari */
+    border: 1px solid rgba(0, 212, 255, 0.15); /* Subtle teal border */
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.4), /* Teal glow */
+                0 0 20px rgba(0, 212, 255, 0.2) inset; /* Inner glow */
+  }
+  /* Ensure specific cards on dashboard (e.g. KeyMetricCard) get this style */
+  .dark .key-metric-card { /* Example if KeyMetricCard has this class or wraps a .card */
+     background-color: rgba(0, 212, 255, 0.1); 
+     backdrop-filter: blur(12px);
+     -webkit-backdrop-filter: blur(12px); 
+     border: 1px solid rgba(0, 212, 255, 0.15); 
+     box-shadow: 0 0 15px rgba(0, 212, 255, 0.4), 
+                 0 0 20px rgba(0, 212, 255, 0.2) inset; 
+  }
+  .dark .key-metric-card .card-foreground { /* Text on glassmorphic cards */
+    color: hsl(var(--foreground));
   }
 }

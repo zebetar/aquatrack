@@ -1,10 +1,11 @@
+
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google'; // Using Inter as a clean, standard font
+import { Montserrat } from 'next/font/google'; // Changed from Inter to Montserrat
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' }); // Initialized Montserrat
 
 export const metadata: Metadata = {
   title: 'AquaTrack Mobile',
@@ -18,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${montserrat.variable} font-sans antialiased`}> {/* Used Montserrat variable */}
         <AuthProvider>
           {children}
           <Toaster />
