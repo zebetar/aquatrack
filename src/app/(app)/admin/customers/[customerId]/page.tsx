@@ -21,27 +21,16 @@ import {
 
 // Placeholder data fetching functions using the store
 async function getCustomerDetailsFromStore(customerId: string): Promise<Customer | null> {
-  // await new Promise(resolve => setTimeout(resolve, 50)); // Simulate async
   const customer = getMockCustomerById(customerId);
-  if (customer) return customer;
-
-  // Fallback for testing or if customerId is not in store
-  return { 
-    id: customerId, 
-    name: `Customer ${customerId.substring(0,5)} (Not in Store)`, 
-    contactInfo: 'N/A', 
-    createdAt: new Date(), 
-    balance: 0 
-  };
+  // No delay here for faster UI updates if data is already in store
+  return customer || null; 
 }
 
 async function getWaterUsageFromStore(customerId: string): Promise<WaterUsageRecord[]> {
-  // await new Promise(resolve => setTimeout(resolve, 50)); // Simulate async
   return getMockUsageRecordsByCustomerId(customerId);
 }
 
 async function getPaymentsFromStore(customerId: string): Promise<Payment[]> {
-  // await new Promise(resolve => setTimeout(resolve, 50)); // Simulate async
   return getMockPaymentsByCustomerId(customerId);
 }
 
@@ -65,19 +54,28 @@ export default function CustomerDetailPage() {
         getPaymentsFromStore(customerId)
       ]);
       setCustomer(custData);
-      setUsageRecords(usageData);
-      setPayments(paymentData);
+      setUsageRecords(usageData || []);
+      setPayments(paymentData || []);
     } catch (error) {
       console.error("Failed to load customer data from store", error);
-      // Optionally set an error state here
+      // Fallback for testing if customerId is not in store after an error
+      if (!customer) { // only set fallback if customer is still null
+        setCustomer({ 
+            id: customerId, 
+            name: `Customer ${customerId.substring(0,5)} (Error Loading)`, 
+            contactInfo: 'N/A', 
+            createdAt: new Date(), 
+            balance: 0 
+        });
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [customerId]);
+  }, [customerId, customer]); // Added customer to dependencies to potentially help with re-fetch if needed, though primary trigger is customerId
 
   useEffect(() => {
     fetchCustomerData();
-  }, [fetchCustomerData]);
+  }, [fetchCustomerData]); // fetchCustomerData is memoized, so this runs when customerId changes
 
   const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
     if (!customerId) return;
@@ -88,7 +86,8 @@ export default function CustomerDetailPage() {
     const updatedUsageRecords = getMockUsageRecordsByCustomerId(customerId);
     
     if (updatedCustomer) setCustomer(updatedCustomer);
-    setUsageRecords(updatedUsageRecords); // This is the key state update
+    // Ensure a new array reference is passed to trigger re-render
+    setUsageRecords([...updatedUsageRecords]); 
   };
 
   const handleAddPaymentRecord = (newPayment: Payment) => {
@@ -100,10 +99,11 @@ export default function CustomerDetailPage() {
     const updatedPayments = getMockPaymentsByCustomerId(customerId);
 
     if (updatedCustomer) setCustomer(updatedCustomer);
-    setPayments(updatedPayments); // This is the key state update
+    // Ensure a new array reference is passed to trigger re-render
+    setPayments([...updatedPayments]); 
   };
 
-  if (isLoading) {
+  if (isLoading && !customer) { // Show full page loader only if customer is not yet loaded at all
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -124,6 +124,9 @@ export default function CustomerDetailPage() {
     );
   }
 
+  // Show a subtle loading indicator if we are in a loading state but already have some customer data
+  const showInlineLoader = isLoading && customer;
+
   return (
     <>
       <PageHeader 
@@ -139,7 +142,16 @@ export default function CustomerDetailPage() {
       <Button variant="outline" asChild className="mb-6">
           <Link href="/admin/customers"><ArrowLeft className="mr-2 h-4 w-4" />Back to Customers List</Link>
       </Button>
+      
+      {showInlineLoader && (
+        <div className="my-4 flex items-center justify-center text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <span>Refreshing data...</span>
+        </div>
+      )}
+
       <CustomerDetailsView customer={customer} usageRecords={usageRecords} payments={payments} />
     </>
   );
 }
+
