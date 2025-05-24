@@ -11,7 +11,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff } from 'lucide-react'; // Added Eye, EyeOff
+import { Loader2, Eye, EyeOff } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -36,7 +36,7 @@ type AdminChangePasswordFormValues = z.infer<typeof adminChangePasswordSchema>;
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
-  const { user } = useAuth(); // Get current admin user
+  const { user } = useAuth(); 
   const [currentRate, setCurrentRate] = useState(CORE_WATER_RATE_PER_HOUR);
   const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
   const [isSavingRate, setIsSavingRate] = useState(false);
@@ -45,7 +45,6 @@ export default function AdminSettingsPage() {
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
 
-  // State for password visibility
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -98,7 +97,7 @@ export default function AdminSettingsPage() {
   const handleNotImplemented = (featureName: string) => {
     toast({
       title: "Feature Not Implemented",
-      description: `${featureName} functionality is not yet available.`,
+      description: `${featureName} functionality is not available.`,
     });
   };
 
@@ -134,10 +133,10 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Manage application settings and configurations." />
+      <PageHeader title="Settings" description="Manage application configurations." />
       
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        <Card className="shadow-md">
+        <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>General Configuration</CardTitle>
             <CardDescription>Core system parameters.</CardDescription> 
@@ -166,13 +165,13 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Notification Preferences</CardTitle>
             <CardDescription>Manage how admins receive system alerts.</CardDescription> 
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+            <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
               <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
                 <span>Email Notifications</span>
                 <span className="font-normal leading-snug text-muted-foreground">
@@ -186,7 +185,7 @@ export default function AdminSettingsPage() {
                 aria-label="Toggle email notifications"
               />
             </div>
-            <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+            <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
               <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
                 <span>SMS Alerts</span>
                 <span className="font-normal leading-snug text-muted-foreground">
@@ -200,7 +199,7 @@ export default function AdminSettingsPage() {
                 aria-label="Toggle SMS alerts"
               />
             </div>
-             <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+             <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
               <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
                 <span>Push Notifications</span>
                 <span className="font-normal leading-snug text-muted-foreground">
@@ -217,7 +216,7 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Admin Account: Change Email</CardTitle>
           </CardHeader>
@@ -250,7 +249,7 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
         
-        <Card className="shadow-md">
+        <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Admin Account: Change Password</CardTitle>
           </CardHeader>
@@ -314,27 +313,27 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md lg:col-span-2">
+        <Card className="shadow-md lg:col-span-2 glassmorphism-card">
           <CardHeader>
             <CardTitle>System Operations</CardTitle>
             <CardDescription>Advanced system management features.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border p-4">
+            {/* <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
               <div>
                 <h3 className="font-medium">User Management</h3>
                 <p className="text-sm text-muted-foreground">Create, manage, and assign roles to admin and viewer accounts.</p>
               </div>
               <Button variant="outline" onClick={() => handleNotImplemented('User Management')}>Manage Users</Button>
-            </div>
-            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border p-4">
+            </div> */}
+            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
               <div>
                 <h3 className="font-medium">Data Export</h3>
                 <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
               </div>
               <Button variant="outline" onClick={() => handleNotImplemented('Data Export')}>Export Data</Button>
             </div>
-             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border p-4">
+             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
               <div>
                 <h3 className="font-medium">System Theme</h3>
                 <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>

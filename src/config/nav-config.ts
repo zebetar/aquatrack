@@ -9,8 +9,8 @@ import {
   Bell,
   Settings,
   FileText,
-  ListChecks,
-  UserCog // Corrected from UsersCog
+  // ListChecks, // UserCog was previously here, ListChecks seems unused, removing for cleanliness
+  // UserCog // Corrected from UsersCog, removing as feature is removed
 } from 'lucide-react';
 
 export const adminNavItems: NavItem[] = [
@@ -50,12 +50,12 @@ export const adminNavItems: NavItem[] = [
     icon: Bell,
     role: 'admin',
   },
-  {
-    title: 'User Management', // Added User Management
-    href: '/admin/users',
-    icon: UserCog, // Corrected to UserCog
-    role: 'admin',
-  },
+  // {
+  //   title: 'User Management', // Removed User Management
+  //   href: '/admin/users',
+  //   icon: UserCog,
+  //   role: 'admin',
+  // },
   {
     title: 'Settings',
     href: '/admin/settings',
@@ -92,7 +92,7 @@ export const viewerNavItems: NavItem[] = [
    {
     title: 'Profile',
     href: '/viewer/profile',
-    icon: Users,
+    icon: Users, // Using Users icon for profile for viewers
     role: 'viewer',
   },
 ];
