@@ -8,80 +8,99 @@ body {
 
 @layer base {
   :root {
-    /* Light Theme: Clean Blue-Teal & Neon Hints */
-    --background: 190 60% 98%; /* Very Light Cyan tint, almost white */
-    --foreground: 195 50% 20%; /* Dark Desaturated Cyan-Blue text */
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 195 50% 20%;
+    /* Light Theme: Inspired by the provided image */
+    --background: 0 0% 100%; /* White main content background */
+    --foreground: 210 40% 15%; /* Dark Blue-Gray text */
+    
+    --card: 200 100% 97%; /* Very Light Sky Blue for dashboard cards */
+    --card-foreground: 210 40% 25%; /* Darker Blue-Gray text on cards */
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 195 50% 20%;
-    --primary: 185 75% 45%; /* Strong Blue-Teal */
-    --primary-foreground: 190 60% 98%; /* Light text on primary */
-    --secondary: 190 50% 90%; /* Light Cyan Gray */
-    --secondary-foreground: 195 45% 30%; /* Darker secondary text */
-    --muted: 190 50% 94%; /* Very Light Cyan Gray */
-    --muted-foreground: 195 30% 50%; /* Medium Gray text */
-    --accent: 175 80% 85%; /* Pale Neon-ish Mint/Cyan */
-    --accent-foreground: 185 75% 30%; /* Darker text on accent */
+    --popover-foreground: 210 40% 15%;
+    
+    --primary: 180 65% 45%; /* Vibrant Teal for primary actions */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    
+    --secondary: 200 50% 90%; /* Light Blue-Gray for secondary elements */
+    --secondary-foreground: 210 40% 30%; /* Darker text on secondary */
+    
+    --muted: 200 50% 94%; /* Very light blue-gray for muted backgrounds */
+    --muted-foreground: 210 30% 50%; /* Medium gray text for muted foreground */
+    
+    --accent: 190 70% 80%; /* Lighter teal for accents */
+    --accent-foreground: 180 65% 25%; /* Darker teal text on accent */
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 190 40% 88%; /* Light Cyan Border */
-    --input: 190 40% 88%;
-    --ring: 185 75% 50%; /* Primary for rings */
-    --chart-1: 185 75% 45%;
-    --chart-2: 170 80% 40%;
-    --chart-3: 200 70% 50%;
-    --chart-4: 190 60% 60%;
-    --chart-5: 210 80% 55%;
+    
+    --border: 200 30% 85%; /* Soft blue-gray border, like on cards */
+    --input: 200 30% 88%; /* Slightly adjusted for input fields */
+    --ring: 180 65% 50%; /* Primary color for rings */
+
+    --chart-1: 180 65% 45%; /* Teal */
+    --chart-2: 170 80% 40%; /* Green-Teal */
+    --chart-3: 200 70% 50%; /* Sky Blue */
+    --chart-4: 190 60% 60%; /* Desaturated Teal */
+    --chart-5: 210 80% 55%; /* Bright Blue */
+    
     --radius: 0.5rem;
 
     /* Sidebar specific colors for light mode */
-    --sidebar-background: 190 30% 92%; /* Light Grayish Cyan for Sidebar */
-    --sidebar-foreground: 195 50% 25%; /* Dark text */
-    --sidebar-primary: 185 75% 45%; /* Matches main primary */
-    --sidebar-primary-foreground: 190 60% 98%;
-    --sidebar-accent: 190 40% 85%; /* Slightly darker hover */
-    --sidebar-accent-foreground: 185 75% 25%;
-    --sidebar-border: 190 30% 88%;
-    --sidebar-ring: 185 75% 50%;
+    --sidebar-background: 195 53% 48%; /* Main blue-teal of the sidebar */
+    --sidebar-foreground: 0 0% 100%; /* White text for inactive sidebar items */
+    --sidebar-primary: 175 72% 55%; /* Bright active teal for sidebar item background */
+    --sidebar-primary-foreground: 195 53% 15%; /* Dark text for active sidebar item */
+    --sidebar-accent: 195 53% 58%; /* Hover/accent for sidebar items */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 195 53% 40%; /* Border for sidebar elements */
+    --sidebar-ring: 175 72% 60%;
   }
 
   .dark {
-    /* Dark Theme: Deep Blue-Teal & Neon Accents */
-    --background: 195 60% 10%; /* Very Dark Desaturated Cyan-Blue */
-    --foreground: 190 80% 95%; /* Very Light Cyan tint */
-    --card: 195 55% 13%; /* Slightly Lighter Dark Cyan-Blue for cards */
-    --card-foreground: 190 80% 95%;
-    --popover: 195 60% 8%; /* Even Darker for Popovers */
-    --popover-foreground: 190 80% 95%;
-    --primary: 180 90% 50%; /* Vibrant Teal/Cyan - Neon-like */
-    --primary-foreground: 195 60% 10%; /* Dark for contrast on primary */
-    --secondary: 190 40% 30%; /* Muted Dark Cyan */
-    --secondary-foreground: 190 80% 90%;
-    --muted: 190 30% 20%; /* Darker Muted Cyan */
-    --muted-foreground: 190 40% 70%; /* Lighter Muted Text */
-    --accent: 170 100% 55%;  /* Bright Neon Green-Cyan for Accent */
-    --accent-foreground: 195 60% 10%; /* Dark text on accent */
-    --destructive: 0 70% 55%; /* Slightly less saturated red for dark mode */
+    /* Dark Theme: Complementary to the light theme */
+    --background: 210 30% 12%; /* Deep Dark Blue */
+    --foreground: 200 50% 90%; /* Light Blue-Gray text */
+    
+    --card: 210 30% 18%; /* Slightly lighter Deep Dark Blue for cards */
+    --card-foreground: 200 50% 90%;
+    
+    --popover: 210 30% 10%; /* Darker popover background */
+    --popover-foreground: 200 50% 90%;
+    
+    --primary: 175 72% 55%; /* Vibrant Teal (consistent with light mode sidebar active) */
+    --primary-foreground: 195 53% 15%; /* Dark text on primary */
+    
+    --secondary: 200 20% 35%; /* Muted Dark Blue-Gray */
+    --secondary-foreground: 200 40% 80%;
+    
+    --muted: 200 20% 25%; /* Darker muted background */
+    --muted-foreground: 200 30% 65%;
+    
+    --accent: 170 80% 45%; /* Neon-ish Cyan/Green for dark mode accent */
+    --accent-foreground: 210 30% 12%; /* Dark text on accent */
+    
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 190 40% 25%; /* Subtle Border */
-    --input: 190 40% 25%;
-    --ring: 180 90% 55%; /* Primary for rings */
-    --chart-1: 180 90% 50%;
-    --chart-2: 170 100% 55%;
-    --chart-3: 200 80% 60%;
-    --chart-4: 190 70% 40%;
-    --chart-5: 210 90% 65%;
+    
+    --border: 200 20% 30%; /* Subtle border in dark mode */
+    --input: 200 20% 30%;
+    --ring: 175 72% 60%; /* Primary for rings */
+
+    --chart-1: 175 72% 55%; /* Teal */
+    --chart-2: 170 80% 45%; /* Neon-ish Cyan/Green */
+    --chart-3: 200 50% 70%; /* Light Blue for dark bg */
+    --chart-4: 190 60% 50%; /* Desaturated Teal for dark */
+    --chart-5: 210 80% 65%; /* Brighter Blue for dark */
 
     /* Sidebar specific colors for dark mode */
-    --sidebar-background: 195 65% 7%; /* Very Deep Dark Cyan-Blue for Sidebar */
-    --sidebar-foreground: 190 70% 90%;
-    --sidebar-primary: 180 90% 50%; /* Matches main primary */
-    --sidebar-primary-foreground: 195 60% 10%;
-    --sidebar-accent: 195 50% 15%; /* Hover accent for sidebar items */
-    --sidebar-accent-foreground: 180 90% 70%;
-    --sidebar-border: 195 50% 12%;
-    --sidebar-ring: 180 90% 55%;
+    --sidebar-background: 205 45% 20%; /* Darker blue for dark mode sidebar */
+    --sidebar-foreground: 190 60% 92%; /* Light text for dark sidebar */
+    --sidebar-primary: 175 72% 55%; /* Consistent vibrant Teal for active item */
+    --sidebar-primary-foreground: 195 53% 15%; /* Dark text on active */
+    --sidebar-accent: 205 45% 30%; /* Hover for dark sidebar items */
+    --sidebar-accent-foreground: 190 60% 95%;
+    --sidebar-border: 205 45% 15%;
+    --sidebar-ring: 175 72% 60%;
   }
 }
 
