@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed ShadCnCardDescription as it's not used
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -10,7 +10,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, UploadCloud } from 'lucide-react'; // Removed ImageIcon
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -80,9 +80,9 @@ export default function AdminSettingsPage() {
   const adminNameForm = useForm<AdminChangeNameFormValues>({
     resolver: zodResolver(adminChangeNameSchema),
     defaultValues: { newAdminName: user?.name || "" },
-    values: { newAdminName: user?.name || "" }
   });
 
+  // Effect to update form default value when user.name changes (e.g. after login)
   useEffect(() => {
     if (user?.name) {
       adminNameForm.reset({ newAdminName: user.name });
@@ -169,27 +169,26 @@ export default function AdminSettingsPage() {
   };
 
   const handleAdminAvatarChange = async () => {
-    if (!avatarPreview && !user?.avatarUrl) { // No new image and no old image
+    if (!avatarPreview && !user?.avatarUrl) { 
         toast({ title: "No Image", description: "Please select an image to update your avatar." });
         return;
     }
-    if (avatarPreview === user?.avatarUrl) { // No change
+    if (avatarPreview === user?.avatarUrl) { 
         toast({ title: "No Change", description: "The selected image is the same as your current avatar." });
         return;
     }
 
     setIsSavingAvatar(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    updateUserAvatarUrl(avatarPreview); // Pass Data URI or null
+    updateUserAvatarUrl(avatarPreview); 
     setIsSavingAvatar(false);
   };
   
   const handleClearAvatar = () => {
     setAvatarPreview(null);
     if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset file input
+        fileInputRef.current.value = ""; 
     }
-    // To actually remove from auth, user needs to click "Save Avatar"
   };
 
 
