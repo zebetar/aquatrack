@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email: string;
@@ -10,6 +11,7 @@ export interface User {
 export interface Customer {
   id: string;
   name: string;
+  email?: string; // Email used for the linked viewer account
   contactInfo?: string; // e.g., phone number or address
   authUID?: string; // Firebase Auth UID of the linked viewer account
   createdAt: Date;

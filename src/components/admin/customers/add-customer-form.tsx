@@ -55,6 +55,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     const newCustomer: Customer = {
       id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, // Mock ID
       name: values.name,
+      email: values.email || undefined, // Save the email to the customer object
       contactInfo: values.contactInfo || undefined,
       // For mock purposes, if an email is provided, we can simulate linking an authUID
       // In a real app, this UID would come from Firebase Auth after user creation.
