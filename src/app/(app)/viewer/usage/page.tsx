@@ -27,6 +27,8 @@ export default function ViewerUsagePage() {
     // Simulate async fetch
     await new Promise(resolve => setTimeout(resolve, 200));
     const records = getMockUsageRecordsByCustomerId(user.customerId);
+    // Sort by most recent first before setting
+    records.sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     setUsageRecords(records || []);
     setIsLoading(false);
   }, [user]);
@@ -61,11 +63,11 @@ export default function ViewerUsagePage() {
           <CardTitle>Usage Summary</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
+            <div className="rounded-lg border bg-card p-4 shadow">
                 <p className="text-sm text-muted-foreground">Total Hours Consumed (All Time)</p>
                 <p className="text-2xl font-bold">{totalHours.toFixed(2)} hrs</p>
             </div>
-            <div>
+            <div className="rounded-lg border bg-card p-4 shadow">
                 <p className="text-sm text-muted-foreground">Total Cost (All Time)</p>
                 <p className="text-2xl font-bold">PKR {totalCost.toLocaleString('en-US')}</p>
             </div>
