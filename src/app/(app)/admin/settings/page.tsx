@@ -11,12 +11,18 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users, ChevronsUpDown } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from 'next/link';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Schemas for admin (though functionality is mocked)
 const adminChangeEmailSchema = z.object({
@@ -136,213 +142,245 @@ export default function AdminSettingsPage() {
     <>
       <PageHeader title="Settings" description="Manage application configurations." />
       
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        <Card className="shadow-md glassmorphism-card">
-          <CardHeader>
-            <CardTitle>General Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="coreWaterRate">Core Water Rate (PKR/hour)</Label>
-              <div className="flex items-center gap-2">
-                <Input 
-                  id="coreWaterRate" 
-                  type="number"
-                  value={newRateInput} 
-                  onChange={(e) => setNewRateInput(e.target.value)}
-                  className="max-w-xs"
-                  placeholder="e.g., 1200"
-                />
-                <Button onClick={handleSaveWaterRate} disabled={isSavingRate}>
-                  {isSavingRate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Rate
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Current effective rate: PKR {currentRate}/hour. This rate is fundamental for calculating usage costs.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <Accordion type="multiple" className="w-full space-y-4">
+        <AccordionItem value="general-config" className="border-none">
+          <Card className="shadow-md glassmorphism-card">
+            <CardHeader className="p-4">
+              <AccordionTrigger className="p-0 hover:no-underline">
+                <CardTitle>General Configuration</CardTitle>
+              </AccordionTrigger>
+            </CardHeader>
+            <AccordionContent>
+              <CardContent className="space-y-4 p-4 pt-0">
+                <div className="space-y-2">
+                  <Label htmlFor="coreWaterRate">Core Water Rate (PKR/hour)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      id="coreWaterRate" 
+                      type="number"
+                      value={newRateInput} 
+                      onChange={(e) => setNewRateInput(e.target.value)}
+                      className="max-w-xs"
+                      placeholder="e.g., 1200"
+                    />
+                    <Button onClick={handleSaveWaterRate} disabled={isSavingRate}>
+                      {isSavingRate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Rate
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Current effective rate: PKR {currentRate}/hour. This rate is fundamental for calculating usage costs.
+                  </p>
+                </div>
+              </CardContent>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
 
-        <Card className="shadow-md glassmorphism-card">
-          <CardHeader>
-            <CardTitle>Notification Preferences</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-              <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
-                <span>Email Notifications</span>
-                <span className="font-normal leading-snug text-muted-foreground">
-                  Receive important updates via email.
-                </span>
-              </Label>
-              <Switch
-                id="email-notifications"
-                checked={emailNotifications}
-                onCheckedChange={setEmailNotifications}
-                aria-label="Toggle email notifications"
-              />
-            </div>
-            <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-              <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
-                <span>SMS Alerts</span>
-                <span className="font-normal leading-snug text-muted-foreground">
-                  Get critical alerts via SMS (if configured).
-                </span>
-              </Label>
-              <Switch
-                id="sms-notifications"
-                checked={smsNotifications}
-                onCheckedChange={setSmsNotifications}
-                aria-label="Toggle SMS alerts"
-              />
-            </div>
-             <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-              <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
-                <span>Push Notifications</span>
-                <span className="font-normal leading-snug text-muted-foreground">
-                  Receive real-time push notifications in-app.
-                </span>
-              </Label>
-              <Switch
-                id="push-notifications"
-                checked={pushNotifications}
-                onCheckedChange={setPushNotifications}
-                aria-label="Toggle push notifications"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <AccordionItem value="notification-prefs" className="border-none">
+          <Card className="shadow-md glassmorphism-card">
+            <CardHeader className="p-4">
+              <AccordionTrigger className="p-0 hover:no-underline">
+                <CardTitle>Notification Preferences</CardTitle>
+              </AccordionTrigger>
+            </CardHeader>
+            <AccordionContent>
+              <CardContent className="space-y-4 p-4 pt-0">
+                <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
+                  <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
+                    <span>Email Notifications</span>
+                    <span className="font-normal leading-snug text-muted-foreground">
+                      Receive important updates via email.
+                    </span>
+                  </Label>
+                  <Switch
+                    id="email-notifications"
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
+                    aria-label="Toggle email notifications"
+                  />
+                </div>
+                <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
+                  <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
+                    <span>SMS Alerts</span>
+                    <span className="font-normal leading-snug text-muted-foreground">
+                      Get critical alerts via SMS (if configured).
+                    </span>
+                  </Label>
+                  <Switch
+                    id="sms-notifications"
+                    checked={smsNotifications}
+                    onCheckedChange={setSmsNotifications}
+                    aria-label="Toggle SMS alerts"
+                  />
+                </div>
+                 <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
+                  <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
+                    <span>Push Notifications</span>
+                    <span className="font-normal leading-snug text-muted-foreground">
+                      Receive real-time push notifications in-app.
+                    </span>
+                  </Label>
+                  <Switch
+                    id="push-notifications"
+                    checked={pushNotifications}
+                    onCheckedChange={setPushNotifications}
+                    aria-label="Toggle push notifications"
+                  />
+                </div>
+              </CardContent>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
 
-        <Card className="shadow-md glassmorphism-card">
-          <CardHeader>
-            <CardTitle>Admin Account: Change Email</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-2">
-                <Label>Current Email</Label>
-                <Input value={user?.email || 'N/A'} readOnly />
-            </div>
-            <Form {...adminEmailForm}>
-              <form onSubmit={adminEmailForm.handleSubmit(handleAdminEmailChange)} className="space-y-4">
-                <FormField
-                  control={adminEmailForm.control}
-                  name="newAdminEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Admin Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="new.admin@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={isSavingEmail}>
-                  {isSavingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Change Admin Email
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+        <AccordionItem value="admin-email" className="border-none">
+          <Card className="shadow-md glassmorphism-card">
+            <CardHeader className="p-4">
+               <AccordionTrigger className="p-0 hover:no-underline">
+                <CardTitle>Admin Account: Change Email</CardTitle>
+              </AccordionTrigger>
+            </CardHeader>
+            <AccordionContent>
+              <CardContent className="p-4 pt-0">
+                <div className="mb-2">
+                    <Label>Current Email</Label>
+                    <Input value={user?.email || 'N/A'} readOnly />
+                </div>
+                <Form {...adminEmailForm}>
+                  <form onSubmit={adminEmailForm.handleSubmit(handleAdminEmailChange)} className="space-y-4">
+                    <FormField
+                      control={adminEmailForm.control}
+                      name="newAdminEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Admin Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="new.admin@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" disabled={isSavingEmail}>
+                      {isSavingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Change Admin Email
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
         
-        <Card className="shadow-md glassmorphism-card">
-          <CardHeader>
-            <CardTitle>Admin Account: Change Password</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...adminPasswordForm}>
-              <form onSubmit={adminPasswordForm.handleSubmit(handleAdminPasswordChange)} className="space-y-4">
-                 <FormField
-                  control={adminPasswordForm.control}
-                  name="currentAdminPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Password</FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input type={showCurrentPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
-                        </FormControl>
-                        <PasswordVisibilityToggle isVisible={showCurrentPassword} toggle={() => setShowCurrentPassword(!showCurrentPassword)} />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={adminPasswordForm.control}
-                  name="newAdminPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input type={showNewPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
-                        </FormControl>
-                         <PasswordVisibilityToggle isVisible={showNewPassword} toggle={() => setShowNewPassword(!showNewPassword)} />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={adminPasswordForm.control}
-                  name="confirmAdminPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm New Password</FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
-                        </FormControl>
-                        <PasswordVisibilityToggle isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={isSavingPassword}>
-                  {isSavingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Change Admin Password
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+        <AccordionItem value="admin-password" className="border-none">
+          <Card className="shadow-md glassmorphism-card">
+            <CardHeader className="p-4">
+              <AccordionTrigger className="p-0 hover:no-underline">
+                <CardTitle>Admin Account: Change Password</CardTitle>
+              </AccordionTrigger>
+            </CardHeader>
+            <AccordionContent>
+              <CardContent className="p-4 pt-0">
+                <Form {...adminPasswordForm}>
+                  <form onSubmit={adminPasswordForm.handleSubmit(handleAdminPasswordChange)} className="space-y-4">
+                     <FormField
+                      control={adminPasswordForm.control}
+                      name="currentAdminPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Password</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input type={showCurrentPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                            </FormControl>
+                            <PasswordVisibilityToggle isVisible={showCurrentPassword} toggle={() => setShowCurrentPassword(!showCurrentPassword)} />
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={adminPasswordForm.control}
+                      name="newAdminPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Password</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input type={showNewPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                            </FormControl>
+                             <PasswordVisibilityToggle isVisible={showNewPassword} toggle={() => setShowNewPassword(!showNewPassword)} />
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={adminPasswordForm.control}
+                      name="confirmAdminPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm New Password</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                            </FormControl>
+                            <PasswordVisibilityToggle isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" disabled={isSavingPassword}>
+                      {isSavingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Change Admin Password
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
 
-        <Card className="shadow-md lg:col-span-2 glassmorphism-card">
-          <CardHeader>
-            <CardTitle>System Operations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
-              <div>
-                <h3 className="font-medium">User Management</h3>
-                <p className="text-sm text-muted-foreground">List and manage customer accounts. Deletion includes PDF statement download.</p>
-              </div>
-              <Button variant="outline" asChild>
-                <Link href="/admin/users"><Users className="mr-2 h-4 w-4"/>Manage Users</Link>
-              </Button>
-            </div>
-            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
-              <div>
-                <h3 className="font-medium">Data Export</h3>
-                <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
-              </div>
-              <Button variant="outline" onClick={() => handleNotImplemented('Data Export')}>Export Data</Button>
-            </div>
-             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
-              <div>
-                <h3 className="font-medium">System Theme</h3>
-                <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
-              </div>
-              <Button variant="outline" onClick={() => handleNotImplemented('System Theme Toggle')}>Toggle Theme</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <AccordionItem value="system-ops" className="border-none">
+          <Card className="shadow-md glassmorphism-card">
+            <CardHeader className="p-4">
+              <AccordionTrigger className="p-0 hover:no-underline">
+                <CardTitle>System Operations</CardTitle>
+              </AccordionTrigger>
+            </CardHeader>
+            <AccordionContent>
+              <CardContent className="space-y-4 p-4 pt-0">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+                  <div>
+                    <h3 className="font-medium">User Management</h3>
+                    <p className="text-sm text-muted-foreground">List and manage customer accounts. Deletion includes PDF statement download.</p>
+                  </div>
+                  <Button variant="outline" asChild>
+                    <Link href="/admin/users"><Users className="mr-2 h-4 w-4"/>Manage Users</Link>
+                  </Button>
+                </div>
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+                  <div>
+                    <h3 className="font-medium">Data Export</h3>
+                    <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
+                  </div>
+                  <Button variant="outline" onClick={() => handleNotImplemented('Data Export')}>Export Data</Button>
+                </div>
+                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+                  <div>
+                    <h3 className="font-medium">System Theme</h3>
+                    <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
+                  </div>
+                  <Button variant="outline" onClick={() => handleNotImplemented('System Theme Toggle')}>Toggle Theme</Button>
+                </div>
+              </CardContent>
+            </AccordionContent>
+          </Card>
+        </AccordionItem>
+      </Accordion>
     </>
   );
 }
+
+    
