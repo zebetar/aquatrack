@@ -7,15 +7,57 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
-import { useState } from 'react';
+import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
+import { useState, useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminSettingsPage() {
-  // Mock state for notification preferences
+  const { toast } = useToast();
+  const [currentRate, setCurrentRate] = useState(CORE_WATER_RATE_PER_HOUR);
+  const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
+  const [isSavingRate, setIsSavingRate] = useState(false);
+
+  // Notification preferences (mock state)
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
+
+  useEffect(() => {
+    // Keep input in sync if global constant changes elsewhere (though unlikely in this mock)
+    // Or more practically, to reset if the component re-initializes for some reason
+    setCurrentRate(CORE_WATER_RATE_PER_HOUR);
+    setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
+  }, []);
+
+
+  const handleSaveWaterRate = async () => {
+    setIsSavingRate(true);
+    const rateValue = parseFloat(newRateInput);
+
+    if (isNaN(rateValue) || rateValue < 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Rate",
+        description: "Please enter a valid positive number for the water rate.",
+      });
+      setIsSavingRate(false);
+      return;
+    }
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 700));
+    
+    updateCoreWaterRate(rateValue);
+    setCurrentRate(rateValue); // Update displayed rate on this page
+
+    toast({
+      title: "Water Rate Updated",
+      description: `The core water rate has been set to PKR ${rateValue}/hour.`,
+    });
+    setIsSavingRate(false);
+  };
 
   return (
     <>
@@ -30,9 +72,22 @@ export default function AdminSettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="coreWaterRate">Core Water Rate (PKR/hour)</Label>
-              <Input id="coreWaterRate" value={CORE_WATER_RATE_PER_HOUR} readOnly disabled />
+              <div className="flex items-center gap-2">
+                <Input 
+                  id="coreWaterRate" 
+                  type="number"
+                  value={newRateInput} 
+                  onChange={(e) => setNewRateInput(e.target.value)}
+                  className="max-w-xs"
+                  placeholder="e.g., 1200"
+                />
+                <Button onClick={handleSaveWaterRate} disabled={isSavingRate}>
+                  {isSavingRate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Rate
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
-                This rate is fundamental for calculating usage costs. It is configured elsewhere and displayed here for reference.
+                Current effective rate: PKR {currentRate}/hour. This rate is fundamental for calculating usage costs.
               </p>
             </div>
           </CardContent>
