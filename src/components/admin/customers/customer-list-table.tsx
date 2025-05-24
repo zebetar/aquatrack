@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Customer } from '@/types';
@@ -12,14 +13,43 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { Eye, Edit, Trash2 } from 'lucide-react'; // Edit and Trash2 for future actions
+import { Eye, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
+import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 interface CustomerListTableProps {
   customers: Customer[];
 }
 
 export function CustomerListTable({ customers }: CustomerListTableProps) {
+  const { toast } = useToast();
+  const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
+
+  const handleDownloadPdf = async (customer: Customer) => {
+    setGeneratingPdfId(customer.id);
+    try {
+      const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
+      const payments = getMockPaymentsByCustomerId(customer.id);
+      await generateCustomerPdf(customer, usageRecords, payments);
+      toast({
+        title: "PDF Generated",
+        description: `Statement for ${customer.name} is being downloaded.`,
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        variant: "destructive",
+        title: "PDF Generation Failed",
+        description: "Could not generate the PDF statement.",
+      });
+    } finally {
+      setGeneratingPdfId(null);
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-card shadow-sm">
       <Table>
@@ -52,19 +82,25 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
                   {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right space-x-1">
                 <Button variant="ghost" size="icon" asChild title="View Details">
                   <Link href={`/admin/customers/${customer.id}`}>
                     <Eye className="h-4 w-4" />
                   </Link>
                 </Button>
-                 {/* Placeholder for future actions */}
-                {/* <Button variant="ghost" size="icon" title="Edit Customer">
-                  <Edit className="h-4 w-4" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  title="Download Statement PDF"
+                  onClick={() => handleDownloadPdf(customer)}
+                  disabled={generatingPdfId === customer.id}
+                >
+                  {generatingPdfId === customer.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
                 </Button>
-                <Button variant="ghost" size="icon" title="Delete Customer" className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button> */}
               </TableCell>
             </TableRow>
           ))}
