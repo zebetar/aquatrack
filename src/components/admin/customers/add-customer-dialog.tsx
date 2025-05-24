@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,9 +13,19 @@ import {
 import { PlusCircle } from "lucide-react";
 import { AddCustomerForm } from "./add-customer-form";
 import { useState } from "react";
+import type { Customer } from "@/types";
 
-export function AddCustomerDialog() {
+interface AddCustomerDialogProps {
+  onCustomerAdded: (customer: Customer) => void;
+}
+
+export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   const [open, setOpen] = useState(false);
+
+  const handleSuccess = (newCustomer: Customer) => {
+    onCustomerAdded(newCustomer);
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -30,7 +41,7 @@ export function AddCustomerDialog() {
             Enter the details for the new customer. An email is required to create a Viewer account.
           </DialogDescription>
         </DialogHeader>
-        <AddCustomerForm onSuccess={() => setOpen(false)} />
+        <AddCustomerForm onSuccessCallback={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

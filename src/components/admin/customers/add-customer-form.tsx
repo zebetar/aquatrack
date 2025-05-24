@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import type { Customer } from "@/types";
 
 const addCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -26,10 +28,10 @@ const addCustomerFormSchema = z.object({
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccess?: () => void;
+  onSuccessCallback: (customer: Customer) => void;
 }
 
-export function AddCustomerForm({ onSuccess }: AddCustomerFormProps) {
+export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,19 +47,28 @@ export function AddCustomerForm({ onSuccess }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     // Here you would typically call a server action or API endpoint
-    // This would involve creating a customer document in Firestore
-    // and potentially a Firebase Auth user if email is provided for a viewer account.
     console.log("Add Customer Data:", values);
 
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const newCustomer: Customer = {
+      id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, // Mock ID
+      name: values.name,
+      contactInfo: values.contactInfo || undefined,
+      // For mock purposes, if an email is provided, we can simulate linking an authUID
+      // In a real app, this UID would come from Firebase Auth after user creation.
+      authUID: values.email ? `authuid-${Math.random().toString(36).substring(2, 9)}` : undefined,
+      createdAt: new Date(),
+      balance: 0,
+    };
     
     toast({
       title: "Customer Added Successfully!",
-      description: `${values.name} has been added to the system.`,
+      description: `${newCustomer.name} has been added to the system.`,
     });
     setIsLoading(false);
-    onSuccess?.();
+    onSuccessCallback(newCustomer); // Pass the new customer data up and close dialog
     form.reset();
   }
 
