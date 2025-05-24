@@ -9,7 +9,6 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -25,8 +24,6 @@ export default function AdminSettingsPage() {
   const [pushNotifications, setPushNotifications] = useState(true);
 
   useEffect(() => {
-    // Keep input in sync if global constant changes elsewhere (though unlikely in this mock)
-    // Or more practically, to reset if the component re-initializes for some reason
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
     setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
   }, []);
@@ -46,11 +43,10 @@ export default function AdminSettingsPage() {
       return;
     }
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 700));
     
     updateCoreWaterRate(rateValue);
-    setCurrentRate(rateValue); // Update displayed rate on this page
+    setCurrentRate(rateValue); 
 
     toast({
       title: "Water Rate Updated",
@@ -62,7 +58,7 @@ export default function AdminSettingsPage() {
   const handleNotImplemented = (featureName: string) => {
     toast({
       title: "Feature Not Implemented",
-      description: `${featureName} functionality is not yet available in this mock application.`,
+      description: `${featureName} functionality is not yet available.`, // Shortened
     });
   };
 
@@ -74,7 +70,7 @@ export default function AdminSettingsPage() {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle>General Configuration</CardTitle>
-            <CardDescription>Core system parameters and information.</CardDescription>
+            <CardDescription>Core system parameters.</CardDescription> 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -103,7 +99,7 @@ export default function AdminSettingsPage() {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle>Notification Preferences</CardTitle>
-            <CardDescription>Manage how admins receive system alerts. (Mock UI)</CardDescription>
+            <CardDescription>Manage how admins receive system alerts.</CardDescription> 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
