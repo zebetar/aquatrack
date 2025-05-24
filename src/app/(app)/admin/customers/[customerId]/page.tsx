@@ -124,14 +124,14 @@ export default function CustomerDetailPage() {
 
   const handleSaveChanges = () => {
     if (customer && editedCustomerData) {
-      const updatedCustomer: Customer = {
+      const updatedCustomerData: Customer = {
         ...customer, // Preserve non-editable fields like id, createdAt, balance, authUID
         name: editedCustomerData.name || customer.name,
         contactInfo: editedCustomerData.contactInfo, // Can be undefined
         email: editedCustomerData.email, // Can be undefined
       };
-      updateMockCustomer(updatedCustomer);
-      setCustomer(updatedCustomer); // Immediately update displayed customer
+      updateMockCustomer(updatedCustomerData);
+      setCustomer(updatedCustomerData); // Immediately update displayed customer
       setIsEditing(false);
       toast({ title: "Customer Updated", description: "Customer details have been saved." });
     }
@@ -173,7 +173,7 @@ export default function CustomerDetailPage() {
     <>
       <PageHeader 
         title={customer.name} 
-        description={`Details for customer ID: ${customer.id}`}
+        // description prop removed here
         actions={
           <div className="flex gap-2">
             {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
