@@ -1,25 +1,25 @@
 
-import { LoginForm } from '@/components/auth/login-form';
+import { SignupForm } from '@/components/auth/signup-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Droplets } from 'lucide-react'; 
+import { UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <Card className="shadow-xl">
       <CardHeader className="items-center text-center">
         <div className="mb-2 flex items-center justify-center rounded-full bg-primary p-3 text-primary-foreground">
-          <Droplets className="h-10 w-10" />
+          <UserPlus className="h-10 w-10" />
         </div>
-        <CardTitle className="text-3xl font-bold">AquaTrack Mobile</CardTitle>
-        <CardDescription>Sign in to manage your water supply</CardDescription>
+        <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
+        <CardDescription>Sign up to get started with AquaTrack Mobile</CardDescription>
       </CardHeader>
       <CardContent>
-        <LoginForm />
+        <SignupForm />
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-semibold text-primary hover:underline">
-            Sign Up
+          Already have an account?{' '}
+          <Link href="/login" className="font-semibold text-primary hover:underline">
+            Log In
           </Link>
         </p>
       </CardContent>
