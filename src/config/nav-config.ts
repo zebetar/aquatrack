@@ -9,7 +9,8 @@ import {
   Bell,
   Settings,
   FileText,
-  ListChecks
+  ListChecks,
+  UserCog // Corrected from UsersCog
 } from 'lucide-react';
 
 export const adminNavItems: NavItem[] = [
@@ -27,13 +28,13 @@ export const adminNavItems: NavItem[] = [
   },
   {
     title: 'Water Usage',
-    href: '/admin/usage', 
+    href: '/admin/usage',
     icon: Droplets,
     role: 'admin',
   },
   {
     title: 'Payments',
-    href: '/admin/payments', 
+    href: '/admin/payments',
     icon: CreditCard,
     role: 'admin',
   },
@@ -47,6 +48,12 @@ export const adminNavItems: NavItem[] = [
     title: 'Notifications',
     href: '/admin/notifications',
     icon: Bell,
+    role: 'admin',
+  },
+  {
+    title: 'User Management', // Added User Management
+    href: '/admin/users',
+    icon: UserCog, // Corrected to UserCog
     role: 'admin',
   },
   {
@@ -67,13 +74,13 @@ export const viewerNavItems: NavItem[] = [
   {
     title: 'My Usage',
     href: '/viewer/usage',
-    icon: Droplets, 
+    icon: Droplets,
     role: 'viewer',
   },
   {
     title: 'My Billing',
     href: '/viewer/billing',
-    icon: CreditCard, 
+    icon: CreditCard,
     role: 'viewer',
   },
   {
@@ -85,7 +92,7 @@ export const viewerNavItems: NavItem[] = [
    {
     title: 'Profile',
     href: '/viewer/profile',
-    icon: Users, 
+    icon: Users,
     role: 'viewer',
   },
 ];
