@@ -9,6 +9,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, subMonths, parseISO } from 'date-fns';
 import { getAllMockCustomers, getAllMockUsageRecords, getAllMockPayments } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
+import { formatDurationFromHours } from '@/lib/utils';
 
 interface MonthlySupply {
   month: string; // "YYYY-MM"
@@ -158,11 +159,11 @@ export default function AdminReportsPage() {
                 <BarChart data={filteredSupplyDataForChart}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="monthLabel" />
-                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" />
+                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" tickFormatter={(value) => formatDurationFromHours(value)} />
                   <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
-                  <Tooltip formatter={(value, name) => name === 'revenue' ? `PKR ${Number(value).toLocaleString('en-US')}`: `${Number(value).toFixed(1)} hrs`}/>
+                  <Tooltip formatter={(value, name) => name === 'revenue' ? `PKR ${Number(value).toLocaleString('en-US')}`: formatDurationFromHours(Number(value))}/>
                   <Legend />
-                  <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--chart-1))" name="Supply (Hours)" />
+                  <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--chart-1))" name="Supply" />
                   <Bar yAxisId="right" dataKey="revenue" fill="hsl(var(--chart-2))" name="Revenue (PKR)" />
                 </BarChart>
               </ResponsiveContainer>
@@ -181,11 +182,11 @@ export default function AdminReportsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topCustomersByConsumption} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
+                  <XAxis type="number" tickFormatter={(value) => formatDurationFromHours(value)} />
                   <YAxis dataKey="name" type="category" width={100} interval={0} />
-                  <Tooltip formatter={(value) => `${Number(value).toFixed(1)} hrs`}/>
+                  <Tooltip formatter={(value) => formatDurationFromHours(Number(value))}/>
                   <Legend />
-                  <Bar dataKey="consumption" fill="hsl(var(--chart-3))" name="Consumption (Hours)" />
+                  <Bar dataKey="consumption" fill="hsl(var(--chart-3))" name="Consumption" />
                 </BarChart>
               </ResponsiveContainer>
             )}

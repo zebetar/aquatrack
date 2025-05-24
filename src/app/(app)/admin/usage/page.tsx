@@ -11,6 +11,7 @@ import { getAllMockUsageRecords } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
 import { Loader2 } from 'lucide-react';
+import { formatDurationFromHours } from '@/lib/utils';
 
 export default function AdminUsagePage() {
   const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
@@ -58,7 +59,7 @@ export default function AdminUsagePage() {
                   <TableHead>Date</TableHead>
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
-                  <TableHead className="text-right">Duration (Hrs)</TableHead>
+                  <TableHead className="text-right">Duration</TableHead>
                   <TableHead className="text-right">Cost (PKR)</TableHead>
                   <TableHead>Recorded By</TableHead>
                 </TableRow>
@@ -77,7 +78,7 @@ export default function AdminUsagePage() {
                       <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
                       <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
                       <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
-                      <TableCell className="text-right">{record.durationHours.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
                       <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
                       <TableCell>{record.recordedBy === 'admin001' ? 'Admin' : record.recordedBy}</TableCell>
                     </TableRow>

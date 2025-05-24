@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDurationFromHours } from "@/lib/utils";
 import { format, differenceInMinutes, set, parse, addDays } from "date-fns";
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
@@ -135,7 +135,7 @@ export function EditUsageRecordForm({ existingRecord, onSuccess }: EditUsageForm
     
     toast({
       title: "Usage Record Updated!",
-      description: `Usage for ${existingRecord.customerName} updated. New cost: PKR ${finalCost.toLocaleString('en-US')}.`,
+      description: `Usage for ${existingRecord.customerName} updated. Cost: PKR ${finalCost.toLocaleString('en-US')}. Duration: ${formatDurationFromHours(finalDurationHours)}.`,
     });
     setIsLoading(false);
     onSuccess?.(updatedUsageRecord); 
@@ -211,7 +211,7 @@ export function EditUsageRecordForm({ existingRecord, onSuccess }: EditUsageForm
         <div className="mt-4 space-y-2 rounded-md border bg-muted p-3 text-sm">
             <div className="flex justify-between">
                 <span>Duration:</span>
-                <span className="font-semibold">{durationHours.toFixed(2)} hours</span>
+                <span className="font-semibold">{formatDurationFromHours(durationHours)}</span>
             </div>
             <div className="flex justify-between">
                 <span>Calculated Cost (PKR {CORE_WATER_RATE_PER_HOUR}/hr):</span>

@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId, getMockNotificationsByUserId } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification } from '@/types';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, formatDurationFromHours } from '@/lib/utils';
 
 const SummaryCard = ({ title, value, icon: Icon, actionLink, actionLabel, className }: { title: string, value: string, icon: React.ElementType, actionLink?: string, actionLabel?: string, className?: string }) => (
   <Card className={cn("shadow-md glassmorphism-card", className)}>
@@ -105,7 +105,7 @@ export default function ViewerDashboardPage() {
 
   const summaries = [
     { title: 'Current Outstanding Bill', value: `PKR ${customerProfile?.balance?.toLocaleString('en-US') ?? '0.00'}`, icon: FileText, actionLink: '/viewer/billing', actionLabel: 'View Details' },
-    { title: 'Recent Usage (Last 7 Days)', value: `${recentUsageHours.toFixed(1)} hrs`, icon: Clock, actionLink: '/viewer/usage', actionLabel: 'View History' },
+    { title: 'Recent Usage (Last 7 Days)', value: formatDurationFromHours(recentUsageHours), icon: Clock, actionLink: '/viewer/usage', actionLabel: 'View History' },
     { title: 'Last Payment Made', value: lastPayment ? `PKR ${lastPayment.amountPaid.toLocaleString('en-US')}` : 'N/A', icon: DollarSign, actionLink: '/viewer/billing', actionLabel: 'View Payments' },
   ];
 

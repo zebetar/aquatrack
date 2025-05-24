@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
 import { Loader2 } from 'lucide-react';
+import { formatDurationFromHours } from '@/lib/utils';
 
 export default function ViewerUsagePage() {
   const { user, loading: authLoading } = useAuth();
@@ -64,8 +65,8 @@ export default function ViewerUsagePage() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-lg border bg-card p-4 shadow">
-                <p className="text-sm text-muted-foreground">Total Hours Consumed (All Time)</p>
-                <p className="text-2xl font-bold">{totalHours.toFixed(2)} hrs</p>
+                <p className="text-sm text-muted-foreground">Total Consumed (All Time)</p>
+                <p className="text-2xl font-bold">{formatDurationFromHours(totalHours)}</p>
             </div>
             <div className="rounded-lg border bg-card p-4 shadow">
                 <p className="text-sm text-muted-foreground">Total Cost (All Time)</p>
@@ -86,7 +87,7 @@ export default function ViewerUsagePage() {
                   <TableHead>Date</TableHead>
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
-                  <TableHead className="text-right">Duration (Hrs)</TableHead>
+                  <TableHead className="text-right">Duration</TableHead>
                   <TableHead className="text-right">Cost (PKR)</TableHead>
                 </TableRow>
               </TableHeader>
@@ -99,7 +100,7 @@ export default function ViewerUsagePage() {
                       <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
                       <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
                       <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
-                      <TableCell className="text-right">{record.durationHours.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
                       <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
                     </TableRow>
                   ))

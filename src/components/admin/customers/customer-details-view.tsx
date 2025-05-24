@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/accordion";
 import { EditUsageRecordDialog } from './edit-usage-record-dialog';
 import { EditPaymentRecordDialog } from './edit-payment-record-dialog';
+import { formatDurationFromHours } from '@/lib/utils';
 
 interface CustomerDetailsViewProps {
   customer: Customer;
@@ -80,7 +81,7 @@ export function CustomerDetailsView({
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="customer-info">
             <CardHeader className="flex flex-row items-center justify-between p-4">
-              <AccordionTrigger className="flex-1 py-0">
+              <AccordionTrigger className="flex-1 py-0 hover:no-underline">
                 <CardTitle className="text-xl">Customer Information</CardTitle>
               </AccordionTrigger>
               {!isEditing ? (
@@ -161,7 +162,7 @@ export function CustomerDetailsView({
                   <TableHead>Date</TableHead>
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
-                  <TableHead className="text-right">Duration (Hrs)</TableHead>
+                  <TableHead className="text-right">Duration</TableHead>
                   <TableHead className="text-right">Cost (PKR)</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
@@ -175,7 +176,7 @@ export function CustomerDetailsView({
                     <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
                     <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
                     <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
-                    <TableCell className="text-right">{record.durationHours.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
                     <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
                     <TableCell className="text-center">
                       <EditUsageRecordDialog 

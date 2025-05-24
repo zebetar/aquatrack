@@ -14,7 +14,7 @@ import {
 } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
 import { format, isThisMonth } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
 import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog'; // New Import
@@ -153,8 +153,8 @@ export default function AdminDashboardPage() {
       href: '/admin/customers'
     },
     { 
-      title: 'Monthly Supply (Hours)', 
-      value: `${monthlySupply.toFixed(1)} hrs`, 
+      title: 'Monthly Supply', 
+      value: formatDurationFromHours(monthlySupply), 
       icon: Droplets, 
       description: 'Current month',
       onClick: () => setIsMonthlySupplyDialogOpen(true)

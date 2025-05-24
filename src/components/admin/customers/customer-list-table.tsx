@@ -19,6 +19,7 @@ import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
+import { formatDurationFromHours } from '@/lib/utils';
 
 // Expect an optional totalUsageHours property
 interface CustomerWithUsage extends Customer {
@@ -76,7 +77,7 @@ export function CustomerListTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Contact Info</TableHead>
-            <TableHead className="text-right">Total Usage (Hrs)</TableHead>
+            <TableHead className="text-right">Total Usage</TableHead>
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-center">PDF</TableHead>
@@ -99,7 +100,7 @@ export function CustomerListTable({
             >
               <TableCell className="font-medium">{customer.name}</TableCell>
               <TableCell>{customer.contactInfo || '-'}</TableCell>
-              <TableCell className="text-right">{(customer.totalUsageHours ?? 0).toFixed(1)}</TableCell>
+              <TableCell className="text-right">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</TableCell>
               <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
               <TableCell className="text-center">
                 <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>

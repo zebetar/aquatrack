@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDurationFromHours } from "@/lib/utils";
 import { format, differenceInMinutes, set, parse, addDays } from "date-fns"; // Added addDays
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
@@ -144,7 +144,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     
     toast({
       title: "Usage Logged Successfully!",
-      description: `Logged ${finalDurationHours.toFixed(2)} hours for ${customer.name}. Cost: PKR ${finalCost.toLocaleString('en-US')}.`,
+      description: `Logged ${formatDurationFromHours(finalDurationHours)} for ${customer.name}. Cost: PKR ${finalCost.toLocaleString('en-US')}.`,
     });
     setIsLoading(false);
     onSuccess?.(newUsageRecord); 
@@ -225,7 +225,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
         <div className="mt-4 space-y-2 rounded-md border bg-muted p-3 text-sm">
             <div className="flex justify-between">
                 <span>Duration:</span>
-                <span className="font-semibold">{durationHours.toFixed(2)} hours</span>
+                <span className="font-semibold">{formatDurationFromHours(durationHours)}</span>
             </div>
             <div className="flex justify-between">
                 <span>Calculated Cost (PKR {CORE_WATER_RATE_PER_HOUR}/hr):</span>
@@ -241,5 +241,3 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     </Form>
   );
 }
-
-    

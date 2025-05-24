@@ -12,6 +12,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { formatDurationFromHours } from '@/lib/utils';
 import { 
   getMockCustomerById, 
   getMockUsageRecordsByCustomerId, 
@@ -91,7 +92,7 @@ export default function CustomerDetailPage() {
     const viewerNotification: Notification = {
         id: `noti-${Date.now()}-viewer`,
         userId: customer.authUID || customer.id, // Prefer authUID if available for viewer login
-        message: `New water usage logged: ${newRecord.durationHours.toFixed(1)} hrs, Cost: PKR ${newRecord.cost.toLocaleString()}.`,
+        message: `New water usage logged: ${formatDurationFromHours(newRecord.durationHours)}, Cost: PKR ${newRecord.cost.toLocaleString()}.`,
         type: 'USAGE_LOGGED',
         isRead: false,
         linkTo: `/viewer/usage`,
@@ -102,7 +103,7 @@ export default function CustomerDetailPage() {
     const adminNotification: Notification = {
         id: `noti-${Date.now()}-admin`,
         userId: 'admin001', // Generic admin ID
-        message: `Water usage logged for ${customer.name}: ${newRecord.durationHours.toFixed(1)} hrs.`,
+        message: `Water usage logged for ${customer.name}: ${formatDurationFromHours(newRecord.durationHours)}.`,
         type: 'USAGE_LOGGED',
         isRead: false,
         linkTo: `/admin/customers/${customer.id}`,
@@ -111,7 +112,7 @@ export default function CustomerDetailPage() {
     addMockNotification(adminNotification);
 
     fetchCustomerData(); // Re-fetch all data to ensure consistency
-    toast({ title: "Usage Logged", description: `${newRecord.durationHours.toFixed(2)} hours logged for ${newRecord.customerName}.` });
+    toast({ title: "Usage Logged", description: `${formatDurationFromHours(newRecord.durationHours)} logged for ${newRecord.customerName}.` });
   };
 
   const handleAddPaymentRecord = (newPayment: Payment) => {

@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CustomerMonthlyUsage } from "@/types";
 import { format } from "date-fns";
+import { formatDurationFromHours } from "@/lib/utils";
 
 interface MonthlySupplyDetailsDialogProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export function MonthlySupplyDetailsDialog({ isOpen, onClose, data }: MonthlySup
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer Name</TableHead>
-                  <TableHead className="text-right">Usage (Hours)</TableHead>
+                  <TableHead className="text-right">Usage</TableHead>
                   <TableHead className="text-right">Cost (PKR)</TableHead>
                 </TableRow>
               </TableHeader>
@@ -48,7 +49,7 @@ export function MonthlySupplyDetailsDialog({ isOpen, onClose, data }: MonthlySup
                 {data.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right">{item.usageHours.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{formatDurationFromHours(item.usageHours)}</TableCell>
                     <TableCell className="text-right">{item.cost.toLocaleString('en-US')}</TableCell>
                   </TableRow>
                 ))}
