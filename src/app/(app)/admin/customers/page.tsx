@@ -16,8 +16,6 @@ export default function AdminCustomersPage() {
   useEffect(() => {
     // Load customers from our mock store on initial mount
     setIsLoading(true);
-    // Simulate a small delay for loading from store if needed, or direct load
-    // await new Promise(resolve => setTimeout(resolve, 50)); 
     const storedCustomers = getAllMockCustomers();
     setCustomers(storedCustomers);
     setIsLoading(false);
@@ -26,11 +24,11 @@ export default function AdminCustomersPage() {
   const handleAddCustomer = (newCustomer: Customer) => {
     // Add to the mock store
     addCustomerToStore(newCustomer);
-    // Update local state to re-render the list
-    setCustomers(prevCustomers => [...prevCustomers, newCustomer]);
+    // Update local state by re-fetching from the store to ensure it's fresh
+    setCustomers(getAllMockCustomers());
   };
 
-  if (isLoading) {
+  if (isLoading && customers.length === 0) { // Show loading only if there are no customers yet
     return (
         <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -46,7 +44,14 @@ export default function AdminCustomersPage() {
         description="View, add, and manage customer details."
         actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
       />
+      {isLoading && customers.length > 0 && ( // Show subtle loading indicator if refreshing list
+        <div className="my-4 flex items-center justify-center text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <span>Refreshing customer list...</span>
+        </div>
+      )}
       <CustomerListTable customers={customers} />
     </>
   );
 }
+
