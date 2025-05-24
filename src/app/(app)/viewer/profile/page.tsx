@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth, MOCK_VIEWER_PASSWORD } from '@/contexts/auth-context';
-import { updateCustomerEmail } from '@/lib/mock-data-store';
+// Removed: import { updateCustomerEmail } from '@/lib/mock-data-store'; 
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
