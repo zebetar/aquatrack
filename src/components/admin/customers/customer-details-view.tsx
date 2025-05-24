@@ -24,7 +24,7 @@ export function CustomerDetailsView({ customer, usageRecords, payments }: Custom
           <div><span className="font-semibold">Name:</span> {customer.name}</div>
           <div><span className="font-semibold">Contact:</span> {customer.contactInfo || 'N/A'}</div>
           <div><span className="font-semibold">Joined:</span> {format(new Date(customer.createdAt), 'PPP')}</div>
-          <div><span className="font-semibold">Current Balance:</span> ₹{customer.balance.toLocaleString('en-IN')}</div>
+          <div><span className="font-semibold">Current Balance:</span> PKR {customer.balance.toLocaleString('en-US')}</div>
            {customer.authUID && <div><span className="font-semibold">Linked Auth UID:</span> {customer.authUID}</div>}
         </CardContent>
       </Card>
@@ -32,7 +32,7 @@ export function CustomerDetailsView({ customer, usageRecords, payments }: Custom
       <Card>
         <CardHeader>
           <CardTitle>Water Usage History</CardTitle>
-          <CardDescription>Core rate: ₹{CORE_WATER_RATE_PER_HOUR}/hour</CardDescription>
+          <CardDescription>Core rate: PKR {CORE_WATER_RATE_PER_HOUR}/hour</CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[300px] w-full">
@@ -43,7 +43,7 @@ export function CustomerDetailsView({ customer, usageRecords, payments }: Custom
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
                   <TableHead className="text-right">Duration (Hrs)</TableHead>
-                  <TableHead className="text-right">Cost (₹)</TableHead>
+                  <TableHead className="text-right">Cost (PKR)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -56,7 +56,7 @@ export function CustomerDetailsView({ customer, usageRecords, payments }: Custom
                     <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
                     <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
                     <TableCell className="text-right">{record.durationHours.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{record.cost.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -75,7 +75,7 @@ export function CustomerDetailsView({ customer, usageRecords, payments }: Custom
               <TableHeader>
                 <TableRow>
                   <TableHead>Payment Date</TableHead>
-                  <TableHead className="text-right">Amount Paid (₹)</TableHead>
+                  <TableHead className="text-right">Amount Paid (PKR)</TableHead>
                   <TableHead>Recorded By</TableHead>
                 </TableRow>
               </TableHeader>
@@ -86,7 +86,7 @@ export function CustomerDetailsView({ customer, usageRecords, payments }: Custom
                 {payments.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
-                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
                     <TableCell>{payment.recordedBy === 'admin001' ? "Admin" : payment.recordedBy}</TableCell> {/* Placeholder for recorder name */}
                   </TableRow>
                 ))}

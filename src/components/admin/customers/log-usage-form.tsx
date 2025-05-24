@@ -93,7 +93,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     
     toast({
       title: "Usage Logged Successfully!",
-      description: `Logged ${durationHours.toFixed(2)} hours for ${customer.name}. Cost: ₹${cost.toLocaleString('en-IN')}.`,
+      description: `Logged ${durationHours.toFixed(2)} hours for ${customer.name}. Cost: PKR ${cost.toLocaleString('en-US')}.`,
     });
     setIsLoading(false);
     onSuccess?.(); // Call the onSuccess callback if provided (e.g., to close dialog)
@@ -173,8 +173,8 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
                 <span className="font-semibold">{durationHours.toFixed(2)} hours</span>
             </div>
             <div className="flex justify-between">
-                <span>Calculated Cost (₹{CORE_WATER_RATE_PER_HOUR}/hr):</span>
-                <span className="font-semibold">₹{cost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>Calculated Cost (PKR {CORE_WATER_RATE_PER_HOUR}/hr):</span>
+                <span className="font-semibold">PKR {cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
         </div>
 

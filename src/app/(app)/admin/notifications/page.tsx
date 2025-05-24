@@ -7,7 +7,7 @@ import type { Notification } from '@/types'; // Assuming Notification type exist
 
 // Placeholder data
 const mockNotifications: Notification[] = [
-  { id: 'notif_admin_1', userId: 'admin001', message: 'Payment of ₹2,400 recorded for Aarav Sharma.', type: 'PAYMENT_RECORDED', isRead: false, createdAt: new Date(Date.now() - 3600000 * 1) }, // 1 hour ago
+  { id: 'notif_admin_1', userId: 'admin001', message: 'Payment of PKR 2,400 recorded for Aarav Sharma.', type: 'PAYMENT_RECORDED', isRead: false, createdAt: new Date(Date.now() - 3600000 * 1) }, // 1 hour ago
   { id: 'notif_admin_2', userId: 'admin001', message: 'Water usage (2 hrs) logged for Priya Patel.', type: 'USAGE_LOGGED', isRead: true, createdAt: new Date(Date.now() - 3600000 * 3) }, // 3 hours ago
   { id: 'notif_admin_3', userId: 'admin001', message: 'New customer Sneha Reddy added.', type: 'ANNOUNCEMENT', isRead: true, createdAt: new Date(Date.now() - 3600000 * 24) }, // 1 day ago
 ];

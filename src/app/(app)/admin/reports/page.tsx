@@ -66,7 +66,7 @@ export default function AdminReportsPage() {
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle>Monthly Supply & Revenue (Hours & ₹)</CardTitle>
+            <CardTitle>Monthly Supply & Revenue (Hours & PKR)</CardTitle>
           </CardHeader>
           <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -75,10 +75,10 @@ export default function AdminReportsPage() {
                 <XAxis dataKey="month" />
                 <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" />
                 <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
-                <Tooltip formatter={(value, name) => name === 'revenue' ? `₹${Number(value).toLocaleString('en-IN')}`: `${value} hrs`}/>
+                <Tooltip formatter={(value, name) => name === 'revenue' ? `PKR ${Number(value).toLocaleString('en-US')}`: `${value} hrs`}/>
                 <Legend />
                 <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--primary))" name="Supply (Hours)" />
-                <Bar yAxisId="right" dataKey="revenue" fill="hsl(var(--chart-2))" name="Revenue (₹)" />
+                <Bar yAxisId="right" dataKey="revenue" fill="hsl(var(--chart-2))" name="Revenue (PKR)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -114,10 +114,10 @@ export default function AdminReportsPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip formatter={(value) => `₹${Number(value).toLocaleString('en-IN')}`}/>
+                    <Tooltip formatter={(value) => `PKR ${Number(value).toLocaleString('en-US')}`}/>
                     <Legend />
-                    <Line type="monotone" dataKey="bill" stroke="hsl(var(--destructive))" name="Total Bill (₹)" />
-                    <Line type="monotone" dataKey="paid" stroke="hsl(var(--chart-5))" name="Amount Paid (₹)" />
+                    <Line type="monotone" dataKey="bill" stroke="hsl(var(--destructive))" name="Total Bill (PKR)" />
+                    <Line type="monotone" dataKey="paid" stroke="hsl(var(--chart-5))" name="Amount Paid (PKR)" />
                 </LineChart>
             </ResponsiveContainer>
           </CardContent>

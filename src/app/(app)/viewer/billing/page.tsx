@@ -47,11 +47,11 @@ export default async function ViewerBillingPage() {
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
                 <p className="text-sm text-muted-foreground">Current Outstanding Balance</p>
-                <p className="text-2xl font-bold">₹{customerProfile.balance.toLocaleString('en-IN')}</p>
+                <p className="text-2xl font-bold">PKR {customerProfile.balance.toLocaleString('en-US')}</p>
             </div>
             <div>
                 <p className="text-sm text-muted-foreground">Total Amount Paid (All Time)</p>
-                <p className="text-2xl font-bold">₹{totalPaid.toLocaleString('en-IN')}</p>
+                <p className="text-2xl font-bold">PKR {totalPaid.toLocaleString('en-US')}</p>
             </div>
           </CardContent>
         </Card>
@@ -68,7 +68,7 @@ export default async function ViewerBillingPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Payment Date</TableHead>
-                  <TableHead className="text-right">Amount Paid (₹)</TableHead>
+                  <TableHead className="text-right">Amount Paid (PKR)</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -79,7 +79,7 @@ export default async function ViewerBillingPage() {
                 {payments.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
-                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
                     <TableCell className="text-green-600">Recorded</TableCell> {/* Placeholder status */}
                   </TableRow>
                 ))}

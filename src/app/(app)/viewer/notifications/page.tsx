@@ -11,10 +11,10 @@ async function getMyNotifications(viewerId: string): Promise<Notification[]> {
   await new Promise(resolve => setTimeout(resolve, 500));
   if (viewerId === 'viewer001') {
     return [
-      { id: 'notif1', userId: 'viewer001', message: 'Your water usage for July 10th (2 hrs) has been logged. Cost: ₹2,400.', type: 'USAGE_LOGGED', isRead: false, linkTo: '/viewer/usage', createdAt: new Date(Date.now() - 3600000 * 2) }, // 2 hours ago
-      { id: 'notif2', userId: 'viewer001', message: 'Payment of ₹2,000 received on July 12th.', type: 'PAYMENT_RECORDED', isRead: true, linkTo: '/viewer/billing', createdAt: new Date(Date.now() - 3600000 * 24 * 2) }, // 2 days ago
+      { id: 'notif1', userId: 'viewer001', message: 'Your water usage for July 10th (2 hrs) has been logged. Cost: PKR 2,400.', type: 'USAGE_LOGGED', isRead: false, linkTo: '/viewer/usage', createdAt: new Date(Date.now() - 3600000 * 2) }, // 2 hours ago
+      { id: 'notif2', userId: 'viewer001', message: 'Payment of PKR 2,000 received on July 12th.', type: 'PAYMENT_RECORDED', isRead: true, linkTo: '/viewer/billing', createdAt: new Date(Date.now() - 3600000 * 24 * 2) }, // 2 days ago
       { id: 'notif3', userId: 'viewer001', message: 'Reminder: Your bill for June is overdue.', type: 'BILL_REMINDER', isRead: false, linkTo: '/viewer/billing', createdAt: new Date(Date.now() - 3600000 * 24 * 5) }, // 5 days ago
-      { id: 'notif4', userId: 'viewer001', message: 'Water usage (1.5 hrs) logged for July 15th. Cost: ₹1,800.', type: 'USAGE_LOGGED', isRead: true, linkTo: '/viewer/usage', createdAt: new Date(Date.now() - 3600000 * 24 * 1) }, // 1 day ago
+      { id: 'notif4', userId: 'viewer001', message: 'Water usage (1.5 hrs) logged for July 15th. Cost: PKR 1,800.', type: 'USAGE_LOGGED', isRead: true, linkTo: '/viewer/usage', createdAt: new Date(Date.now() - 3600000 * 24 * 1) }, // 1 day ago
     ];
   }
   return [];

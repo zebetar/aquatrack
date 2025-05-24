@@ -56,7 +56,7 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     
     toast({
       title: "Payment Recorded Successfully!",
-      description: `₹${values.amountPaid.toLocaleString('en-IN')} recorded for ${customer.name}.`,
+      description: `PKR ${values.amountPaid.toLocaleString('en-US')} recorded for ${customer.name}.`,
     });
 
     setIsLoading(false);
@@ -107,7 +107,7 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
           name="amountPaid"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount Paid (₹)</FormLabel>
+              <FormLabel>Amount Paid (PKR)</FormLabel>
               <FormControl>
                 <Input type="number" placeholder="e.g., 1200" {...field} />
               </FormControl>

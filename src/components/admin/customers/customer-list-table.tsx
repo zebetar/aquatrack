@@ -28,7 +28,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
             <TableHead>Name</TableHead>
             <TableHead>Contact Info</TableHead>
             <TableHead>Joined On</TableHead>
-            <TableHead className="text-right">Balance (₹)</TableHead>
+            <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -46,7 +46,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
               <TableCell className="font-medium">{customer.name}</TableCell>
               <TableCell>{customer.contactInfo || '-'}</TableCell>
               <TableCell>{format(new Date(customer.createdAt), 'PP')}</TableCell>
-              <TableCell className="text-right">{customer.balance.toLocaleString('en-IN')}</TableCell>
+              <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
               <TableCell className="text-center">
                 <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
                   {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}

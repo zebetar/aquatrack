@@ -13,7 +13,7 @@ export default function AdminSettingsPage() {
           <p className="text-muted-foreground">Application settings will be available here.</p>
           <ul className="mt-4 list-disc list-inside space-y-2">
             <li>User Management (Create/Manage Viewer Accounts)</li>
-            <li>Core Water Rate: ₹1200/hr (Display only, configured elsewhere)</li>
+            <li>Core Water Rate: PKR 1200/hr (Display only, configured elsewhere)</li>
             <li>Notification Preferences</li>
             <li>Data Export Options</li>
           </ul>

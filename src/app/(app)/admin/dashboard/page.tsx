@@ -20,8 +20,8 @@ export default function AdminDashboardPage() {
   const metrics = [
     { title: 'Total Customers', value: '125', icon: Users, description: '+5 since last month' },
     { title: 'Monthly Supply (Hours)', value: '850 hrs', icon: Droplets, description: 'Avg. 6.8 hrs/customer' },
-    { title: 'Monthly Revenue', value: '₹10,20,000', icon: CreditCard, description: 'Based on 1200 Rs/hr' },
-    { title: 'Outstanding Bills', value: '₹1,50,000', icon: BarChart3, description: 'From 15 customers' },
+    { title: 'Monthly Revenue', value: 'PKR 1,020,000', icon: CreditCard, description: 'Based on 1200 PKR/hr' },
+    { title: 'Outstanding Bills', value: 'PKR 150,000', icon: BarChart3, description: 'From 15 customers' },
   ];
 
   return (

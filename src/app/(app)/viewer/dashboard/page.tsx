@@ -24,9 +24,9 @@ const SummaryCard = ({ title, value, icon: Icon, actionLink, actionLabel }: { ti
 export default function ViewerDashboardPage() {
   // Placeholder data
   const summaries = [
-    { title: 'Current Outstanding Bill', value: '₹2,400', icon: FileText, actionLink: '/viewer/billing', actionLabel: 'View Details' },
+    { title: 'Current Outstanding Bill', value: 'PKR 2,400', icon: FileText, actionLink: '/viewer/billing', actionLabel: 'View Details' },
     { title: 'Recent Usage (Last 7 Days)', value: '5 hrs', icon: Clock, actionLink: '/viewer/usage', actionLabel: 'View History' },
-    { title: 'Last Payment Made', value: '₹1,800 on 15th Jul', icon: DollarSign, actionLink: '/viewer/billing', actionLabel: 'View Payments' },
+    { title: 'Last Payment Made', value: 'PKR 1,800 on 15th Jul', icon: DollarSign, actionLink: '/viewer/billing', actionLabel: 'View Payments' },
   ];
 
   return (

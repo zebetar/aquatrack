@@ -42,14 +42,14 @@ export default async function ViewerUsagePage() {
             </div>
             <div>
                 <p className="text-sm text-muted-foreground">Total Cost (All Time)</p>
-                <p className="text-2xl font-bold">₹{totalCost.toLocaleString('en-IN')}</p>
+                <p className="text-2xl font-bold">PKR {totalCost.toLocaleString('en-US')}</p>
             </div>
         </CardContent>
       </Card>
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle>Usage Records</CardTitle>
-          <CardDescription>Water is charged at ₹{CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription>
+          <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] w-full">
@@ -60,7 +60,7 @@ export default async function ViewerUsagePage() {
                   <TableHead>Start Time</TableHead>
                   <TableHead>End Time</TableHead>
                   <TableHead className="text-right">Duration (Hrs)</TableHead>
-                  <TableHead className="text-right">Cost (₹)</TableHead>
+                  <TableHead className="text-right">Cost (PKR)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -73,7 +73,7 @@ export default async function ViewerUsagePage() {
                     <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
                     <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
                     <TableCell className="text-right">{record.durationHours.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{record.cost.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
