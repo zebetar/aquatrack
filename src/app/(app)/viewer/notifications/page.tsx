@@ -29,7 +29,8 @@ export default function ViewerNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const viewerUserId = user?.authUID || user?.customerId || user?.id;
+  // Correctly use user.id which is the authUID for viewers
+  const viewerUserId = user?.id; 
 
   const loadNotifications = useCallback(async () => {
     if (!viewerUserId) {
@@ -75,7 +76,7 @@ export default function ViewerNotificationsPage() {
   if (!user) {
       return <p>Not authenticated. Please log in.</p>
   }
-  if (!viewerUserId) {
+  if (!viewerUserId) { // Should be caught by !user check, but good for robustness
       return <p>Could not identify user for notifications.</p>
   }
 

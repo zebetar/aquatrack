@@ -38,20 +38,24 @@ export default function ViewerDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
 
-  const viewerUserId = user?.authUID || user?.customerId || user?.id;
+  // Correctly use user.id which is the authUID for viewers
+  const viewerUserId = user?.id; 
 
   const loadDashboardData = useCallback(async () => {
-    if (!viewerUserId) {
+    if (!viewerUserId) { // If no viewerUserId, no data to load for a specific user
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 100)); 
 
-    const profile = getMockCustomerById(viewerUserId); // For viewers, customerId is their own ID
+    // For viewers, user.id is their authUID, which should be used to get customer data IF
+    // the customer ID (cust-xxxx) is stored on the user object as user.customerId.
+    // getMockCustomerById expects the 'cust-xxxx' ID.
+    const profile = user?.customerId ? getMockCustomerById(user.customerId) : null;
     setCustomerProfile(profile);
 
-    const usageRecords = getMockUsageRecordsByCustomerId(viewerUserId);
+    const usageRecords = getMockUsageRecordsByCustomerId(user?.customerId || viewerUserId); // Prefer customerId if available
     const today = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(today.getDate() - 7);
@@ -61,7 +65,7 @@ export default function ViewerDashboardPage() {
       .reduce((sum, record) => sum + record.durationHours, 0);
     setRecentUsageHours(recentUsage);
 
-    const payments = getMockPaymentsByCustomerId(viewerUserId);
+    const payments = getMockPaymentsByCustomerId(user?.customerId || viewerUserId); // Prefer customerId
     if (payments.length > 0) {
       payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
       setLastPayment(payments[0]);
@@ -69,16 +73,16 @@ export default function ViewerDashboardPage() {
       setLastPayment(null);
     }
 
+    // Notifications are keyed to user.id (authUID)
     const notifications = getMockNotificationsByUserId(viewerUserId);
-    setRecentNotifications(notifications.slice(0, 3)); // Show top 3
+    setRecentNotifications(notifications.slice(0, 3)); 
 
     setIsLoading(false);
-  }, [viewerUserId]);
+  }, [viewerUserId, user?.customerId]); // Added user.customerId to dependencies
 
   useEffect(() => {
     if (!authLoading && viewerUserId) {
       loadDashboardData();
-       // Interval to refresh data periodically, e.g., every 30 seconds
       const intervalId = setInterval(loadDashboardData, 30000);
       return () => clearInterval(intervalId);
     } else if (!authLoading && !viewerUserId) {
@@ -95,10 +99,10 @@ export default function ViewerDashboardPage() {
     );
   }
 
-  if (!user) { // Should be caught by AuthProvider, but as a fallback
+  if (!user) { 
       return <p>Not authenticated. Please log in.</p>
   }
-   if (!viewerUserId) {
+   if (!viewerUserId) { // Should be caught by !user check
       return <p>Could not load dashboard data: User ID not found.</p>
   }
 
