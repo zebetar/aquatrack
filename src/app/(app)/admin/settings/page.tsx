@@ -7,15 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, Image as ImageIcon } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Accordion,
   AccordionContent,
@@ -44,15 +45,9 @@ const adminChangePasswordSchema = z.object({
 });
 type AdminChangePasswordFormValues = z.infer<typeof adminChangePasswordSchema>;
 
-const avatarFormSchema = z.object({
-  avatarUrl: z.string().url({ message: "Please enter a valid URL for the avatar image." }).or(z.literal('')),
-});
-type AvatarFormValues = z.infer<typeof avatarFormSchema>;
-
-
 export default function AdminSettingsPage() {
   const { toast } = useToast();
-  const { user, updateAdminName, updateUserAvatarUrl } = useAuth(); 
+  const { user, updateAdminName, updateUserAvatarUrl } = useAuth();
   const [currentRate, setCurrentRate] = useState(CORE_WATER_RATE_PER_HOUR);
   const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
   const [isSavingRate, setIsSavingRate] = useState(false);
@@ -64,23 +59,30 @@ export default function AdminSettingsPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingEmail, setIsSavingEmail] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
     setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
   }, []);
 
+  useEffect(() => {
+    setAvatarPreview(user?.avatarUrl || null);
+  }, [user?.avatarUrl]);
+
   const adminNameForm = useForm<AdminChangeNameFormValues>({
     resolver: zodResolver(adminChangeNameSchema),
     defaultValues: { newAdminName: user?.name || "" },
-    values: { newAdminName: user?.name || "" } 
+    values: { newAdminName: user?.name || "" }
   });
-  
+
   useEffect(() => {
     if (user?.name) {
       adminNameForm.reset({ newAdminName: user.name });
@@ -98,17 +100,6 @@ export default function AdminSettingsPage() {
     defaultValues: { currentAdminPassword: "", newAdminPassword: "", confirmAdminPassword: "" },
   });
 
-  const adminAvatarForm = useForm<AvatarFormValues>({
-    resolver: zodResolver(avatarFormSchema),
-    defaultValues: { avatarUrl: user?.avatarUrl || "" },
-  });
-
-  useEffect(() => {
-    if (user) {
-      adminAvatarForm.reset({ avatarUrl: user.avatarUrl || "" });
-    }
-  }, [user, adminAvatarForm]);
-
   const handleSaveWaterRate = async () => {
     setIsSavingRate(true);
     const rateValue = parseFloat(newRateInput);
@@ -124,9 +115,9 @@ export default function AdminSettingsPage() {
     }
 
     await new Promise(resolve => setTimeout(resolve, 700));
-    
+
     updateCoreWaterRate(rateValue);
-    setCurrentRate(rateValue); 
+    setCurrentRate(rateValue);
 
     toast({
       title: "Water Rate Updated",
@@ -149,7 +140,7 @@ export default function AdminSettingsPage() {
     adminEmailForm.reset();
     setIsSavingEmail(false);
   };
-  
+
   const handleAdminPasswordChange = async (values: AdminChangePasswordFormValues) => {
     setIsSavingPassword(true);
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -158,12 +149,49 @@ export default function AdminSettingsPage() {
     setIsSavingPassword(false);
   };
 
-  const handleAdminAvatarChange = async (values: AvatarFormValues) => {
+  const handleAvatarFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit for mock
+        toast({
+          variant: "destructive",
+          title: "File Too Large",
+          description: "Please select an image smaller than 2MB.",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAdminAvatarChange = async () => {
+    if (!avatarPreview && !user?.avatarUrl) { // No new image and no old image
+        toast({ title: "No Image", description: "Please select an image to update your avatar." });
+        return;
+    }
+    if (avatarPreview === user?.avatarUrl) { // No change
+        toast({ title: "No Change", description: "The selected image is the same as your current avatar." });
+        return;
+    }
+
     setIsSavingAvatar(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    updateUserAvatarUrl(values.avatarUrl);
+    updateUserAvatarUrl(avatarPreview); // Pass Data URI or null
     setIsSavingAvatar(false);
   };
+  
+  const handleClearAvatar = () => {
+    setAvatarPreview(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Reset file input
+    }
+    // To actually remove from auth, user needs to click "Save Avatar"
+  };
+
 
   const handleToggleTheme = () => {
     const htmlElement = document.documentElement;
@@ -205,10 +233,10 @@ export default function AdminSettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="coreWaterRate">Core Water Rate (PKR/hour)</Label>
                   <div className="flex items-center gap-2">
-                    <Input 
-                      id="coreWaterRate" 
+                    <Input
+                      id="coreWaterRate"
                       type="number"
-                      value={newRateInput} 
+                      value={newRateInput}
                       onChange={(e) => setNewRateInput(e.target.value)}
                       className="max-w-xs"
                       placeholder="e.g., 1200"
@@ -295,7 +323,7 @@ export default function AdminSettingsPage() {
             </CardHeader>
             <AccordionContent>
               <CardContent className="p-4 pt-0 space-y-6">
-                
+
                 <div>
                   <h4 className="text-md font-semibold mb-2">Change Admin Name</h4>
                   <Form {...adminNameForm}>
@@ -325,32 +353,39 @@ export default function AdminSettingsPage() {
 
                 <div>
                   <h4 className="text-md font-semibold mb-2">Change Admin Avatar</h4>
-                  <Form {...adminAvatarForm}>
-                    <form onSubmit={adminAvatarForm.handleSubmit(handleAdminAvatarChange)} className="space-y-4">
-                      <FormField
-                        control={adminAvatarForm.control}
-                        name="avatarUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Avatar Image URL</FormLabel>
-                            <FormControl>
-                              <Input type="url" placeholder="https://example.com/avatar.png" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" disabled={isSavingAvatar}>
+                  <div className="space-y-4">
+                    {avatarPreview && (
+                      <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
+                        <Image src={avatarPreview} alt="Avatar Preview" layout="fill" objectFit="cover" />
+                      </div>
+                    )}
+                    <Input
+                      id="avatarFile"
+                      type="file"
+                      accept="image/png, image/jpeg, image/gif"
+                      onChange={handleAvatarFileChange}
+                      ref={fileInputRef}
+                      className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    />
+                     <FormDescription>Select a PNG, JPG, or GIF image (max 2MB).</FormDescription>
+                    <div className="flex gap-2">
+                      <Button onClick={handleAdminAvatarChange} disabled={isSavingAvatar}>
                         {isSavingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        <ImageIcon className="mr-2 h-4 w-4" />
+                        <UploadCloud className="mr-2 h-4 w-4" />
                         Save Avatar
                       </Button>
-                    </form>
-                  </Form>
+                       {avatarPreview && (
+                        <Button variant="outline" onClick={handleClearAvatar} disabled={isSavingAvatar}>
+                           Clear Preview
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
+
                 <Separator className="my-6 bg-border/50"/>
-                
+
                 <div>
                   <h4 className="text-md font-semibold mb-2">Change Admin Email</h4>
                   <div className="mb-2">
@@ -445,7 +480,7 @@ export default function AdminSettingsPage() {
             </AccordionContent>
           </Card>
         </AccordionItem>
-        
+
         <AccordionItem value="system-ops" className="border-none">
           <Card className="shadow-md glassmorphism-card">
             <CardHeader className="p-4">
@@ -488,3 +523,5 @@ export default function AdminSettingsPage() {
     </>
   );
 }
+
+    

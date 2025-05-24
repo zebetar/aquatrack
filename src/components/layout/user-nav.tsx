@@ -30,16 +30,27 @@ export function UserNav() {
     return names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase();
   };
 
-  const avatarSrc = user.avatarUrl || `https://placehold.co/100x100.png?text=${getInitials(user.name)}`;
-  const avatarHint = user.avatarUrl ? "custom avatar" : "avatar person";
+  // avatarUrl can now be a Data URI or a regular URL (though we only set Data URIs from upload)
+  // If it's a placeholder, data-ai-hint remains relevant.
+  // If user uploaded, the hint is less critical but won't harm.
+  const avatarSrc = user.avatarUrl; // This can be a data URI
+  const placeholderInitials = getInitials(user.name);
+  // Determine if avatarSrc is a data URI or external URL to adjust AI hint
+  const isDataUri = avatarSrc && avatarSrc.startsWith('data:image');
+  const aiHint = isDataUri ? "profile picture" : (avatarSrc ? "custom avatar" : "avatar person");
+
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
-            <AvatarImage src={avatarSrc} alt={user.name || "User"} data-ai-hint={avatarHint} />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+            {avatarSrc ? (
+              <AvatarImage src={avatarSrc} alt={user.name || "User"} data-ai-hint={aiHint} />
+            ) : (
+              <AvatarImage src={`https://placehold.co/100x100.png?text=${placeholderInitials}`} alt={user.name || "User"} data-ai-hint="avatar person" />
+            )}
+            <AvatarFallback>{placeholderInitials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -78,3 +89,5 @@ export function UserNav() {
     </DropdownMenu>
   );
 }
+
+    

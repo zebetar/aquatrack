@@ -6,15 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { useAuth, MOCK_VIEWER_PASSWORD } from '@/contexts/auth-context';
 import { updateCustomerEmail } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Loader2, Eye, EyeOff, Image as ImageIcon } from 'lucide-react'; // Added ImageIcon
-import { useState, useEffect } from 'react';
+import { Loader2, Eye, EyeOff, UploadCloud } from 'lucide-react';
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 
 const changeEmailSchema = z.object({
   newEmail: z.string().email({ message: "Please enter a valid email address." }),
@@ -31,12 +32,6 @@ const changePasswordSchema = z.object({
 });
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
-const avatarFormSchema = z.object({
-  avatarUrl: z.string().url({ message: "Please enter a valid URL for the avatar image." }).or(z.literal('')),
-});
-type AvatarFormValues = z.infer<typeof avatarFormSchema>;
-
-
 export default function ViewerProfilePage() {
   const { user, loading, updateUserEmail: updateUserEmailInAuth, updateUserAvatarUrl } = useAuth();
   const { toast } = useToast();
@@ -46,6 +41,13 @@ export default function ViewerProfilePage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+  useEffect(() => {
+    setAvatarPreview(user?.avatarUrl || null);
+  }, [user?.avatarUrl]);
 
   const emailForm = useForm<ChangeEmailFormValues>({
     resolver: zodResolver(changeEmailSchema),
@@ -56,18 +58,6 @@ export default function ViewerProfilePage() {
     resolver: zodResolver(changePasswordSchema),
     defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
   });
-  
-  const avatarForm = useForm<AvatarFormValues>({
-    resolver: zodResolver(avatarFormSchema),
-    defaultValues: { avatarUrl: user?.avatarUrl || "" },
-  });
-
-  useEffect(() => {
-    if (user) {
-      avatarForm.reset({ avatarUrl: user.avatarUrl || "" });
-    }
-  }, [user, avatarForm]);
-
 
   if (loading) {
     return (
@@ -84,10 +74,9 @@ export default function ViewerProfilePage() {
   const handleEmailChange = async (values: ChangeEmailFormValues) => {
     if (!user || !user.customerId) return;
     setIsEmailSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 700)); 
+    await new Promise(resolve => setTimeout(resolve, 700));
 
-    updateUserEmailInAuth(values.newEmail); 
-    // updateCustomerEmail(user.customerId, values.newEmail); // This is now handled within updateUserEmailInAuth or should be if broader store update needed
+    updateUserEmailInAuth(values.newEmail);
 
     toast({ title: "Email Updated", description: `Your email has been updated to ${values.newEmail}.` });
     emailForm.reset();
@@ -96,7 +85,7 @@ export default function ViewerProfilePage() {
 
   const handlePasswordChange = async (values: ChangePasswordFormValues) => {
     setIsPasswordSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 700)); 
+    await new Promise(resolve => setTimeout(resolve, 700));
 
     if (values.currentPassword === MOCK_VIEWER_PASSWORD) {
       toast({ title: "Password Changed (Mock)", description: "Your password has been successfully updated (simulated)." });
@@ -106,13 +95,46 @@ export default function ViewerProfilePage() {
     }
     setIsPasswordSaving(false);
   };
-  
-  const handleAvatarChange = async (values: AvatarFormValues) => {
+
+  const handleAvatarFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit for mock
+        toast({
+          variant: "destructive",
+          title: "File Too Large",
+          description: "Please select an image smaller than 2MB.",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAvatarChange = async () => {
+    if (!avatarPreview && !user?.avatarUrl) {
+        toast({ title: "No Image", description: "Please select an image to update your avatar." });
+        return;
+    }
+     if (avatarPreview === user?.avatarUrl) {
+        toast({ title: "No Change", description: "The selected image is the same as your current avatar." });
+        return;
+    }
     setIsAvatarSaving(true);
     await new Promise(resolve => setTimeout(resolve, 700));
-    updateUserAvatarUrl(values.avatarUrl);
-    // toast is handled by updateUserAvatarUrl
+    updateUserAvatarUrl(avatarPreview);
     setIsAvatarSaving(false);
+  };
+  
+  const handleClearAvatarPreview = () => {
+    setAvatarPreview(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Reset file input
+    }
   };
 
   const PasswordVisibilityToggle = ({ isVisible, toggle }: { isVisible: boolean, toggle: () => void }) => (
@@ -158,34 +180,38 @@ export default function ViewerProfilePage() {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle>Change Avatar</CardTitle>
-            <CardDescription>Update your profile picture by providing an image URL.</CardDescription>
+            <CardDescription>Upload a new profile picture.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Form {...avatarForm}>
-              <form onSubmit={avatarForm.handleSubmit(handleAvatarChange)} className="space-y-4">
-                <FormField
-                  control={avatarForm.control}
-                  name="avatarUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Image URL</FormLabel>
-                      <FormControl>
-                        <Input type="url" placeholder="https://example.com/image.png" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={isAvatarSaving}>
-                  {isAvatarSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  <ImageIcon className="mr-2 h-4 w-4" />
-                  Save Avatar
+          <CardContent className="space-y-4">
+            {avatarPreview && (
+              <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
+                <Image src={avatarPreview} alt="Avatar Preview" layout="fill" objectFit="cover" />
+              </div>
+            )}
+            <Input
+              id="avatarFile"
+              type="file"
+              accept="image/png, image/jpeg, image/gif"
+              onChange={handleAvatarFileChange}
+              ref={fileInputRef}
+              className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+            />
+            <FormDescription>Select a PNG, JPG, or GIF image (max 2MB).</FormDescription>
+            <div className="flex gap-2">
+                <Button onClick={handleAvatarChange} disabled={isAvatarSaving}>
+                    {isAvatarSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <UploadCloud className="mr-2 h-4 w-4" />
+                    Save Avatar
                 </Button>
-              </form>
-            </Form>
+                {avatarPreview && (
+                    <Button variant="outline" onClick={handleClearAvatarPreview} disabled={isAvatarSaving}>
+                        Clear Preview
+                    </Button>
+                )}
+            </div>
           </CardContent>
         </Card>
-        
+
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle>Change Email</CardTitle>
@@ -215,7 +241,7 @@ export default function ViewerProfilePage() {
             </Form>
           </CardContent>
         </Card>
-        
+
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle>Change Password</CardTitle>
@@ -284,3 +310,5 @@ export default function ViewerProfilePage() {
     </>
   );
 }
+
+    
