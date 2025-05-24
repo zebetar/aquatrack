@@ -1,7 +1,6 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -140,8 +139,7 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Manage application configurations." />
-      
+      {/* PageHeader removed as per user request */}
       <Accordion type="multiple" className="w-full space-y-4">
         <AccordionItem value="general-config" className="border-none">
           <Card className="shadow-md glassmorphism-card">
@@ -382,7 +380,3 @@ export default function AdminSettingsPage() {
     </>
   );
 }
-
-    
-
-    
