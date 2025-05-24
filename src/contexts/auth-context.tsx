@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { User } from '@/types';
@@ -7,15 +8,17 @@ import { useRouter, usePathname } from 'next/navigation';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, role: 'admin' | 'viewer') => void;
+  login: (email: string, password: string, role: 'admin' | 'viewer') => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users
+// Mock users and credentials
 const MOCK_ADMIN_USER: User = { id: 'admin001', email: 'admin@aquatrack.com', role: 'admin', name: 'Admin User' };
+const MOCK_ADMIN_PASSWORD = "adminpassword"; // Example password
 const MOCK_VIEWER_USER: User = { id: 'viewer001', email: 'viewer@aquatrack.com', role: 'viewer', name: 'Customer User', customerId: 'cust001' };
+const MOCK_VIEWER_PASSWORD = "viewerpassword"; // Example password
 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -42,14 +45,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, loading, pathname, router]);
 
 
-  const login = (email: string, role: 'admin' | 'viewer') => {
+  const login = (email: string, password: string, role: 'admin' | 'viewer') => {
     setLoading(true);
     // Simulate API call
     setTimeout(() => {
       let loggedInUser: User | null = null;
-      if (role === 'admin' && email.toLowerCase() === MOCK_ADMIN_USER.email.toLowerCase()) {
+      if (role === 'admin' && email.toLowerCase() === MOCK_ADMIN_USER.email.toLowerCase() && password === MOCK_ADMIN_PASSWORD) {
         loggedInUser = MOCK_ADMIN_USER;
-      } else if (role === 'viewer' && email.toLowerCase() === MOCK_VIEWER_USER.email.toLowerCase()) {
+      } else if (role === 'viewer' && email.toLowerCase() === MOCK_VIEWER_USER.email.toLowerCase() && password === MOCK_VIEWER_PASSWORD) {
         loggedInUser = MOCK_VIEWER_USER;
       }
       

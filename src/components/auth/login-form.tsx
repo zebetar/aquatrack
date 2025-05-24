@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +42,8 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
-    await login(values.email, values.role); // Role is passed for mock login
+    // Pass email, password, and role to the login function
+    await login(values.email, values.password, values.role);
     // In a real app, role might be determined server-side after successful auth
     setIsSubmitting(false);
   }
