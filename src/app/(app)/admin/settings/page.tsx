@@ -59,6 +59,13 @@ export default function AdminSettingsPage() {
     setIsSavingRate(false);
   };
 
+  const handleNotImplemented = (featureName: string) => {
+    toast({
+      title: "Feature Not Implemented",
+      description: `${featureName} functionality is not yet available in this mock application.`,
+    });
+  };
+
   return (
     <>
       <PageHeader title="Settings" description="Manage application settings and configurations." />
@@ -147,7 +154,7 @@ export default function AdminSettingsPage() {
         <Card className="shadow-md lg:col-span-2">
           <CardHeader>
             <CardTitle>System Operations</CardTitle>
-            <CardDescription>Advanced system management features. (Placeholders)</CardDescription>
+            <CardDescription>Advanced system management features.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border p-4">
@@ -155,21 +162,21 @@ export default function AdminSettingsPage() {
                 <h3 className="font-medium">User Management</h3>
                 <p className="text-sm text-muted-foreground">Create, manage, and assign roles to admin and viewer accounts.</p>
               </div>
-              <Button variant="outline" disabled>Manage Users</Button>
+              <Button variant="outline" onClick={() => handleNotImplemented('User Management')}>Manage Users</Button>
             </div>
             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border p-4">
               <div>
                 <h3 className="font-medium">Data Export</h3>
                 <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
               </div>
-              <Button variant="outline" disabled>Export Data</Button>
+              <Button variant="outline" onClick={() => handleNotImplemented('Data Export')}>Export Data</Button>
             </div>
              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border p-4">
               <div>
                 <h3 className="font-medium">System Theme</h3>
-                <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application. (Not implemented)</p>
+                <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
               </div>
-              <Button variant="outline" disabled>Toggle Theme</Button>
+              <Button variant="outline" onClick={() => handleNotImplemented('System Theme Toggle')}>Toggle Theme</Button>
             </div>
           </CardContent>
         </Card>
