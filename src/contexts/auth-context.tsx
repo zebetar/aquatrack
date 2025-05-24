@@ -5,22 +5,21 @@ import type { User, Customer } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getAllMockCustomers, getMockCustomerById } from '@/lib/mock-data-store'; 
+import { getAllMockCustomers } from '@/lib/mock-data-store'; 
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, role: 'admin' | 'viewer') => Promise<void>;
   logout: () => void;
-  updateUserEmail: (newEmail: string) => void; // Added for viewer email change
+  updateUserEmail: (newEmail: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users and credentials
 const MOCK_ADMIN_USER: User = { id: 'admin001', email: 'admin@aquatrack.com', role: 'admin', name: 'Admin User' };
 const MOCK_ADMIN_PASSWORD = "adminpassword";
-export const MOCK_VIEWER_PASSWORD = "viewerpassword"; // Generic password for all mock viewers, made exportable
+export const MOCK_VIEWER_PASSWORD = "viewerpassword"; 
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -73,13 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await delay(500); 
 
     let loggedInUser: User | null = null;
+    const trimmedEmail = email.trim().toLowerCase();
 
-    if (role === 'admin' && email.toLowerCase() === MOCK_ADMIN_USER.email.toLowerCase() && password === MOCK_ADMIN_PASSWORD) {
+    if (role === 'admin' && trimmedEmail === MOCK_ADMIN_USER.email.toLowerCase() && password === MOCK_ADMIN_PASSWORD) {
       loggedInUser = MOCK_ADMIN_USER;
     } else if (role === 'viewer') {
       const customers = getAllMockCustomers();
       const foundCustomer = customers.find(
-        (c: Customer) => c.email?.toLowerCase() === email.toLowerCase() && c.authUID
+        (c: Customer) => c.email?.trim().toLowerCase() === trimmedEmail && c.authUID
       );
 
       if (foundCustomer && password === MOCK_VIEWER_PASSWORD) {
@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(loggedInUser);
       localStorage.setItem('authUser', JSON.stringify(loggedInUser));
       toast({ title: "Login Successful", description: `Welcome back, ${loggedInUser.name || loggedInUser.email}!` });
+      // Redirect is handled by the useEffect hook based on user state change
     } else {
       toast({ variant: "destructive", title: "Login Failed", description: "Invalid credentials or role mismatch." });
     }
@@ -111,10 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateUserEmail = (newEmail: string) => {
     if (user && user.role === 'viewer') {
-      const updatedUser = { ...user, email: newEmail };
+      const updatedUser = { ...user, email: newEmail.trim() };
       setUser(updatedUser);
       localStorage.setItem('authUser', JSON.stringify(updatedUser));
-      // The mock-data-store will be updated separately by the profile page logic
     }
   };
 

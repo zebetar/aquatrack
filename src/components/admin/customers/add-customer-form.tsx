@@ -12,7 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription, // Added FormDescription
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -21,9 +21,9 @@ import { useState } from "react";
 import type { Customer } from "@/types";
 
 const addCustomerFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
-  contactInfo: z.string().optional(),
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
+  email: z.string().email({ message: "Please enter a valid email." }).trim().optional().or(z.literal('')),
+  contactInfo: z.string().trim().optional(),
 });
 
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
@@ -47,30 +47,26 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
 
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
-    // Here you would typically call a server action or API endpoint
-    console.log("Add Customer Data:", values);
+    console.log("Add Customer Data (trimmed):", values);
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     const newCustomer: Customer = {
-      id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, // Mock ID
+      id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       name: values.name,
-      email: values.email || undefined, // Save the email to the customer object
+      email: values.email || undefined,
       contactInfo: values.contactInfo || undefined,
-      // For mock purposes, if an email is provided, we can simulate linking an authUID
-      // In a real app, this UID would come from Firebase Auth after user creation.
-      authUID: values.email ? `authuid-${Math.random().toString(36).substring(2, 9)}` : undefined,
+      authUID: values.email && values.email.trim() !== "" ? `authuid-${Math.random().toString(36).substring(2, 9)}` : undefined,
       createdAt: new Date(),
       balance: 0,
     };
     
     toast({
       title: "Customer Added Successfully!",
-      description: `${newCustomer.name} has been added to the system.`,
+      description: `${newCustomer.name} has been added to the system. ${newCustomer.email ? `Login email: ${newCustomer.email}` : 'No login email set.'}`,
     });
     setIsLoading(false);
-    onSuccessCallback(newCustomer); // Pass the new customer data up and close dialog
+    onSuccessCallback(newCustomer); 
     form.reset();
   }
 
@@ -100,7 +96,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
                 <Input type="email" placeholder="viewer@example.com (optional)" {...field} />
               </FormControl>
               <FormDescription>
-                If provided, this email will be used by the customer to log into their Viewer Dashboard.
+                If provided, this email will be used by the customer to log into their Viewer Dashboard. Use 'viewerpassword' as the password.
               </FormDescription>
               <FormMessage />
             </FormItem>
