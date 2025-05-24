@@ -9,8 +9,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   getAllMockCustomers, 
   addMockCustomer as addCustomerToStore,
-  deleteMockCustomer as deleteCustomerFromStore 
+  deleteMockCustomer as deleteCustomerFromStore,
+  getMockCustomerById,
+  getMockUsageRecordsByCustomerId,
+  getMockPaymentsByCustomerId 
 } from '@/lib/mock-data-store';
+import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,15 +41,45 @@ export default function AdminCustomersPage() {
   };
 
   const handleCustomerDeleted = async (customerId: string) => {
-    setDeletingCustomerId(customerId);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-    const customerToDelete = customers.find(c => c.id === customerId);
+    setDeletingCustomerId(customerId); // Show loading state for the specific delete action
+
+    const customerForToastName = customers.find(c => c.id === customerId); // Get customer name for toast before deletion
+    const customerDataForPdf = getMockCustomerById(customerId); // Get full customer data for PDF generation
+
+    if (customerDataForPdf) {
+      try {
+        const usageRecords = getMockUsageRecordsByCustomerId(customerId);
+        const payments = getMockPaymentsByCustomerId(customerId);
+        await generateCustomerPdf(customerDataForPdf, usageRecords, payments);
+        toast({
+          title: "Statement Generated",
+          description: `PDF statement for ${customerDataForPdf.name} is being downloaded.`,
+        });
+      } catch (error) {
+        console.error("Error generating PDF before deletion:", error);
+        toast({
+          variant: "destructive",
+          title: "PDF Generation Failed",
+          description: "Could not generate PDF statement. Customer will still be deleted.",
+        });
+      }
+    } else {
+      // This case should ideally not happen if customerId is valid, but good to handle
+      toast({
+        variant: "destructive",
+        title: "Customer Data Not Found for PDF",
+        description: "Could not retrieve customer details for PDF generation. Proceeding with deletion.",
+      });
+    }
+
+    // Proceed with deletion from store
     deleteCustomerFromStore(customerId);
-    fetchCustomers(); // Re-fetch from store
-    setDeletingCustomerId(null);
+    fetchCustomers(); // Re-fetch to update the UI list
+
+    setDeletingCustomerId(null); // Clear loading state
     toast({
       title: "Customer Deleted",
-      description: `${customerToDelete?.name || 'Customer'} and all associated data have been removed.`,
+      description: `${customerForToastName?.name || 'Customer'} and all associated data have been removed.`,
     });
   };
 
