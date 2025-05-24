@@ -10,7 +10,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users, ChevronsUpDown } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users, ChevronsUpDown, KeyRound } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Separator } from '@/components/ui/separator';
 
 // Schemas for admin (though functionality is mocked)
 const adminChangeEmailSchema = z.object({
@@ -139,7 +140,6 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      {/* PageHeader removed as per user request */}
       <Accordion type="multiple" className="w-full space-y-4">
         <AccordionItem value="water-rate" className="border-none">
           <Card className="shadow-md glassmorphism-card">
@@ -231,115 +231,113 @@ export default function AdminSettingsPage() {
           </Card>
         </AccordionItem>
 
-        <AccordionItem value="admin-email" className="border-none">
+        <AccordionItem value="admin-account" className="border-none">
           <Card className="shadow-md glassmorphism-card">
             <CardHeader className="p-4">
                <AccordionTrigger className="p-0 hover:no-underline">
-                <CardTitle>Admin Account: Change Email</CardTitle>
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-5 w-5" />
+                  <CardTitle>Admin Account: Change Email & Password</CardTitle>
+                </div>
               </AccordionTrigger>
             </CardHeader>
             <AccordionContent>
-              <CardContent className="p-4 pt-0">
-                <div className="mb-2">
-                    <Label>Current Email</Label>
-                    <Input value={user?.email || 'N/A'} readOnly />
+              <CardContent className="p-4 pt-0 space-y-6">
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Change Admin Email</h4>
+                  <div className="mb-2">
+                      <Label>Current Email</Label>
+                      <Input value={user?.email || 'N/A'} readOnly />
+                  </div>
+                  <Form {...adminEmailForm}>
+                    <form onSubmit={adminEmailForm.handleSubmit(handleAdminEmailChange)} className="space-y-4">
+                      <FormField
+                        control={adminEmailForm.control}
+                        name="newAdminEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Admin Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="new.admin@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={isSavingEmail}>
+                        {isSavingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Change Admin Email
+                      </Button>
+                    </form>
+                  </Form>
                 </div>
-                <Form {...adminEmailForm}>
-                  <form onSubmit={adminEmailForm.handleSubmit(handleAdminEmailChange)} className="space-y-4">
-                    <FormField
-                      control={adminEmailForm.control}
-                      name="newAdminEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>New Admin Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="new.admin@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" disabled={isSavingEmail}>
-                      {isSavingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Change Admin Email
-                    </Button>
-                  </form>
-                </Form>
+
+                <Separator className="my-6 bg-border/50"/>
+
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Change Admin Password</h4>
+                  <Form {...adminPasswordForm}>
+                    <form onSubmit={adminPasswordForm.handleSubmit(handleAdminPasswordChange)} className="space-y-4">
+                       <FormField
+                        control={adminPasswordForm.control}
+                        name="currentAdminPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input type={showCurrentPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                              </FormControl>
+                              <PasswordVisibilityToggle isVisible={showCurrentPassword} toggle={() => setShowCurrentPassword(!showCurrentPassword)} />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={adminPasswordForm.control}
+                        name="newAdminPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input type={showNewPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                              </FormControl>
+                               <PasswordVisibilityToggle isVisible={showNewPassword} toggle={() => setShowNewPassword(!showNewPassword)} />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={adminPasswordForm.control}
+                        name="confirmAdminPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm New Password</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                              </FormControl>
+                              <PasswordVisibilityToggle isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={isSavingPassword}>
+                        {isSavingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Change Admin Password
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
               </CardContent>
             </AccordionContent>
           </Card>
         </AccordionItem>
         
-        <AccordionItem value="admin-password" className="border-none">
-          <Card className="shadow-md glassmorphism-card">
-            <CardHeader className="p-4">
-              <AccordionTrigger className="p-0 hover:no-underline">
-                <CardTitle>Admin Account: Change Password</CardTitle>
-              </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="p-4 pt-0">
-                <Form {...adminPasswordForm}>
-                  <form onSubmit={adminPasswordForm.handleSubmit(handleAdminPasswordChange)} className="space-y-4">
-                     <FormField
-                      control={adminPasswordForm.control}
-                      name="currentAdminPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Current Password</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input type={showCurrentPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
-                            </FormControl>
-                            <PasswordVisibilityToggle isVisible={showCurrentPassword} toggle={() => setShowCurrentPassword(!showCurrentPassword)} />
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={adminPasswordForm.control}
-                      name="newAdminPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>New Password</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input type={showNewPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
-                            </FormControl>
-                             <PasswordVisibilityToggle isVisible={showNewPassword} toggle={() => setShowNewPassword(!showNewPassword)} />
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={adminPasswordForm.control}
-                      name="confirmAdminPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm New Password</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
-                            </FormControl>
-                            <PasswordVisibilityToggle isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" disabled={isSavingPassword}>
-                      {isSavingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Change Admin Password
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </AccordionContent>
-          </Card>
-        </AccordionItem>
-
         <AccordionItem value="system-ops" className="border-none">
           <Card className="shadow-md glassmorphism-card">
             <CardHeader className="p-4">
