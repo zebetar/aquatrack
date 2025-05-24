@@ -9,7 +9,8 @@ import {
   Bell,
   Settings,
   FileText,
-  UserCog, // Added for User Management
+  UserCog,
+  FileDown, // Added for Data Export
 } from 'lucide-react';
 
 export const adminNavItems: NavItem[] = [
@@ -52,7 +53,13 @@ export const adminNavItems: NavItem[] = [
   {
     title: 'User Management', 
     href: '/admin/users',
-    icon: UserCog, // Using UserCog
+    icon: UserCog,
+    role: 'admin',
+  },
+  {
+    title: 'Data Export', // New Nav Item
+    href: '/admin/data-export',
+    icon: FileDown,
     role: 'admin',
   },
   {
@@ -91,7 +98,7 @@ export const viewerNavItems: NavItem[] = [
    {
     title: 'Profile',
     href: '/viewer/profile',
-    icon: Users, // Using Users icon for profile for viewers
+    icon: Users, 
     role: 'viewer',
   },
 ];

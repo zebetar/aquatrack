@@ -10,7 +10,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users, KeyRound } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -361,14 +361,16 @@ export default function AdminSettingsPage() {
                     <h3 className="font-medium">Data Export</h3>
                     <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
                   </div>
-                  <Button variant="outline" onClick={() => handleNotImplemented('Data Export')}>Export Data</Button>
+                  <Button variant="outline" asChild>
+                    <Link href="/admin/data-export"><FileDown className="mr-2 h-4 w-4"/>Export Data</Link>
+                  </Button>
                 </div>
                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                   <div>
                     <h3 className="font-medium">System Theme</h3>
                     <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
                   </div>
-                  <Button variant="outline" onClick={() => handleNotImplemented('System Theme Toggle')}>Toggle Theme</Button>
+                  <Button variant="outline" onClick={() => handleNotImplemented('System Theme Toggle')}><Palette className="mr-2 h-4 w-4"/>Toggle Theme</Button>
                 </div>
               </CardContent>
             </AccordionContent>
