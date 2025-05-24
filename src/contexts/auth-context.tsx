@@ -5,7 +5,7 @@ import type { User, Customer } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getAllMockCustomers } from '@/lib/mock-data-store'; 
+import { getAllMockCustomers, updateCustomerEmail as updateCustomerEmailInStore } from '@/lib/mock-data-store'; 
 
 interface AuthContextType {
   user: User | null;
@@ -31,6 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Load user from localStorage on initial mount
+    setLoading(true); // Start loading
     const storedUser = localStorage.getItem('authUser');
     if (storedUser) {
       try {
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (parsedUser && parsedUser.id && parsedUser.email && parsedUser.role) {
           setUser(parsedUser);
         } else {
+          // Invalid user object, clear it
           localStorage.removeItem('authUser');
         }
       } catch (error) {
@@ -45,23 +48,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('authUser');
       }
     }
-    setLoading(false);
+    setLoading(false); // Done loading
   }, []);
 
   useEffect(() => {
-    if (loading) {
+    if (loading) { // Only run redirect logic after initial loading is complete
       return; 
     }
 
     const isAuthPage = pathname.startsWith('/login'); 
 
     if (!user) { 
+      // If no user is logged in and not on an auth page, redirect to login
       if (!isAuthPage) {
         router.push('/login');
       }
     } else { 
+      // If user is logged in and on an auth page, redirect to their dashboard
       if (isAuthPage) {
         router.push(user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard');
+      }
+      // Additional check: if user is on a page not matching their role, redirect
+      // Example: admin on /viewer/* or viewer on /admin/*
+      if (user.role === 'admin' && pathname.startsWith('/viewer')) {
+        router.push('/admin/dashboard');
+      } else if (user.role === 'viewer' && pathname.startsWith('/admin')) {
+        router.push('/viewer/dashboard');
       }
     }
   }, [user, loading, pathname, router]);
@@ -72,20 +84,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await delay(500); 
 
     let loggedInUser: User | null = null;
-    const trimmedEmail = email.trim().toLowerCase();
+    const processedLoginEmail = email.trim().toLowerCase();
 
-    if (role === 'admin' && trimmedEmail === MOCK_ADMIN_USER.email.toLowerCase() && password === MOCK_ADMIN_PASSWORD) {
+    if (role === 'admin' && processedLoginEmail === MOCK_ADMIN_USER.email.toLowerCase() && password === MOCK_ADMIN_PASSWORD) {
       loggedInUser = MOCK_ADMIN_USER;
     } else if (role === 'viewer') {
-      const customers = getAllMockCustomers();
+      const customers = getAllMockCustomers(); // Ensure this gets fresh data
       const foundCustomer = customers.find(
-        (c: Customer) => c.email?.trim().toLowerCase() === trimmedEmail && c.authUID
+        (c: Customer) => 
+          c.email?.trim().toLowerCase() === processedLoginEmail && // Compare processed emails
+          c.authUID // Ensure customer has an authUID (is eligible for login)
       );
 
       if (foundCustomer && password === MOCK_VIEWER_PASSWORD) {
         loggedInUser = {
           id: foundCustomer.authUID!, 
-          email: foundCustomer.email!,
+          email: foundCustomer.email!, // Use the original stored email for the user object
           role: 'viewer',
           name: foundCustomer.name,
           customerId: foundCustomer.id,
@@ -97,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(loggedInUser);
       localStorage.setItem('authUser', JSON.stringify(loggedInUser));
       toast({ title: "Login Successful", description: `Welcome back, ${loggedInUser.name || loggedInUser.email}!` });
-      // Redirect is handled by the useEffect hook based on user state change
+      // Redirect will be handled by the useEffect hook based on user state change
     } else {
       toast({ variant: "destructive", title: "Login Failed", description: "Invalid credentials or role mismatch." });
     }
@@ -111,10 +125,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserEmail = (newEmail: string) => {
-    if (user && user.role === 'viewer') {
-      const updatedUser = { ...user, email: newEmail.trim() };
+    // This function updates email for a logged-in VIEWER
+    if (user && user.role === 'viewer' && user.customerId) {
+      const processedNewEmail = newEmail.trim().toLowerCase();
+      const updatedUser = { ...user, email: processedNewEmail };
       setUser(updatedUser);
       localStorage.setItem('authUser', JSON.stringify(updatedUser));
+      // Also update in the mock-data-store if this user is a customer
+      updateCustomerEmailInStore(user.customerId, processedNewEmail);
     }
   };
 

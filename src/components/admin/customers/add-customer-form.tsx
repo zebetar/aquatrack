@@ -22,7 +22,7 @@ import type { Customer } from "@/types";
 
 const addCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
-  email: z.string().email({ message: "Please enter a valid email." }).trim().optional().or(z.literal('')),
+  email: z.string().email({ message: "Please enter a valid email." }).trim().toLowerCase().optional().or(z.literal('')),
   contactInfo: z.string().trim().optional(),
 });
 
@@ -47,23 +47,24 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
 
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
-    console.log("Add Customer Data (trimmed):", values);
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Ensure email is undefined if it's an empty string after Zod processing, otherwise use the processed value.
+    const customerEmail = values.email && values.email.length > 0 ? values.email : undefined;
 
     const newCustomer: Customer = {
       id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       name: values.name,
-      email: values.email || undefined,
+      email: customerEmail, // Use the processed email
       contactInfo: values.contactInfo || undefined,
-      authUID: values.email && values.email.trim() !== "" ? `authuid-${Math.random().toString(36).substring(2, 9)}` : undefined,
+      // Generate authUID only if customerEmail is a valid, non-empty string
+      authUID: customerEmail ? `authuid-${Math.random().toString(36).substring(2, 9)}` : undefined,
       createdAt: new Date(),
       balance: 0,
     };
     
     toast({
       title: "Customer Added Successfully!",
-      description: `${newCustomer.name} has been added to the system. ${newCustomer.email ? `Login email: ${newCustomer.email}` : 'No login email set.'}`,
+      description: `${newCustomer.name} has been added. ${newCustomer.email ? `Login email: ${newCustomer.email}` : 'No login email set.'}`,
     });
     setIsLoading(false);
     onSuccessCallback(newCustomer); 
@@ -96,7 +97,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
                 <Input type="email" placeholder="viewer@example.com (optional)" {...field} />
               </FormControl>
               <FormDescription>
-                If provided, this email will be used by the customer to log into their Viewer Dashboard. Use 'viewerpassword' as the password.
+                If provided, this email will be used by the customer to log into their Viewer Dashboard. Use 'viewerpassword' as the password. This email is case-insensitive for login.
               </FormDescription>
               <FormMessage />
             </FormItem>
