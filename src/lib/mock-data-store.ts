@@ -44,10 +44,11 @@ function loadStoreFromLocalStorage(): void {
       console.log("Mock data store loaded from localStorage.");
     } else {
       console.log("No mock data found in localStorage, initializing empty store.");
+      // Optionally initialize with some default data if the store is empty
+      // seedInitialData(); 
     }
   } catch (error) {
     console.error("Error loading mock data store from localStorage:", error);
-    // If error, initialize with empty store to prevent app crash
     store = { customers: [], usageRecords: [], payments: [] };
   }
 }
@@ -56,13 +57,12 @@ function saveStoreToLocalStorage(): void {
   try {
     const serializedStore = JSON.stringify(store);
     localStorage.setItem(STORAGE_KEY, serializedStore);
-    // console.log("Mock data store saved to localStorage.");
-  } catch (error) {
+  } catch (error)
+    {
     console.error("Error saving mock data store to localStorage:", error);
   }
 }
 
-// Load store from localStorage when the script is first imported/run
 loadStoreFromLocalStorage();
 
 
@@ -82,8 +82,20 @@ export function getMockCustomerById(customerId: string): Customer | undefined {
 }
 
 export function getAllMockCustomers(): Customer[] {
-  return [...store.customers]; // Return a copy
+  return [...store.customers];
 }
+
+export function updateCustomerEmail(customerId: string, newEmail: string): void {
+  const customerIndex = store.customers.findIndex(c => c.id === customerId);
+  if (customerIndex > -1) {
+    store.customers[customerIndex].email = newEmail;
+    saveStoreToLocalStorage();
+    console.log(`Customer ${customerId} email updated in mock store to ${newEmail}`);
+  } else {
+    console.warn(`Attempted to update email for non-existent customer ID: ${customerId}`);
+  }
+}
+
 
 // --- Water Usage Record Functions ---
 export function addMockUsageRecord(record: WaterUsageRecord): void {
@@ -102,7 +114,7 @@ export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageR
 }
 
 export function getAllMockUsageRecords(): WaterUsageRecord[] {
-  return [...store.usageRecords]; // Return a copy
+  return [...store.usageRecords];
 }
 
 // --- Payment Functions ---
@@ -122,7 +134,7 @@ export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
 }
 
 export function getAllMockPayments(): Payment[] {
-  return [...store.payments]; // Return a copy
+  return [...store.payments];
 }
 
 // --- Utility Functions ---
@@ -132,19 +144,6 @@ export function clearAllMockData(): void {
     usageRecords: [],
     payments: [],
   };
-  saveStoreToLocalStorage(); // Also clear it from localStorage
+  saveStoreToLocalStorage();
   console.log("Mock data store cleared from memory and localStorage.");
 }
-
-// Optional: Log store changes for debugging
-const logStore = (operation: string) => {
-  // console.log(`Mock Store after ${operation}:`, JSON.parse(JSON.stringify(store)));
-};
-
-// Wrap add functions with logging if desired
-const originalAddMockCustomer = addMockCustomer;
-export const addMockCustomerLogged = (customer: Customer) => {
-  originalAddMockCustomer(customer);
-  logStore(`addMockCustomer: ${customer.id}`);
-};
-// Similar wrappers for other add functions if needed for debugging.

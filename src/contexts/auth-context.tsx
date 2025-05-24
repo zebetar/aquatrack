@@ -5,14 +5,14 @@ import type { User, Customer } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getAllMockCustomers } from '@/lib/mock-data-store'; 
+import { getAllMockCustomers, getMockCustomerById } from '@/lib/mock-data-store'; 
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string, role: 'admin' | 'viewer') => Promise<void>;
   logout: () => void;
-  // Removed signup function from type
+  updateUserEmail: (newEmail: string) => void; // Added for viewer email change
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Mock users and credentials
 const MOCK_ADMIN_USER: User = { id: 'admin001', email: 'admin@aquatrack.com', role: 'admin', name: 'Admin User' };
 const MOCK_ADMIN_PASSWORD = "adminpassword";
-const MOCK_VIEWER_PASSWORD = "viewerpassword"; // Generic password for all mock viewers
+export const MOCK_VIEWER_PASSWORD = "viewerpassword"; // Generic password for all mock viewers, made exportable
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return; 
     }
 
-    const isAuthPage = pathname.startsWith('/login'); // Only login page is auth page now
+    const isAuthPage = pathname.startsWith('/login'); 
 
     if (!user) { 
       if (!isAuthPage) {
@@ -103,17 +103,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   };
 
-  // Removed signup function
-  // async function signup(name: string, email: string, password: string): Promise<void> { ... }
-
   const logout = () => {
     setUser(null);
     localStorage.removeItem('authUser');
     router.push('/login'); 
   };
 
+  const updateUserEmail = (newEmail: string) => {
+    if (user && user.role === 'viewer') {
+      const updatedUser = { ...user, email: newEmail };
+      setUser(updatedUser);
+      localStorage.setItem('authUser', JSON.stringify(updatedUser));
+      // The mock-data-store will be updated separately by the profile page logic
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUserEmail }}>
       {children}
     </AuthContext.Provider>
   );

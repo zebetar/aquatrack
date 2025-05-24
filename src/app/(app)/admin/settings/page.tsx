@@ -10,23 +10,63 @@ import { Button } from '@/components/ui/button';
 import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
+import { Loader2, Eye, EyeOff } from 'lucide-react'; // Added Eye, EyeOff
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+// Schemas for admin (though functionality is mocked)
+const adminChangeEmailSchema = z.object({
+  newAdminEmail: z.string().email({ message: "Please enter a valid email address." }),
+});
+type AdminChangeEmailFormValues = z.infer<typeof adminChangeEmailSchema>;
+
+const adminChangePasswordSchema = z.object({
+  currentAdminPassword: z.string().min(1, { message: "Current password is required." }),
+  newAdminPassword: z.string().min(6, { message: "New password must be at least 6 characters." }),
+  confirmAdminPassword: z.string().min(6, { message: "Confirm password must be at least 6 characters." }),
+}).refine(data => data.newAdminPassword === data.confirmAdminPassword, {
+  message: "New passwords do not match.",
+  path: ["confirmAdminPassword"],
+});
+type AdminChangePasswordFormValues = z.infer<typeof adminChangePasswordSchema>;
+
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
+  const { user } = useAuth(); // Get current admin user
   const [currentRate, setCurrentRate] = useState(CORE_WATER_RATE_PER_HOUR);
   const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
   const [isSavingRate, setIsSavingRate] = useState(false);
 
-  // Notification preferences (mock state)
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
+
+  // State for password visibility
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   useEffect(() => {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
     setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
   }, []);
+
+  const adminEmailForm = useForm<AdminChangeEmailFormValues>({
+    resolver: zodResolver(adminChangeEmailSchema),
+    defaultValues: { newAdminEmail: "" },
+  });
+
+  const adminPasswordForm = useForm<AdminChangePasswordFormValues>({
+    resolver: zodResolver(adminChangePasswordSchema),
+    defaultValues: { currentAdminPassword: "", newAdminPassword: "", confirmAdminPassword: "" },
+  });
 
 
   const handleSaveWaterRate = async () => {
@@ -58,9 +98,39 @@ export default function AdminSettingsPage() {
   const handleNotImplemented = (featureName: string) => {
     toast({
       title: "Feature Not Implemented",
-      description: `${featureName} functionality is not yet available.`, // Shortened
+      description: `${featureName} functionality is not yet available.`,
     });
   };
+
+  const handleAdminEmailChange = async (values: AdminChangeEmailFormValues) => {
+    setIsSavingEmail(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    toast({ title: "Mock Action", description: `Email change to ${values.newAdminEmail} simulated (not implemented).` });
+    adminEmailForm.reset();
+    setIsSavingEmail(false);
+  };
+  
+  const handleAdminPasswordChange = async (values: AdminChangePasswordFormValues) => {
+    setIsSavingPassword(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    toast({ title: "Mock Action", description: "Password change simulated (not implemented)." });
+    adminPasswordForm.reset();
+    setIsSavingPassword(false);
+  };
+
+  const PasswordVisibilityToggle = ({ isVisible, toggle }: { isVisible: boolean, toggle: () => void }) => (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      onClick={toggle}
+      tabIndex={-1}
+    >
+      {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      <span className="sr-only">{isVisible ? "Hide password" : "Show password"}</span>
+    </Button>
+  );
 
   return (
     <>
@@ -144,6 +214,103 @@ export default function AdminSettingsPage() {
                 aria-label="Toggle push notifications"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle>Admin Account: Change Email</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-2">
+                <Label>Current Email</Label>
+                <Input value={user?.email || 'N/A'} readOnly />
+            </div>
+            <Form {...adminEmailForm}>
+              <form onSubmit={adminEmailForm.handleSubmit(handleAdminEmailChange)} className="space-y-4">
+                <FormField
+                  control={adminEmailForm.control}
+                  name="newAdminEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New Admin Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="new.admin@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isSavingEmail}>
+                  {isSavingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Change Admin Email
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle>Admin Account: Change Password</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...adminPasswordForm}>
+              <form onSubmit={adminPasswordForm.handleSubmit(handleAdminPasswordChange)} className="space-y-4">
+                 <FormField
+                  control={adminPasswordForm.control}
+                  name="currentAdminPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Password</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input type={showCurrentPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                        </FormControl>
+                        <PasswordVisibilityToggle isVisible={showCurrentPassword} toggle={() => setShowCurrentPassword(!showCurrentPassword)} />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={adminPasswordForm.control}
+                  name="newAdminPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New Password</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input type={showNewPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                        </FormControl>
+                         <PasswordVisibilityToggle isVisible={showNewPassword} toggle={() => setShowNewPassword(!showNewPassword)} />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={adminPasswordForm.control}
+                  name="confirmAdminPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm New Password</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
+                        </FormControl>
+                        <PasswordVisibilityToggle isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isSavingPassword}>
+                  {isSavingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Change Admin Password
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
 
