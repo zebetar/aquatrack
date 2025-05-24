@@ -12,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription, // Added FormDescription
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +22,7 @@ import type { Customer } from "@/types";
 
 const addCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email for viewer account." }).optional().or(z.literal('')),
+  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
   contactInfo: z.string().optional(),
 });
 
@@ -94,10 +95,13 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email (for Viewer Account)</FormLabel>
+              <FormLabel>Email (for Viewer Account Login)</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="viewer@example.com (optional)" {...field} />
               </FormControl>
+              <FormDescription>
+                If provided, this email will be used by the customer to log into their Viewer Dashboard.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
