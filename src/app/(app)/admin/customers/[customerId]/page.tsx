@@ -22,7 +22,6 @@ import {
 // Placeholder data fetching functions using the store
 async function getCustomerDetailsFromStore(customerId: string): Promise<Customer | null> {
   const customer = getMockCustomerById(customerId);
-  // No delay here for faster UI updates if data is already in store
   return customer || null; 
 }
 
@@ -45,7 +44,10 @@ export default function CustomerDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCustomerData = useCallback(async () => {
-    if (!customerId) return; 
+    if (!customerId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const [custData, usageData, paymentData] = await Promise.all([
@@ -59,7 +61,7 @@ export default function CustomerDetailPage() {
     } catch (error) {
       console.error("Failed to load customer data from store", error);
       // Fallback for testing if customerId is not in store after an error
-      if (!customer) { // only set fallback if customer is still null
+      if (!customer) { 
         setCustomer({ 
             id: customerId, 
             name: `Customer ${customerId.substring(0,5)} (Error Loading)`, 
@@ -71,11 +73,11 @@ export default function CustomerDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [customerId, customer]); // Added customer to dependencies to potentially help with re-fetch if needed, though primary trigger is customerId
+  }, [customerId, customer]); // customer is in dependency to re-evaluate if its own state changes, though fetchCustomerData is mainly driven by customerId change
 
   useEffect(() => {
     fetchCustomerData();
-  }, [fetchCustomerData]); // fetchCustomerData is memoized, so this runs when customerId changes
+  }, [fetchCustomerData]); 
 
   const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
     if (!customerId) return;
@@ -86,7 +88,6 @@ export default function CustomerDetailPage() {
     const updatedUsageRecords = getMockUsageRecordsByCustomerId(customerId);
     
     if (updatedCustomer) setCustomer(updatedCustomer);
-    // Ensure a new array reference is passed to trigger re-render
     setUsageRecords([...updatedUsageRecords]); 
   };
 
@@ -99,11 +100,10 @@ export default function CustomerDetailPage() {
     const updatedPayments = getMockPaymentsByCustomerId(customerId);
 
     if (updatedCustomer) setCustomer(updatedCustomer);
-    // Ensure a new array reference is passed to trigger re-render
     setPayments([...updatedPayments]); 
   };
 
-  if (isLoading && !customer) { // Show full page loader only if customer is not yet loaded at all
+  if (isLoading && !customer) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -124,7 +124,6 @@ export default function CustomerDetailPage() {
     );
   }
 
-  // Show a subtle loading indicator if we are in a loading state but already have some customer data
   const showInlineLoader = isLoading && customer;
 
   return (
@@ -154,4 +153,3 @@ export default function CustomerDetailPage() {
     </>
   );
 }
-
