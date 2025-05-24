@@ -11,11 +11,12 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import Link from 'next/link';
 
 // Schemas for admin (though functionality is mocked)
 const adminChangeEmailSchema = z.object({
@@ -97,7 +98,7 @@ export default function AdminSettingsPage() {
   const handleNotImplemented = (featureName: string) => {
     toast({
       title: "Feature Not Implemented",
-      description: `${featureName} functionality is not available.`,
+      description: `${featureName} functionality is not available in this mock application.`,
     });
   };
 
@@ -139,7 +140,6 @@ export default function AdminSettingsPage() {
         <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>General Configuration</CardTitle>
-            <CardDescription>Core system parameters.</CardDescription> 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -168,7 +168,6 @@ export default function AdminSettingsPage() {
         <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Notification Preferences</CardTitle>
-            <CardDescription>Manage how admins receive system alerts.</CardDescription> 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
@@ -316,16 +315,17 @@ export default function AdminSettingsPage() {
         <Card className="shadow-md lg:col-span-2 glassmorphism-card">
           <CardHeader>
             <CardTitle>System Operations</CardTitle>
-            <CardDescription>Advanced system management features.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
               <div>
                 <h3 className="font-medium">User Management</h3>
-                <p className="text-sm text-muted-foreground">Create, manage, and assign roles to admin and viewer accounts.</p>
+                <p className="text-sm text-muted-foreground">List and manage customer accounts. Deletion includes PDF statement download.</p>
               </div>
-              <Button variant="outline" onClick={() => handleNotImplemented('User Management')}>Manage Users</Button>
-            </div> */}
+              <Button variant="outline" asChild>
+                <Link href="/admin/users"><Users className="mr-2 h-4 w-4"/>Manage Users</Link>
+              </Button>
+            </div>
             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
               <div>
                 <h3 className="font-medium">Data Export</h3>

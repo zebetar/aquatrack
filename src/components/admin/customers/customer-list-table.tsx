@@ -13,12 +13,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Trash2 } from 'lucide-react'; // Added Trash2
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-// import { DeleteCustomerDialog } from './delete-customer-dialog'; // No longer needed if delete button is removed
+import { DeleteCustomerDialog } from './delete-customer-dialog';
 
 interface CustomerListTableProps {
   customers: Customer[];
@@ -68,13 +68,13 @@ export function CustomerListTable({ customers, onCustomerDeleted, deletingCustom
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-center">PDF</TableHead>
-            {/* <TableHead className="text-right">Actions</TableHead>  Removed Actions column header */}
+            <TableHead className="text-center">Actions</TableHead> 
           </TableRow>
         </TableHeader>
         <TableBody>
           {customers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center"> {/* Adjusted colSpan */}
+              <TableCell colSpan={6} className="h-24 text-center"> {/* Adjusted colSpan */}
                 No customers found.
               </TableCell>
             </TableRow>
@@ -108,7 +108,24 @@ export function CustomerListTable({ customers, onCustomerDeleted, deletingCustom
                   )}
                 </Button>
               </TableCell>
-              {/* Removed TableCell for DeleteCustomerDialog */}
+              <TableCell className="text-center">
+                <DeleteCustomerDialog 
+                  customer={customer}
+                  onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                  isDeleting={deletingCustomerId === customer.id}
+                  triggerButton={
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      title="Delete Customer" 
+                      disabled={deletingCustomerId === customer.id}
+                      onClick={(e) => e.stopPropagation()} // Prevent row click
+                    >
+                      {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                    </Button>
+                  }
+                />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
