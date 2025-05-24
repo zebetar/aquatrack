@@ -1,3 +1,4 @@
+
 import type { NavItem } from '@/types';
 import {
   LayoutDashboard,
@@ -26,17 +27,15 @@ export const adminNavItems: NavItem[] = [
   },
   {
     title: 'Water Usage',
-    href: '/admin/usage', // Or integrate into customers
+    href: '/admin/usage', 
     icon: Droplets,
     role: 'admin',
-    disabled: true, // Example: can be enabled later
   },
   {
     title: 'Payments',
-    href: '/admin/payments', // Or integrate into customers
+    href: '/admin/payments', 
     icon: CreditCard,
     role: 'admin',
-    disabled: true, // Example: can be enabled later
   },
   {
     title: 'Reports',
@@ -68,13 +67,13 @@ export const viewerNavItems: NavItem[] = [
   {
     title: 'My Usage',
     href: '/viewer/usage',
-    icon: Droplets, // Using Droplets, could be ListChecks or FileText
+    icon: Droplets, 
     role: 'viewer',
   },
   {
     title: 'My Billing',
     href: '/viewer/billing',
-    icon: CreditCard, // Using CreditCard, could be FileText
+    icon: CreditCard, 
     role: 'viewer',
   },
   {
@@ -86,7 +85,7 @@ export const viewerNavItems: NavItem[] = [
    {
     title: 'Profile',
     href: '/viewer/profile',
-    icon: Users, // Using Users as a generic profile icon
+    icon: Users, 
     role: 'viewer',
   },
 ];
