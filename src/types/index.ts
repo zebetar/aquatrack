@@ -61,3 +61,10 @@ export interface NavItem {
   label?: string;
   role?: 'admin' | 'viewer'; // To control visibility
 }
+
+export interface CustomerMonthlyUsage {
+  id: string; // customerId
+  name: string;
+  usageHours: number;
+  cost: number;
+}

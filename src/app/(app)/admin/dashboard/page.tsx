@@ -12,10 +12,11 @@ import {
   getAllMockPayments,
   getAllAdminNotifications
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification } from '@/types';
+import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
 import { format, isThisMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
 
 const KeyMetricCard = ({ 
   title, 
@@ -23,14 +24,16 @@ const KeyMetricCard = ({
   icon: Icon, 
   description, 
   className, 
-  href 
+  href,
+  onClick,
 }: { 
   title: string, 
   value: string, 
   icon: React.ElementType, 
   description?: string, 
   className?: string,
-  href?: string 
+  href?: string,
+  onClick?: () => void;
 }) => {
   const cardInnerContent = (
     <>
@@ -45,20 +48,34 @@ const KeyMetricCard = ({
     </>
   );
 
+  const cardClasses = cn(
+    "shadow-md glassmorphism-card", 
+    className,
+    href || onClick ? "hover:shadow-lg transition-all duration-150 ease-in-out hover:border-primary" : ""
+  );
+
   if (href) {
     return (
       <Link href={href} className="block h-full group">
-        <Card className={cn(
-          "shadow-md hover:shadow-lg transition-all duration-150 ease-in-out hover:border-primary glassmorphism-card", 
-          className
-        )}>
+        <Card className={cardClasses}>
           {cardInnerContent}
         </Card>
       </Link>
     );
   }
+  
+  if (onClick) {
+    return (
+       <div onClick={onClick} className="cursor-pointer h-full group">
+        <Card className={cn(cardClasses, "h-full")}>
+          {cardInnerContent}
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <Card className={cn("shadow-md glassmorphism-card", className)}>
+    <Card className={cardClasses}>
       {cardInnerContent}
     </Card>
   );
@@ -70,6 +87,9 @@ export default function AdminDashboardPage() {
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
   const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
+  
+  const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
+  const [customersWithMonthlyUsageData, setCustomersWithMonthlyUsageData] = useState<CustomerMonthlyUsage[]>([]);
 
   const loadDashboardData = useCallback(() => {
     const customers = getAllMockCustomers();
@@ -79,10 +99,9 @@ export default function AdminDashboardPage() {
 
     setTotalCustomers(customers.length);
 
-    const currentMonthUsage = usageRecords.filter(record => isThisMonth(new Date(record.date)));
-    const currentSupply = currentMonthUsage.reduce((sum, record) => sum + record.durationHours, 0);
-    
-    const currentRevenue = currentMonthUsage.reduce((sum, record) => sum + record.cost, 0);
+    const currentMonthUsageRecords = usageRecords.filter(record => isThisMonth(new Date(record.date)));
+    const currentSupply = currentMonthUsageRecords.reduce((sum, record) => sum + record.durationHours, 0);
+    const currentRevenue = currentMonthUsageRecords.reduce((sum, record) => sum + record.cost, 0);
     
     setMonthlySupply(currentSupply);
     setMonthlyRevenue(currentRevenue);
@@ -91,6 +110,24 @@ export default function AdminDashboardPage() {
     setOutstandingBillsValue(totalDue);
     
     setRecentNotifications(notifications.slice(0, 3)); 
+
+    // Prepare data for monthly supply dialog
+    const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
+    customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
+
+    currentMonthUsageRecords.forEach(record => {
+      const entry = customerUsageMap.get(record.customerId);
+      if (entry) {
+        entry.usageHours += record.durationHours;
+        entry.cost += record.cost;
+      }
+    });
+    
+    const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
+      .map(([id, data]) => ({ id, ...data }))
+      .filter(item => item.usageHours > 0) // Only show customers with usage this month
+      .sort((a,b) => b.usageHours - a.usageHours); // Sort by highest usage
+    setCustomersWithMonthlyUsageData(processedDialogData);
 
   }, []);
 
@@ -108,14 +145,20 @@ export default function AdminDashboardPage() {
       description: `${totalCustomers} active`,
       href: '/admin/customers'
     },
-    { title: 'Monthly Supply (Hours)', value: `${monthlySupply.toFixed(1)} hrs`, icon: Droplets, description: 'Current month' },
+    { 
+      title: 'Monthly Supply (Hours)', 
+      value: `${monthlySupply.toFixed(1)} hrs`, 
+      icon: Droplets, 
+      description: 'Current month',
+      onClick: () => setIsMonthlySupplyDialogOpen(true)
+    },
     { title: 'Monthly Revenue', value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, icon: CreditCard, description: 'Current month' },
     { 
       title: 'Outstanding Bills', 
       value: `PKR ${outstandingBillsValue.toLocaleString('en-US')}`, 
       icon: BarChart3, 
       description: 'Total amount due',
-      href: '/admin/reports/outstanding-bills' // Added href here
+      href: '/admin/reports/outstanding-bills'
     },
   ];
 
@@ -131,7 +174,8 @@ export default function AdminDashboardPage() {
             icon={metric.icon}
             description={metric.description}
             href={metric.href}
-            className={metric.href ? "hover:ring-2 hover:ring-primary/50" : ""}
+            onClick={metric.onClick}
+            className={metric.href || metric.onClick ? "hover:ring-2 hover:ring-primary/50" : ""}
           />
         ))}
       </div>
@@ -167,6 +211,11 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <MonthlySupplyDetailsDialog
+        isOpen={isMonthlySupplyDialogOpen}
+        onClose={() => setIsMonthlySupplyDialogOpen(false)}
+        data={customersWithMonthlyUsageData}
+      />
     </>
   );
 }
