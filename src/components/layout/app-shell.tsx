@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from 'react';
@@ -7,7 +8,7 @@ import { adminNavItems, viewerNavItems } from '@/config/nav-config';
 import { useAuth } from '@/contexts/auth-context';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, Water, Loader2 } from 'lucide-react';
+import { Menu, Droplets, Loader2 } from 'lucide-react'; // Changed Water to Droplets
 import Link from 'next/link';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -35,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center border-b border-sidebar-border px-4 shrink-0">
         <Link href="/" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
-          <Water className="h-7 w-7 text-primary" />
+          <Droplets className="h-7 w-7 text-primary" /> {/* Changed Water to Droplets */}
           <span className="text-xl">AquaTrack</span>
         </Link>
       </div>
