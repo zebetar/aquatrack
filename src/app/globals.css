@@ -9,101 +9,97 @@ body {
 
 @layer base {
   :root {
-    /* Light Theme: Clean, Bright, Aquatic */
-    --background: 200 60% 97%; /* Very light, slightly cool off-white */
-    --foreground: 210 30% 20%; /* Dark desaturated blue for text */
+    /* Light Theme: Elegant, Clean, Aquatic */
+    --background: 210 30% 98%; /* Very light, cool off-white */
+    --foreground: 220 25% 25%; /* Dark, slightly desaturated blue-grey for text */
     
-    --card: 0 0% 100%; /* White cards for clarity */
-    --card-foreground: 210 30% 20%;
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 220 25% 25%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 210 30% 20%;
+    --popover-foreground: 220 25% 25%;
     
-    --primary: 195 85% 45%; /* Clear, vibrant sky blue/teal */
-    --primary-foreground: 0 0% 100%; /* White text on primary */
+    --primary: 205 70% 48%; /* Clear, professional blue */
+    --primary-foreground: 0 0% 100%; 
     
-    --secondary: 190 70% 90%; /* Light, soft cyan/blue */
-    --secondary-foreground: 195 85% 25%; /* Darker primary for text */
+    --secondary: 210 50% 93%; /* Light, soft cool grey-blue */
+    --secondary-foreground: 205 70% 30%; 
     
-    --muted: 200 50% 94%; /* Light grayish blue */
-    --muted-foreground: 210 30% 50%;
+    --muted: 210 40% 95%; /* Lighter cool grey-blue */
+    --muted-foreground: 220 20% 50%;
     
-    --accent: 180 70% 60%; /* A slightly greener teal, like shallow water */
-    --accent-foreground: 210 30% 15%; /* Dark text on accent */
+    --accent: 180 60% 55%; /* Soft teal/aqua accent */
+    --accent-foreground: 220 25% 20%; 
     
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 200 30% 85%;
-    --input: 200 30% 90%;
-    --ring: 195 85% 50%; /* Primary color for rings */
+    --border: 210 20% 88%;
+    --input: 210 20% 94%;
+    --ring: 205 70% 50%; 
 
-    /* Updated chart colors for light theme */
-    --chart-1: 195 85% 45%;   /* Primary Blue/Teal (matches --primary) */
-    --chart-2: 190 75% 60%;   /* Lighter Cyan/Aqua */
-    --chart-3: 205 70% 50%;   /* Medium Desaturated Blue */
-    --chart-4: 45 80% 65%;    /* Soft Gold/Sand */
-    --chart-5: 340 80% 70%;   /* Soft Coral/Pink for contrast */
+    --chart-1: 205 70% 48%;   /* Primary Blue */
+    --chart-2: 180 60% 55%;   /* Soft Teal/Aqua */
+    --chart-3: 220 50% 65%;   /* Desaturated Blue/Lavender */
+    --chart-4: 45 70% 65%;    /* Soft Gold */
+    --chart-5: 330 65% 70%;   /* Muted Pink/Rose */
     
     --radius: 0.5rem;
 
-    /* Sidebar specific colors for light mode */
-    --sidebar-background: 198 50% 90%; /* Light, slightly desaturated cyan */
-    --sidebar-foreground: 210 30% 25%; 
-    --sidebar-primary: 195 85% 45%;   /* Active Blue/Teal */
+    --sidebar-background: 215 35% 92%; 
+    --sidebar-foreground: 220 25% 30%; 
+    --sidebar-primary: 205 70% 48%;  
     --sidebar-primary-foreground: 0 0% 100%; 
-    --sidebar-accent: 195 85% 85%;    /* Hover light blue/teal */
-    --sidebar-accent-foreground: 195 85% 25%;
-    --sidebar-border: 200 30% 80%;
-    --sidebar-ring: 195 85% 50%;
+    --sidebar-accent: 205 70% 88%;    
+    --sidebar-accent-foreground: 205 70% 28%;
+    --sidebar-border: 210 20% 85%;
+    --sidebar-ring: 205 70% 50%;
   }
 
   .dark {
-    /* Dark Theme: Deep Water / Night Sky over Water */
-    --background: 210 30% 12%; /* Very dark desaturated blue */
-    --foreground: 200 20% 90%; /* Light grayish cyan for text */
+    /* Dark Theme: Futuristic, Elegant, Deep Ocean */
+    --background: 220 40% 10%; /* Deep, dark desaturated blue */
+    --foreground: 200 20% 90%; /* Light, cool grey for text */
     
-    --card: 205 30% 18%; /* Dark blue, slightly lighter than background */
+    --card: 220 35% 15%; /* Dark blue, slightly lighter than background */
     --card-foreground: 200 20% 90%;
     
-    --popover: 210 30% 9%; /* Even darker for popovers */
+    --popover: 220 40% 8%; 
     --popover-foreground: 200 20% 90%;
     
-    --primary: 185 90% 50%; /* Vibrant cyan, like moonlight on water */
-    --primary-foreground: 210 30% 10%; /* Dark text on bright primary */
+    --primary: 185 85% 55%; /* Vibrant, sharp cyan/teal */
+    --primary-foreground: 220 30% 12%; 
     
-    --secondary: 190 40% 30%; /* Muted dark cyan */
-    --secondary-foreground: 200 20% 80%; 
+    --secondary: 210 30% 25%; /* Muted dark blue */
+    --secondary-foreground: 200 15% 80%; 
     
-    --muted: 205 30% 22%; /* Darker muted blue */
-    --muted-foreground: 200 20% 70%; /* Muted light text */
+    --muted: 210 30% 20%; 
+    --muted-foreground: 200 15% 65%; 
     
-    --accent: 40 100% 65%;   /* Warm gold/orange for contrast */
-    --accent-foreground: 30 30% 10%; /* Dark text on accent */
+    --accent: 170 75% 60%; /* Slightly greener vibrant teal/cyan */
+    --accent-foreground: 220 30% 8%; 
     
-    --destructive: 0 70% 55%; /* Darker Red */
+    --destructive: 0 65% 50%; 
     --destructive-foreground: 0 0% 98%;
     
-    --border: 190 50% 35%; /* Muted cyan border */
-    --input: 205 30% 20%;  /* Dark blue input background */
-    --ring: 185 90% 55%;   /* Brighter cyan for rings */
+    --border: 210 25% 30%; 
+    --input: 210 30% 18%;  
+    --ring: 185 85% 60%;   
 
-    /* Updated chart colors for dark theme */
-    --chart-1: 185 90% 50%; /* Primary Cyan (matches --primary) */
-    --chart-2: 175 80% 60%; /* Brighter Aqua/Teal */
-    --chart-3: 195 60% 40%; /* Deeper Muted Cyan */
-    --chart-4: 40 100% 70%;  /* Brighter Gold/Orange (similar to --accent) */
-    --chart-5: 350 90% 75%;   /* Luminous Pink/Magenta */
+    --chart-1: 185 85% 55%; /* Primary Cyan/Teal */
+    --chart-2: 170 75% 60%; /* Greener Teal/Cyan */
+    --chart-3: 230 60% 70%; /* Lighter Desaturated Blue/Purple */
+    --chart-4: 40 90% 65%;  /* Gold/Orange */
+    --chart-5: 300 70% 70%; /* Magenta/Purple */
 
-    /* Sidebar specific colors for dark mode */
-    --sidebar-background: 210 30% 9%; /* Even darker blue than main bg */
-    --sidebar-foreground: 200 20% 85%; 
-    --sidebar-primary: 185 90% 50%;   /* Active Cyan */
-    --sidebar-primary-foreground: 210 30% 10%; 
-    --sidebar-accent: 185 90% 40%; /* Hover darker cyan */
-    --sidebar-accent-foreground: 200 20% 95%;
-    --sidebar-border: 190 50% 25%;
-    --sidebar-ring: 185 90% 55%;
+    --sidebar-background: 220 40% 8%; 
+    --sidebar-foreground: 200 15% 85%; 
+    --sidebar-primary: 185 85% 55%;  
+    --sidebar-primary-foreground: 220 30% 12%; 
+    --sidebar-accent: 185 85% 45%; 
+    --sidebar-accent-foreground: 200 15% 95%;
+    --sidebar-border: 210 25% 25%;
+    --sidebar-ring: 185 85% 60%;
   }
 }
 
@@ -123,4 +119,30 @@ body {
   }
 }
 
-/* Standard card styling will apply using the new theme variables */
+/* Refined Glassmorphism for Dark Mode - apply .glassmorphism-card class to cards */
+.dark .glassmorphism-card {
+  background-color: hsla(var(--card-foreground), 0.05); /* More subtle background */
+  backdrop-filter: blur(12px); /* Slightly more blur for depth */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsla(var(--primary), 0.25); /* Subtle border with primary color tint */
+  box-shadow: 0 0 20px hsla(var(--primary), 0.15), /* Softer, more diffused glow */
+              0 6px 12px rgba(0, 0, 0, 0.2); /* Standard subtle shadow for depth */
+}
+
+/* Standard card styling will apply using the new theme variables for light mode */
+
+/* Button hover/pop effect - applied to default variant */
+.btn-pop-hover { /* Add this class to buttons you want to have this effect */
+  @apply transition-all duration-300 ease-in-out;
+}
+.btn-pop-hover:hover:not(:disabled) {
+  @apply transform scale-105 shadow-lg;
+}
+
+.dark .btn-primary-dark-pulse:not(:disabled) {
+  /* Keeping a subtle glow for primary buttons in dark mode, but removed pulse */
+  box-shadow: 0 0 8px hsla(var(--primary), 0.6), 0 0 12px hsla(var(--primary), 0.4);
+}
+.dark .btn-primary-dark-pulse:hover:not(:disabled) {
+  box-shadow: 0 0 12px hsla(var(--primary), 0.8), 0 0 18px hsla(var(--primary), 0.6);
+}

@@ -1,14 +1,14 @@
 
 import type { Metadata } from 'next';
-import { Montserrat } from 'next/font/google'; // Changed from Inter to Montserrat
+import { Montserrat } from 'next/font/google'; // Ensured Montserrat is used
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 
-const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' }); // Initialized Montserrat
+const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
 
 export const metadata: Metadata = {
-  title: 'AquaTrack Mobile',
+  title: 'AquaTrack', // Changed from AquaTrack Mobile
   description: 'Tubewell Water Supply Management App',
 };
 
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${montserrat.variable} font-sans antialiased`}> {/* Used Montserrat variable */}
+      <body className={`${montserrat.variable} font-sans antialiased`}>
         <AuthProvider>
           {children}
           <Toaster />
