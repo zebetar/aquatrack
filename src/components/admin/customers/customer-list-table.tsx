@@ -13,17 +13,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { Download, Loader2, Trash2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { DeleteCustomerDialog } from './delete-customer-dialog'; // Import the dialog
+// import { DeleteCustomerDialog } from './delete-customer-dialog'; // No longer needed if delete button is removed
 
 interface CustomerListTableProps {
   customers: Customer[];
-  onCustomerDeleted: (customerId: string) => void; // Callback for when a customer is deleted
-  deletingCustomerId: string | null; // To show loading on specific delete button
+  onCustomerDeleted: (customerId: string) => void; 
+  deletingCustomerId: string | null; 
 }
 
 export function CustomerListTable({ customers, onCustomerDeleted, deletingCustomerId }: CustomerListTableProps) {
@@ -58,14 +58,6 @@ export function CustomerListTable({ customers, onCustomerDeleted, deletingCustom
     router.push(`/admin/customers/${customerId}`);
   };
 
-  const handleDelete = (e: React.MouseEvent, customerId: string) => {
-    e.stopPropagation(); // Prevent row click
-    // The actual delete logic will be triggered by the dialog's onConfirm
-    // The parent (AdminCustomersPage) will handle opening the dialog
-    // Here, we just need to inform the parent that a delete action was initiated
-    // Or, the dialog trigger can be directly here.
-  };
-
   return (
     <div className="rounded-lg border bg-card shadow-sm">
       <Table>
@@ -76,13 +68,13 @@ export function CustomerListTable({ customers, onCustomerDeleted, deletingCustom
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-center">PDF</TableHead>
-            <TableHead className="text-right">Actions</TableHead> 
+            {/* <TableHead className="text-right">Actions</TableHead>  Removed Actions column header */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {customers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={5} className="h-24 text-center"> {/* Adjusted colSpan */}
                 No customers found.
               </TableCell>
             </TableRow>
@@ -116,24 +108,7 @@ export function CustomerListTable({ customers, onCustomerDeleted, deletingCustom
                   )}
                 </Button>
               </TableCell>
-              <TableCell className="text-right">
-                <DeleteCustomerDialog 
-                  customer={customer} 
-                  onDeleteConfirm={onCustomerDeleted}
-                  isDeleting={deletingCustomerId === customer.id}
-                  triggerButton={
-                     <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        title="Delete Customer"
-                        onClick={(e) => e.stopPropagation()} // Prevent row click when opening dialog
-                        disabled={deletingCustomerId === customer.id}
-                      >
-                        {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                      </Button>
-                  }
-                />
-              </TableCell>
+              {/* Removed TableCell for DeleteCustomerDialog */}
             </TableRow>
           ))}
         </TableBody>
