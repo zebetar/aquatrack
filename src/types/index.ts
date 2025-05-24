@@ -6,6 +6,7 @@ export interface User {
   name?: string;
   customerId?: string; // For viewers, linking to their customer profile
   fcmToken?: string;
+  avatarUrl?: string; // Added for custom avatar
 }
 
 export interface Customer {

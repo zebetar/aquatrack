@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,12 +30,15 @@ export function UserNav() {
     return names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase();
   };
 
+  const avatarSrc = user.avatarUrl || `https://placehold.co/100x100.png?text=${getInitials(user.name)}`;
+  const avatarHint = user.avatarUrl ? "custom avatar" : "avatar person";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
-            <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name || "User"} data-ai-hint="avatar person" />
+            <AvatarImage src={avatarSrc} alt={user.name || "User"} data-ai-hint={avatarHint} />
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
         </Button>
@@ -51,7 +55,7 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={user.role === 'admin' ? "/admin/settings" : "/viewer/profile"}> {/* Placeholder links */}
+            <Link href={user.role === 'admin' ? "/admin/settings" : "/viewer/profile"}>
               <UserIcon className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </Link>

@@ -10,7 +10,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, User } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, Image as ImageIcon } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
 
-// Schemas for admin (though functionality is mocked for email/password)
 const adminChangeNameSchema = z.object({
   newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
 });
@@ -45,10 +44,15 @@ const adminChangePasswordSchema = z.object({
 });
 type AdminChangePasswordFormValues = z.infer<typeof adminChangePasswordSchema>;
 
+const avatarFormSchema = z.object({
+  avatarUrl: z.string().url({ message: "Please enter a valid URL for the avatar image." }).or(z.literal('')),
+});
+type AvatarFormValues = z.infer<typeof avatarFormSchema>;
+
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
-  const { user, updateAdminName } = useAuth(); 
+  const { user, updateAdminName, updateUserAvatarUrl } = useAuth(); 
   const [currentRate, setCurrentRate] = useState(CORE_WATER_RATE_PER_HOUR);
   const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
   const [isSavingRate, setIsSavingRate] = useState(false);
@@ -64,6 +68,7 @@ export default function AdminSettingsPage() {
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingEmail, setIsSavingEmail] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
 
   useEffect(() => {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
@@ -73,7 +78,7 @@ export default function AdminSettingsPage() {
   const adminNameForm = useForm<AdminChangeNameFormValues>({
     resolver: zodResolver(adminChangeNameSchema),
     defaultValues: { newAdminName: user?.name || "" },
-    values: { newAdminName: user?.name || "" } // Keep form in sync if user.name changes
+    values: { newAdminName: user?.name || "" } 
   });
   
   useEffect(() => {
@@ -93,6 +98,16 @@ export default function AdminSettingsPage() {
     defaultValues: { currentAdminPassword: "", newAdminPassword: "", confirmAdminPassword: "" },
   });
 
+  const adminAvatarForm = useForm<AvatarFormValues>({
+    resolver: zodResolver(avatarFormSchema),
+    defaultValues: { avatarUrl: user?.avatarUrl || "" },
+  });
+
+  useEffect(() => {
+    if (user) {
+      adminAvatarForm.reset({ avatarUrl: user.avatarUrl || "" });
+    }
+  }, [user, adminAvatarForm]);
 
   const handleSaveWaterRate = async () => {
     setIsSavingRate(true);
@@ -124,14 +139,13 @@ export default function AdminSettingsPage() {
     setIsSavingName(true);
     await new Promise(resolve => setTimeout(resolve, 500));
     updateAdminName(values.newAdminName);
-    // Toast is handled by updateAdminName function in AuthContext
     setIsSavingName(false);
   };
 
   const handleAdminEmailChange = async (values: AdminChangeEmailFormValues) => {
     setIsSavingEmail(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    toast({ title: "Mock Action", description: `Email change to ${values.newAdminEmail} simulated (not implemented).` });
+    toast({ title: "Mock Action", description: `Admin email change to ${values.newAdminEmail} simulated (not implemented).` });
     adminEmailForm.reset();
     setIsSavingEmail(false);
   };
@@ -139,9 +153,16 @@ export default function AdminSettingsPage() {
   const handleAdminPasswordChange = async (values: AdminChangePasswordFormValues) => {
     setIsSavingPassword(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    toast({ title: "Mock Action", description: "Password change simulated (not implemented)." });
+    toast({ title: "Mock Action", description: "Admin password change simulated (not implemented)." });
     adminPasswordForm.reset();
     setIsSavingPassword(false);
+  };
+
+  const handleAdminAvatarChange = async (values: AvatarFormValues) => {
+    setIsSavingAvatar(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    updateUserAvatarUrl(values.avatarUrl);
+    setIsSavingAvatar(false);
   };
 
   const handleToggleTheme = () => {
@@ -295,6 +316,34 @@ export default function AdminSettingsPage() {
                       <Button type="submit" disabled={isSavingName}>
                         {isSavingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Name
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+
+                <Separator className="my-6 bg-border/50"/>
+
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Change Admin Avatar</h4>
+                  <Form {...adminAvatarForm}>
+                    <form onSubmit={adminAvatarForm.handleSubmit(handleAdminAvatarChange)} className="space-y-4">
+                      <FormField
+                        control={adminAvatarForm.control}
+                        name="avatarUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Avatar Image URL</FormLabel>
+                            <FormControl>
+                              <Input type="url" placeholder="https://example.com/avatar.png" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={isSavingAvatar}>
+                        {isSavingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <ImageIcon className="mr-2 h-4 w-4" />
+                        Save Avatar
                       </Button>
                     </form>
                   </Form>

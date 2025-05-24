@@ -13,12 +13,13 @@ interface AuthContextType {
   login: (email: string, password: string, role: 'admin' | 'viewer') => Promise<void>;
   logout: () => void;
   updateUserEmail: (newEmail: string) => void;
-  updateAdminName: (newName: string) => void; // Added for admin name change
+  updateAdminName: (newName: string) => void;
+  updateUserAvatarUrl: (newUrl: string) => void; // Added for avatar
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MOCK_ADMIN_USER: User = { id: 'admin001', email: 'admin@aquatrack.com', role: 'admin', name: 'Admin User' };
+const MOCK_ADMIN_USER_BASE: Omit<User, 'id' | 'role'> = { email: 'admin@aquatrack.com', name: 'Admin User' };
 const MOCK_ADMIN_PASSWORD = "adminpassword";
 export const MOCK_VIEWER_PASSWORD = "viewerpassword";
 
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isAuthPage) {
         router.push(user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard');
       }
+      // Ensure correct dashboard for role if already logged in and trying to access wrong section
       if (user.role === 'admin' && pathname.startsWith('/viewer')) {
         router.push('/admin/dashboard');
       } else if (user.role === 'viewer' && pathname.startsWith('/admin')) {
@@ -80,17 +82,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await delay(500);
 
     let loggedInUser: User | null = null;
-    const processedEmail = email.trim().toLowerCase();
+    // Email is already processed (trimmed, lowercased) by Zod schema in LoginForm
+    const processedEmail = email;
 
-    if (role === 'admin' && processedEmail === MOCK_ADMIN_USER.email && password === MOCK_ADMIN_PASSWORD) {
-      // Use a copy of MOCK_ADMIN_USER to allow for name changes in session
-      loggedInUser = { ...MOCK_ADMIN_USER };
+    if (role === 'admin' && processedEmail === MOCK_ADMIN_USER_BASE.email && password === MOCK_ADMIN_PASSWORD) {
+      // Check if admin user is already in localStorage to retain name/avatar changes
+      const storedAdminUser = localStorage.getItem('authUser');
+      let adminData = { ...MOCK_ADMIN_USER_BASE, id: 'admin001', role: 'admin' as const };
+      if (storedAdminUser) {
+        try {
+          const parsedUser: User = JSON.parse(storedAdminUser);
+          if(parsedUser.id === 'admin001') {
+            adminData = { ...adminData, name: parsedUser.name, avatarUrl: parsedUser.avatarUrl };
+          }
+        } catch { /* ignore parsing error, use defaults */ }
+      }
+      loggedInUser = adminData;
     } else if (role === 'viewer') {
       const customers = getAllMockCustomers();
       const foundCustomer = customers.find(
         (c: Customer) =>
           c.email?.trim().toLowerCase() === processedEmail &&
-          c.authUID 
+          c.authUID
       );
 
       if (foundCustomer && password === MOCK_VIEWER_PASSWORD) {
@@ -100,7 +113,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: 'viewer',
           name: foundCustomer.name,
           customerId: foundCustomer.id,
+          // avatarUrl will be loaded from localStorage if previously set for this viewer
         };
+        // Attempt to load existing viewer data from localStorage to retain avatarUrl
+        const storedViewerData = localStorage.getItem('authUser');
+        if (storedViewerData) {
+          try {
+            const parsedUser: User = JSON.parse(storedViewerData);
+            if (parsedUser.id === loggedInUser.id) {
+              loggedInUser.avatarUrl = parsedUser.avatarUrl;
+            }
+          } catch { /* ignore */ }
+        }
+
       }
     }
 
@@ -116,6 +141,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    // Note: We could choose to clear the entire localStorage here,
+    // or just the authUser key. For now, just authUser.
     localStorage.removeItem('authUser');
     router.push('/login');
   };
@@ -126,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = { ...user, email: processedNewEmail };
       setUser(updatedUser);
       localStorage.setItem('authUser', JSON.stringify(updatedUser));
-      updateCustomerEmailInStore(user.customerId, processedNewEmail);
+      updateCustomerEmailInStore(user.customerId, processedNewEmail); // This updates the mock-data-store
     }
   };
 
@@ -144,9 +171,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserAvatarUrl = (newUrl: string) => {
+    if (user) {
+      const trimmedUrl = newUrl.trim();
+      const updatedUser = { ...user, avatarUrl: trimmedUrl === '' ? undefined : trimmedUrl };
+      setUser(updatedUser);
+      localStorage.setItem('authUser', JSON.stringify(updatedUser));
+      toast({ title: "Avatar Updated", description: "Your profile picture has been updated." });
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUserEmail, updateAdminName }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUserEmail, updateAdminName, updateUserAvatarUrl }}>
       {children}
     </AuthContext.Provider>
   );

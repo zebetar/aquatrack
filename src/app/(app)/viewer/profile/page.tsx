@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useAuth, MOCK_VIEWER_PASSWORD } from '@/contexts/auth-context'; // Import MOCK_VIEWER_PASSWORD
+import { useAuth, MOCK_VIEWER_PASSWORD } from '@/contexts/auth-context';
 import { updateCustomerEmail } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { Loader2, Eye, EyeOff, Image as ImageIcon } from 'lucide-react'; // Added ImageIcon
+import { useState, useEffect } from 'react';
 
 const changeEmailSchema = z.object({
   newEmail: z.string().email({ message: "Please enter a valid email address." }),
@@ -31,12 +31,18 @@ const changePasswordSchema = z.object({
 });
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
+const avatarFormSchema = z.object({
+  avatarUrl: z.string().url({ message: "Please enter a valid URL for the avatar image." }).or(z.literal('')),
+});
+type AvatarFormValues = z.infer<typeof avatarFormSchema>;
+
 
 export default function ViewerProfilePage() {
-  const { user, loading, updateUserEmail: updateUserEmailInAuth } = useAuth();
+  const { user, loading, updateUserEmail: updateUserEmailInAuth, updateUserAvatarUrl } = useAuth();
   const { toast } = useToast();
   const [isEmailSaving, setIsEmailSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [isAvatarSaving, setIsAvatarSaving] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -50,6 +56,18 @@ export default function ViewerProfilePage() {
     resolver: zodResolver(changePasswordSchema),
     defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
   });
+  
+  const avatarForm = useForm<AvatarFormValues>({
+    resolver: zodResolver(avatarFormSchema),
+    defaultValues: { avatarUrl: user?.avatarUrl || "" },
+  });
+
+  useEffect(() => {
+    if (user) {
+      avatarForm.reset({ avatarUrl: user.avatarUrl || "" });
+    }
+  }, [user, avatarForm]);
+
 
   if (loading) {
     return (
@@ -66,20 +84,19 @@ export default function ViewerProfilePage() {
   const handleEmailChange = async (values: ChangeEmailFormValues) => {
     if (!user || !user.customerId) return;
     setIsEmailSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 700)); // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 700)); 
 
-    // Mock update
-    updateUserEmailInAuth(values.newEmail); // Updates AuthContext and localStorage
-    updateCustomerEmail(user.customerId, values.newEmail); // Updates mock-data-store
+    updateUserEmailInAuth(values.newEmail); 
+    // updateCustomerEmail(user.customerId, values.newEmail); // This is now handled within updateUserEmailInAuth or should be if broader store update needed
 
-    toast({ title: "Email Updated (Mock)", description: `Your email has been updated to ${values.newEmail} for this session.` });
+    toast({ title: "Email Updated", description: `Your email has been updated to ${values.newEmail}.` });
     emailForm.reset();
     setIsEmailSaving(false);
   };
 
   const handlePasswordChange = async (values: ChangePasswordFormValues) => {
     setIsPasswordSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 700)); // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 700)); 
 
     if (values.currentPassword === MOCK_VIEWER_PASSWORD) {
       toast({ title: "Password Changed (Mock)", description: "Your password has been successfully updated (simulated)." });
@@ -90,6 +107,14 @@ export default function ViewerProfilePage() {
     setIsPasswordSaving(false);
   };
   
+  const handleAvatarChange = async (values: AvatarFormValues) => {
+    setIsAvatarSaving(true);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    updateUserAvatarUrl(values.avatarUrl);
+    // toast is handled by updateUserAvatarUrl
+    setIsAvatarSaving(false);
+  };
+
   const PasswordVisibilityToggle = ({ isVisible, toggle }: { isVisible: boolean, toggle: () => void }) => (
     <Button
       type="button"
@@ -132,6 +157,37 @@ export default function ViewerProfilePage() {
 
         <Card className="shadow-md">
           <CardHeader>
+            <CardTitle>Change Avatar</CardTitle>
+            <CardDescription>Update your profile picture by providing an image URL.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...avatarForm}>
+              <form onSubmit={avatarForm.handleSubmit(handleAvatarChange)} className="space-y-4">
+                <FormField
+                  control={avatarForm.control}
+                  name="avatarUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image URL</FormLabel>
+                      <FormControl>
+                        <Input type="url" placeholder="https://example.com/image.png" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isAvatarSaving}>
+                  {isAvatarSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  Save Avatar
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-md">
+          <CardHeader>
             <CardTitle>Change Email</CardTitle>
             <CardDescription>Update the email address associated with your account.</CardDescription>
           </CardHeader>
@@ -160,7 +216,7 @@ export default function ViewerProfilePage() {
           </CardContent>
         </Card>
         
-        <Card className="shadow-md lg:col-span-2">
+        <Card className="shadow-md">
           <CardHeader>
             <CardTitle>Change Password</CardTitle>
             <CardDescription>Update your login password.</CardDescription>
