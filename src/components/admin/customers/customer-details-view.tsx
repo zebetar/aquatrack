@@ -17,12 +17,39 @@ interface CustomerDetailsViewProps {
   usageRecords: WaterUsageRecord[];
   payments: Payment[];
   isEditing: boolean;
-  editedCustomerData: Partial<Customer>; // Or Customer if all fields are always present
+  editedCustomerData: Partial<Customer>;
   onFieldChange: (field: keyof Customer, value: string) => void;
   onToggleEdit: () => void;
   onSaveChanges: () => void;
   onCancelChanges: () => void;
 }
+
+const DetailItem = ({ label, value, isEditing = false, id, field, editedValue, onChange, inputType = "text" }: {
+  label: string;
+  value?: string | number | null;
+  isEditing?: boolean;
+  id?: string;
+  field?: keyof Customer;
+  editedValue?: string;
+  onChange?: (value: string) => void;
+  inputType?: string;
+}) => (
+  <div className="space-y-1">
+    <Label htmlFor={id} className="text-sm font-medium text-muted-foreground">{label}</Label>
+    {isEditing && id && field && onChange ? (
+      <Input
+        id={id}
+        type={inputType}
+        value={editedValue || ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="text-base"
+      />
+    ) : (
+      <p className="text-base font-medium">{value || 'N/A'}</p>
+    )}
+  </div>
+);
+
 
 export function CustomerDetailsView({ 
   customer, 
@@ -55,51 +82,48 @@ export function CustomerDetailsView({
             </div>
           )}
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          {isEditing ? (
-            <>
-              <div className="space-y-1">
-                <Label htmlFor="customerName">Name</Label>
-                <Input 
-                  id="customerName" 
-                  value={editedCustomerData.name || ''} 
-                  onChange={(e) => onFieldChange('name', e.target.value)} 
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="customerContact">Contact Info</Label>
-                <Input 
-                  id="customerContact" 
-                  value={editedCustomerData.contactInfo || ''} 
-                  onChange={(e) => onFieldChange('contactInfo', e.target.value)} 
-                />
-              </div>
-               <div className="space-y-1">
-                <Label htmlFor="customerEmail">Email (for Viewer Login)</Label>
-                <Input 
-                  id="customerEmail" 
-                  type="email"
-                  value={editedCustomerData.email || ''} 
-                  onChange={(e) => onFieldChange('email', e.target.value)} 
-                />
-              </div>
-              <div>
-                <span className="font-semibold text-sm">Joined:</span> {format(new Date(customer.createdAt), 'PPP')}
-              </div>
-              <div>
-                <span className="font-semibold text-sm">Current Balance:</span> PKR {customer.balance.toLocaleString('en-US')}
-              </div>
-              {customer.authUID && <div><span className="font-semibold text-sm">Linked Auth UID:</span> {customer.authUID}</div>}
-            </>
-          ) : (
-            <>
-              <div><span className="font-semibold">Name:</span> {customer.name}</div>
-              <div><span className="font-semibold">Contact:</span> {customer.contactInfo || 'N/A'}</div>
-              <div><span className="font-semibold">Email:</span> {customer.email || 'N/A'}</div>
-              <div><span className="font-semibold">Joined:</span> {format(new Date(customer.createdAt), 'PPP')}</div>
-              <div><span className="font-semibold">Current Balance:</span> PKR {customer.balance.toLocaleString('en-US')}</div>
-              {customer.authUID && <div><span className="font-semibold">Linked Auth UID:</span> {customer.authUID}</div>}
-            </>
+        <CardContent className="space-y-4">
+          <DetailItem
+            label="Name"
+            value={customer.name}
+            isEditing={isEditing}
+            id="customerName"
+            field="name"
+            editedValue={editedCustomerData.name}
+            onChange={(value) => onFieldChange('name', value)}
+          />
+          <DetailItem
+            label="Contact Info (Phone/Address)"
+            value={customer.contactInfo}
+            isEditing={isEditing}
+            id="customerContact"
+            field="contactInfo"
+            editedValue={editedCustomerData.contactInfo}
+            onChange={(value) => onFieldChange('contactInfo', value)}
+          />
+          <DetailItem
+            label="Email (for Viewer Login)"
+            value={customer.email}
+            isEditing={isEditing}
+            id="customerEmail"
+            field="email"
+            editedValue={editedCustomerData.email}
+            onChange={(value) => onFieldChange('email', value)}
+            inputType="email"
+          />
+          <DetailItem
+            label="Joined On"
+            value={format(new Date(customer.createdAt), 'PPP')}
+          />
+          <DetailItem
+            label="Current Balance"
+            value={`PKR ${customer.balance.toLocaleString('en-US')}`}
+          />
+          {customer.authUID && (
+            <DetailItem
+              label="Linked Auth UID"
+              value={customer.authUID}
+            />
           )}
         </CardContent>
       </Card>
@@ -159,7 +183,6 @@ export function CustomerDetailsView({
                   <TableRow><TableCell colSpan={3} className="text-center h-24">No payment records found.</TableCell></TableRow>
                 )}
                 {payments.map(payment => (
-                  // Ensure no extraneous whitespace between TableCell components within TableRow
                   <TableRow key={payment.id}
                     ><TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell
                     ><TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell
