@@ -61,7 +61,7 @@ export function addMockPayment(payment: Payment): void {
 
 export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
   return store.payments
-    .filter(p => p.customerId === payment.customerId)
+    .filter(p => p.customerId === customerId) // Corrected line: payment.customerId to customerId
     .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
 }
 
@@ -87,3 +87,4 @@ export const addMockCustomerLogged = (customer: Customer) => {
   logStore(`addMockCustomer: ${customer.id}`);
 };
 // Similar wrappers for other add functions if needed for debugging.
+
