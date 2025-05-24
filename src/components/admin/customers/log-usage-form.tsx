@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, differenceInMinutes, set, parse } from "date-fns";
+import { format, differenceInMinutes, set, parse, addDays } from "date-fns"; // Added addDays
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import type { Customer, WaterUsageRecord } from "@/types";
@@ -29,25 +29,27 @@ const logUsageFormSchema = z.object({
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)"),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)"),
 }).refine(data => {
-  // Ensure startTime and endTime strings are valid before attempting to parse and compare.
-  // Field-level regex should catch basic format errors. This refine focuses on cross-field logic.
   const [startH, startM] = data.startTime.split(':').map(Number);
   const [endH, endM] = data.endTime.split(':').map(Number);
 
-  // Use the date from the form for constructing full Date objects
-  const baseDate = data.date; 
-
-  const startDateTime = set(baseDate, { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
-  const endDateTime = set(baseDate, { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
-  
-  // Check if date constructions are valid
-  if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-    return false; // If dates are invalid (e.g. due to bad H/M numbers if regex was bypassed), refinement fails.
+  let effectiveEndDate = new Date(data.date);
+  // If end time string suggests it's on the next day compared to start time string
+  if (endH < startH || (endH === startH && endM <= startM)) { // endM <= startM to catch same time on next day
+    effectiveEndDate = addDays(effectiveEndDate, 1);
   }
 
-  return endDateTime > startDateTime;
+  const startDateTime = set(data.date, { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
+  const endDateTime = set(effectiveEndDate, { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+  
+  if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+    return false; // Invalid date construction
+  }
+
+  const diffMinutes = differenceInMinutes(endDateTime, startDateTime);
+  // Ensure duration is positive and not excessively long (e.g., max 24 hours for a single entry)
+  return diffMinutes > 0 && diffMinutes <= 24 * 60; 
 }, {
-  message: "End time must be after start time.",
+  message: "End time must be after start time. Max duration 24 hours.",
   path: ["endTime"], // Error reported on endTime field
 });
 
@@ -72,31 +74,38 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     mode: "onChange", 
   });
 
-  const { getValues, watch, formState } = form; // Added formState
+  const { getValues, watch, formState } = form;
   const watchedValues = watch(); 
 
   const calculatedMetrics = useMemo(() => {
-    const parseResult = logUsageFormSchema.safeParse(watchedValues);
+    const currentValues = getValues(); // Get current form values
+    const parseResult = logUsageFormSchema.safeParse(currentValues);
 
-    if (!parseResult.success || !watchedValues.date || !watchedValues.startTime || !watchedValues.endTime) {
+    if (!parseResult.success || !currentValues.date || !currentValues.startTime || !currentValues.endTime) {
       return { durationHours: 0, cost: 0 };
     }
     
-    const [startH, startM] = watchedValues.startTime.split(':').map(Number);
-    const [endH, endM] = watchedValues.endTime.split(':').map(Number);
+    const { date, startTime: startTimeStr, endTime: endTimeStr } = currentValues;
+    const [startH, startM] = startTimeStr.split(':').map(Number);
+    const [endH, endM] = endTimeStr.split(':').map(Number);
 
-    const actualStartTime = set(new Date(watchedValues.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
-    const actualEndTime = set(new Date(watchedValues.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+    const actualStartTime = set(new Date(date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
+    let actualEndTime = set(new Date(date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
     
-    if (actualEndTime <= actualStartTime || isNaN(actualStartTime.getTime()) || isNaN(actualEndTime.getTime())) {
-      return { durationHours: 0, cost: 0 };
+    // Adjust for overnight usage: if end time is earlier or same on the selected date, assume it's the next day
+    if (actualEndTime <= actualStartTime) { 
+      actualEndTime = addDays(actualEndTime, 1);
+    }
+    
+    if (isNaN(actualStartTime.getTime()) || isNaN(actualEndTime.getTime()) || actualEndTime <= actualStartTime) {
+      return { durationHours: 0, cost: 0 }; // Recalculate validity check
     }
 
     const durationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
     const durationHours = durationMinutes / 60;
     const cost = durationHours * CORE_WATER_RATE_PER_HOUR;
     return { durationHours, cost };
-  }, [watchedValues]); 
+  }, [watchedValues, getValues]); // Depend on watchedValues to re-trigger calculation
 
   const { durationHours, cost } = calculatedMetrics;
   
@@ -105,11 +114,14 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
   async function onSubmit(values: LogUsageFormValues) {
     setIsLoading(true);
     
-    // Re-calculate using validated values for safety, although schema validation should ensure correctness.
     const [startH, startM] = values.startTime.split(':').map(Number);
     const [endH, endM] = values.endTime.split(':').map(Number);
     const actualStartTime = set(new Date(values.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
-    const actualEndTime = set(new Date(values.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+    let actualEndTime = set(new Date(values.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+
+    if (actualEndTime <= actualStartTime) {
+      actualEndTime = addDays(actualEndTime, 1);
+    }
     
     const finalDurationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
     const finalDurationHours = finalDurationMinutes / 60;
@@ -119,7 +131,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
       id: `usage-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
       customerId: customer.id,
       customerName: customer.name,
-      date: values.date, 
+      date: values.date, // This is the start date of the usage
       startTime: actualStartTime, 
       endTime: actualEndTime,  
       durationHours: finalDurationHours,
@@ -151,7 +163,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
+              <FormLabel>Date (Start Date of Usage)</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -229,3 +241,5 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     </Form>
   );
 }
+
+    
