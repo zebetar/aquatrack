@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import { 
   getMockCustomerById, 
   getMockUsageRecordsByCustomerId, 
@@ -45,19 +46,23 @@ async function getPaymentsFromStore(customerId: string): Promise<Payment[]> {
 }
 
 
-export default function CustomerDetailPage({ params }: { params: { customerId: string } }) {
+export default function CustomerDetailPage() {
+  const routeParams = useParams<{ customerId: string }>();
+  const customerId = routeParams.customerId;
+
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCustomerData = useCallback(async () => {
+    if (!customerId) return; // Guard clause if customerId is not available
     setIsLoading(true);
     try {
       const [custData, usageData, paymentData] = await Promise.all([
-        getCustomerDetailsFromStore(params.customerId),
-        getWaterUsageFromStore(params.customerId),
-        getPaymentsFromStore(params.customerId)
+        getCustomerDetailsFromStore(customerId),
+        getWaterUsageFromStore(customerId),
+        getPaymentsFromStore(customerId)
       ]);
       setCustomer(custData);
       setUsageRecords(usageData);
@@ -67,26 +72,28 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
     } finally {
       setIsLoading(false);
     }
-  }, [params.customerId]);
+  }, [customerId]);
 
   useEffect(() => {
     fetchCustomerData();
   }, [fetchCustomerData]);
 
   const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
+    if (!customerId) return;
     addMockUsageRecord(newRecord); // Adds to store & updates customer balance in store
     // Refresh data from store for this page
-    const updatedCustomer = getMockCustomerById(params.customerId);
-    const updatedUsageRecords = getMockUsageRecordsByCustomerId(params.customerId);
+    const updatedCustomer = getMockCustomerById(customerId);
+    const updatedUsageRecords = getMockUsageRecordsByCustomerId(customerId);
     if (updatedCustomer) setCustomer(updatedCustomer);
     setUsageRecords(updatedUsageRecords);
   };
 
   const handleAddPaymentRecord = (newPayment: Payment) => {
+    if (!customerId) return;
     addMockPayment(newPayment); // Adds to store & updates customer balance in store
     // Refresh data from store for this page
-    const updatedCustomer = getMockCustomerById(params.customerId);
-    const updatedPayments = getMockPaymentsByCustomerId(params.customerId);
+    const updatedCustomer = getMockCustomerById(customerId);
+    const updatedPayments = getMockPaymentsByCustomerId(customerId);
     if (updatedCustomer) setCustomer(updatedCustomer);
     setPayments(updatedPayments);
   };
