@@ -62,7 +62,6 @@ export default function AdminCustomersPage() {
     <>
       <PageHeader 
         title="Customer Management" 
-        description="View, add, and manage customer details."
         actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
       />
       {isLoading && customers.length > 0 && ( 
