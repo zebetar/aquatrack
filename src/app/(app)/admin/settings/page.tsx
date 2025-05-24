@@ -10,7 +10,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users, ChevronsUpDown, KeyRound } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users, KeyRound } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -237,7 +237,7 @@ export default function AdminSettingsPage() {
                <AccordionTrigger className="p-0 hover:no-underline">
                 <div className="flex items-center gap-2">
                   <KeyRound className="h-5 w-5" />
-                  <CardTitle>Admin Account: Change Email & Password</CardTitle>
+                  <CardTitle>Edit Account</CardTitle>
                 </div>
               </AccordionTrigger>
             </CardHeader>
