@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
@@ -84,11 +85,12 @@ export function CustomerDetailsView({ customer, usageRecords, payments }: Custom
                   <TableRow><TableCell colSpan={3} className="text-center h-24">No payment records found.</TableCell></TableRow>
                 )}
                 {payments.map(payment => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
-                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                    <TableCell>{payment.recordedBy === 'admin001' ? "Admin" : payment.recordedBy}</TableCell> {/* Placeholder for recorder name */}
-                  </TableRow>
+                  // Ensure no extraneous whitespace between TableCell components within TableRow
+                  <TableRow key={payment.id}
+                    ><TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell
+                    ><TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell
+                    ><TableCell>{payment.recordedBy === 'admin001' ? "Admin" : payment.recordedBy}</TableCell
+                  ></TableRow>
                 ))}
               </TableBody>
             </Table>
