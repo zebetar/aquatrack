@@ -64,7 +64,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
             <TableHead>Contact Info</TableHead>
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right">PDF</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -90,7 +90,6 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
                 </Badge>
               </TableCell>
               <TableCell className="text-right space-x-1">
-                {/* Removed Eye icon Button */}
                 <Button
                   variant="ghost"
                   size="icon"
