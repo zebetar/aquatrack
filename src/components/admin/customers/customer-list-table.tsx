@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Eye, Download, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+// import { format } from 'date-fns'; // No longer needed for 'Joined On'
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
@@ -57,7 +57,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Contact Info</TableHead>
-            <TableHead>Joined On</TableHead>
+            {/* <TableHead>Joined On</TableHead> -- Removed */}
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -66,7 +66,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
         <TableBody>
           {customers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={5} className="h-24 text-center"> {/* Adjusted colSpan from 6 to 5 */}
                 No customers found.
               </TableCell>
             </TableRow>
@@ -75,7 +75,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
             <TableRow key={customer.id}>
               <TableCell className="font-medium">{customer.name}</TableCell>
               <TableCell>{customer.contactInfo || '-'}</TableCell>
-              <TableCell>{format(new Date(customer.createdAt), 'PP')}</TableCell>
+              {/* <TableCell>{format(new Date(customer.createdAt), 'PP')}</TableCell> -- Removed */}
               <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
               <TableCell className="text-center">
                 <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
@@ -88,9 +88,9 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
                     <Eye className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   title="Download Statement PDF"
                   onClick={() => handleDownloadPdf(customer)}
                   disabled={generatingPdfId === customer.id}
