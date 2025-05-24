@@ -12,24 +12,27 @@ import {
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation'; // Import useRouter
-import { Download, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Download, Loader2, Trash2 } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { DeleteCustomerDialog } from './delete-customer-dialog'; // Import the dialog
 
 interface CustomerListTableProps {
   customers: Customer[];
+  onCustomerDeleted: (customerId: string) => void; // Callback for when a customer is deleted
+  deletingCustomerId: string | null; // To show loading on specific delete button
 }
 
-export function CustomerListTable({ customers }: CustomerListTableProps) {
+export function CustomerListTable({ customers, onCustomerDeleted, deletingCustomerId }: CustomerListTableProps) {
   const { toast } = useToast();
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
 
   const handleDownloadPdf = async (e: React.MouseEvent, customer: Customer) => {
-    e.stopPropagation(); // Prevent row click when clicking download button
+    e.stopPropagation(); 
     setGeneratingPdfId(customer.id);
     try {
       const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
@@ -55,6 +58,14 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
     router.push(`/admin/customers/${customerId}`);
   };
 
+  const handleDelete = (e: React.MouseEvent, customerId: string) => {
+    e.stopPropagation(); // Prevent row click
+    // The actual delete logic will be triggered by the dialog's onConfirm
+    // The parent (AdminCustomersPage) will handle opening the dialog
+    // Here, we just need to inform the parent that a delete action was initiated
+    // Or, the dialog trigger can be directly here.
+  };
+
   return (
     <div className="rounded-lg border bg-card shadow-sm">
       <Table>
@@ -64,13 +75,14 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
             <TableHead>Contact Info</TableHead>
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
-            <TableHead className="text-right">PDF</TableHead>
+            <TableHead className="text-center">PDF</TableHead>
+            <TableHead className="text-right">Actions</TableHead> 
           </TableRow>
         </TableHeader>
         <TableBody>
           {customers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <TableCell colSpan={6} className="h-24 text-center">
                 No customers found.
               </TableCell>
             </TableRow>
@@ -79,7 +91,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
             <TableRow 
               key={customer.id} 
               onClick={() => handleRowClick(customer.id)}
-              className="cursor-pointer hover:bg-muted/60" // Added cursor and adjusted hover
+              className="cursor-pointer hover:bg-muted/60"
             >
               <TableCell className="font-medium">{customer.name}</TableCell>
               <TableCell>{customer.contactInfo || '-'}</TableCell>
@@ -89,7 +101,7 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
                   {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right space-x-1">
+              <TableCell className="text-center">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -103,6 +115,24 @@ export function CustomerListTable({ customers }: CustomerListTableProps) {
                     <Download className="h-4 w-4" />
                   )}
                 </Button>
+              </TableCell>
+              <TableCell className="text-right">
+                <DeleteCustomerDialog 
+                  customer={customer} 
+                  onDeleteConfirm={onCustomerDeleted}
+                  isDeleting={deletingCustomerId === customer.id}
+                  triggerButton={
+                     <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        title="Delete Customer"
+                        onClick={(e) => e.stopPropagation()} // Prevent row click when opening dialog
+                        disabled={deletingCustomerId === customer.id}
+                      >
+                        {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                      </Button>
+                  }
+                />
               </TableCell>
             </TableRow>
           ))}

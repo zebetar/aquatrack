@@ -45,6 +45,8 @@ function loadStoreFromLocalStorage(): void {
         console.log("Mock data store loaded from localStorage.");
       } else {
         console.log("No mock data found in localStorage, initializing empty store.");
+        // Initialize with empty store if nothing is found
+        store = { customers: [], usageRecords: [], payments: [] };
       }
     } catch (error) {
       console.error("Error loading mock data store from localStorage:", error);
@@ -53,6 +55,7 @@ function loadStoreFromLocalStorage(): void {
   } else {
     // Fallback for environments where localStorage is not available (e.g., SSR pre-hydration)
     console.warn("localStorage not available, mock data store will be in-memory for this session.");
+    store = { customers: [], usageRecords: [], payments: [] };
   }
 }
 
@@ -61,7 +64,8 @@ function saveStoreToLocalStorage(): void {
     try {
       const serializedStore = JSON.stringify(store);
       localStorage.setItem(STORAGE_KEY, serializedStore);
-    } catch (error) {
+    } catch (error)
+      {
       console.error("Error saving mock data store to localStorage:", error);
     }
   }
@@ -113,6 +117,22 @@ export function updateCustomerEmail(customerId: string, newEmail: string): void 
     console.log(`Customer ${customerId} email updated in mock store to ${newEmail}`);
   } else {
     console.warn(`Attempted to update email for non-existent customer ID: ${customerId}`);
+  }
+}
+
+export function deleteMockCustomer(customerId: string): void {
+  const initialCustomerCount = store.customers.length;
+  store.customers = store.customers.filter(c => c.id !== customerId);
+  
+  if (store.customers.length < initialCustomerCount) {
+    // Also remove associated usage records and payments
+    store.usageRecords = store.usageRecords.filter(ur => ur.customerId !== customerId);
+    store.payments = store.payments.filter(p => p.customerId !== customerId);
+    
+    saveStoreToLocalStorage();
+    console.log(`Customer ${customerId} and associated data deleted from mock store.`);
+  } else {
+    console.warn(`Attempted to delete non-existent customer ID: ${customerId}`);
   }
 }
 
