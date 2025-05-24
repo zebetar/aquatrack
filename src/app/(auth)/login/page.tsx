@@ -10,7 +10,7 @@ export default function LoginPage() {
         <div className="mb-2 flex items-center justify-center rounded-full bg-primary p-3 text-primary-foreground">
           <Droplets className="h-10 w-10" />
         </div>
-        <CardTitle className="text-3xl font-bold">AquaTrack Mobile</CardTitle>
+        <CardTitle className="text-3xl font-bold">AquaTrack</CardTitle>
         <CardDescription>Sign in to manage your water supply</CardDescription>
       </CardHeader>
       <CardContent>
