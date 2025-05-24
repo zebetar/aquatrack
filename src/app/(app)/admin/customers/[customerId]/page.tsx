@@ -7,6 +7,7 @@ import { CustomerDetailsView } from '@/components/admin/customers/customer-detai
 import { LogUsageDialog } from '@/components/admin/customers/log-usage-dialog';
 import { RecordPaymentDialog } from '@/components/admin/customers/record-payment-dialog';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
@@ -16,32 +17,21 @@ import {
   getMockUsageRecordsByCustomerId, 
   getMockPaymentsByCustomerId,
   addMockUsageRecord,
-  addMockPayment
+  addMockPayment,
+  updateMockCustomer
 } from '@/lib/mock-data-store';
-
-// Placeholder data fetching functions using the store
-async function getCustomerDetailsFromStore(customerId: string): Promise<Customer | null> {
-  const customer = getMockCustomerById(customerId);
-  return customer || null; 
-}
-
-async function getWaterUsageFromStore(customerId: string): Promise<WaterUsageRecord[]> {
-  return getMockUsageRecordsByCustomerId(customerId);
-}
-
-async function getPaymentsFromStore(customerId: string): Promise<Payment[]> {
-  return getMockPaymentsByCustomerId(customerId);
-}
-
 
 export default function CustomerDetailPage() {
   const routeParams = useParams<{ customerId: string }>();
   const customerId = routeParams.customerId;
+  const { toast } = useToast();
 
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCustomerData, setEditedCustomerData] = useState<Partial<Customer>>({});
 
   const fetchCustomerData = useCallback(async () => {
     if (!customerId) {
@@ -50,30 +40,41 @@ export default function CustomerDetailPage() {
     }
     setIsLoading(true);
     try {
-      const [custData, usageData, paymentData] = await Promise.all([
-        getCustomerDetailsFromStore(customerId),
-        getWaterUsageFromStore(customerId),
-        getPaymentsFromStore(customerId)
-      ]);
-      setCustomer(custData);
+      // Simulate async fetch
+      await new Promise(resolve => setTimeout(resolve, 200)); 
+      const custData = getMockCustomerById(customerId);
+      const usageData = getMockUsageRecordsByCustomerId(customerId);
+      const paymentData = getMockPaymentsByCustomerId(customerId);
+      
+      setCustomer(custData || null);
+      if (custData) { // Initialize editedCustomerData when customer data is fetched
+        setEditedCustomerData(custData);
+      }
       setUsageRecords(usageData || []);
       setPayments(paymentData || []);
     } catch (error) {
       console.error("Failed to load customer data from store", error);
-      // Fallback for testing if customerId is not in store after an error
       if (!customer) { 
         setCustomer({ 
             id: customerId, 
             name: `Customer ${customerId.substring(0,5)} (Error Loading)`, 
             contactInfo: 'N/A', 
+            email: 'N/A',
             createdAt: new Date(), 
             balance: 0 
         });
+        setEditedCustomerData({ 
+            id: customerId, 
+            name: `Customer ${customerId.substring(0,5)} (Error Loading)`, 
+            contactInfo: 'N/A',
+            email: 'N/A',
+        });
       }
+       toast({ variant: "destructive", title: "Error", description: "Could not load customer data." });
     } finally {
       setIsLoading(false);
     }
-  }, [customerId, customer]); // customer is in dependency to re-evaluate if its own state changes, though fetchCustomerData is mainly driven by customerId change
+  }, [customerId, toast]); // Removed 'customer' from dependencies to avoid re-triggering fetch on its own update
 
   useEffect(() => {
     fetchCustomerData();
@@ -81,27 +82,69 @@ export default function CustomerDetailPage() {
 
   const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
     if (!customerId) return;
-    addMockUsageRecord(newRecord); // Adds to store & updates customer balance in store
+    addMockUsageRecord(newRecord); 
     
-    // Refresh data from store for this page
     const updatedCustomer = getMockCustomerById(customerId);
     const updatedUsageRecords = getMockUsageRecordsByCustomerId(customerId);
     
-    if (updatedCustomer) setCustomer(updatedCustomer);
+    if (updatedCustomer) {
+      setCustomer(updatedCustomer);
+      setEditedCustomerData(updatedCustomer); // Also update edited data if currently editing or for next edit
+    }
     setUsageRecords([...updatedUsageRecords]); 
+    toast({ title: "Usage Logged", description: `${newRecord.durationHours.toFixed(2)} hours logged for ${newRecord.customerName}.` });
   };
 
   const handleAddPaymentRecord = (newPayment: Payment) => {
     if (!customerId) return;
-    addMockPayment(newPayment); // Adds to store & updates customer balance in store
+    addMockPayment(newPayment);
     
-    // Refresh data from store for this page
     const updatedCustomer = getMockCustomerById(customerId);
     const updatedPayments = getMockPaymentsByCustomerId(customerId);
 
-    if (updatedCustomer) setCustomer(updatedCustomer);
+    if (updatedCustomer) {
+      setCustomer(updatedCustomer);
+      setEditedCustomerData(updatedCustomer);
+    }
     setPayments([...updatedPayments]); 
+    toast({ title: "Payment Recorded", description: `PKR ${newPayment.amountPaid.toLocaleString()} recorded.`});
   };
+
+  const handleToggleEdit = () => {
+    if (!isEditing && customer) {
+      // When starting to edit, populate form with current customer data
+      setEditedCustomerData({ ...customer });
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleFieldChange = (field: keyof Customer, value: string) => {
+    setEditedCustomerData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveChanges = () => {
+    if (customer && editedCustomerData) {
+      const updatedCustomer: Customer = {
+        ...customer, // Preserve non-editable fields like id, createdAt, balance, authUID
+        name: editedCustomerData.name || customer.name,
+        contactInfo: editedCustomerData.contactInfo, // Can be undefined
+        email: editedCustomerData.email, // Can be undefined
+      };
+      updateMockCustomer(updatedCustomer);
+      setCustomer(updatedCustomer); // Immediately update displayed customer
+      setIsEditing(false);
+      toast({ title: "Customer Updated", description: "Customer details have been saved." });
+    }
+  };
+
+  const handleCancelChanges = () => {
+    if (customer) {
+      // Reset edited data to original customer data
+      setEditedCustomerData({ ...customer });
+    }
+    setIsEditing(false);
+  };
+
 
   if (isLoading && !customer) {
     return (
@@ -133,8 +176,8 @@ export default function CustomerDetailPage() {
         description={`Details for customer ID: ${customer.id}`}
         actions={
           <div className="flex gap-2">
-            <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />
-            <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} /> 
+            {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
+            {!isEditing && <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />}
           </div>
         }
       />
@@ -149,7 +192,17 @@ export default function CustomerDetailPage() {
         </div>
       )}
 
-      <CustomerDetailsView customer={customer} usageRecords={usageRecords} payments={payments} />
+      <CustomerDetailsView 
+        customer={customer} 
+        usageRecords={usageRecords} 
+        payments={payments}
+        isEditing={isEditing}
+        editedCustomerData={editedCustomerData}
+        onFieldChange={handleFieldChange}
+        onToggleEdit={handleToggleEdit}
+        onSaveChanges={handleSaveChanges}
+        onCancelChanges={handleCancelChanges}
+      />
     </>
   );
 }

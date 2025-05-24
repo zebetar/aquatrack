@@ -17,52 +17,57 @@ let store: MockDataStore = {
 };
 
 function loadStoreFromLocalStorage(): void {
-  try {
-    const serializedStore = localStorage.getItem(STORAGE_KEY);
-    if (serializedStore) {
-      const parsedStore: MockDataStore = JSON.parse(serializedStore);
-      
-      // Convert date strings back to Date objects
-      parsedStore.customers = parsedStore.customers.map(c => ({
-        ...c,
-        createdAt: new Date(c.createdAt),
-      }));
-      parsedStore.usageRecords = parsedStore.usageRecords.map(ur => ({
-        ...ur,
-        date: new Date(ur.date),
-        startTime: new Date(ur.startTime),
-        endTime: new Date(ur.endTime),
-        createdAt: new Date(ur.createdAt),
-      }));
-      parsedStore.payments = parsedStore.payments.map(p => ({
-        ...p,
-        paymentDate: new Date(p.paymentDate),
-        createdAt: new Date(p.createdAt),
-      }));
-      
-      store = parsedStore;
-      console.log("Mock data store loaded from localStorage.");
-    } else {
-      console.log("No mock data found in localStorage, initializing empty store.");
-      // Optionally initialize with some default data if the store is empty
-      // seedInitialData(); 
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const serializedStore = localStorage.getItem(STORAGE_KEY);
+      if (serializedStore) {
+        const parsedStore: MockDataStore = JSON.parse(serializedStore);
+        
+        // Convert date strings back to Date objects
+        parsedStore.customers = parsedStore.customers.map(c => ({
+          ...c,
+          createdAt: new Date(c.createdAt),
+        }));
+        parsedStore.usageRecords = parsedStore.usageRecords.map(ur => ({
+          ...ur,
+          date: new Date(ur.date),
+          startTime: new Date(ur.startTime),
+          endTime: new Date(ur.endTime),
+          createdAt: new Date(ur.createdAt),
+        }));
+        parsedStore.payments = parsedStore.payments.map(p => ({
+          ...p,
+          paymentDate: new Date(p.paymentDate),
+          createdAt: new Date(p.createdAt),
+        }));
+        
+        store = parsedStore;
+        console.log("Mock data store loaded from localStorage.");
+      } else {
+        console.log("No mock data found in localStorage, initializing empty store.");
+      }
+    } catch (error) {
+      console.error("Error loading mock data store from localStorage:", error);
+      store = { customers: [], usageRecords: [], payments: [] };
     }
-  } catch (error) {
-    console.error("Error loading mock data store from localStorage:", error);
-    store = { customers: [], usageRecords: [], payments: [] };
+  } else {
+    // Fallback for environments where localStorage is not available (e.g., SSR pre-hydration)
+    console.warn("localStorage not available, mock data store will be in-memory for this session.");
   }
 }
 
 function saveStoreToLocalStorage(): void {
-  try {
-    const serializedStore = JSON.stringify(store);
-    localStorage.setItem(STORAGE_KEY, serializedStore);
-  } catch (error)
-    {
-    console.error("Error saving mock data store to localStorage:", error);
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const serializedStore = JSON.stringify(store);
+      localStorage.setItem(STORAGE_KEY, serializedStore);
+    } catch (error) {
+      console.error("Error saving mock data store to localStorage:", error);
+    }
   }
 }
 
+// Load store on initial script execution
 loadStoreFromLocalStorage();
 
 
@@ -77,6 +82,17 @@ export function addMockCustomer(customer: Customer): void {
   saveStoreToLocalStorage();
 }
 
+export function updateMockCustomer(updatedCustomer: Customer): void {
+  const customerIndex = store.customers.findIndex(c => c.id === updatedCustomer.id);
+  if (customerIndex > -1) {
+    store.customers[customerIndex] = { ...store.customers[customerIndex], ...updatedCustomer };
+    saveStoreToLocalStorage();
+    console.log(`Customer ${updatedCustomer.id} updated in mock store.`);
+  } else {
+    console.warn(`Attempted to update non-existent customer ID: ${updatedCustomer.id}`);
+  }
+}
+
 export function getMockCustomerById(customerId: string): Customer | undefined {
   return store.customers.find(c => c.id === customerId);
 }
@@ -88,7 +104,11 @@ export function getAllMockCustomers(): Customer[] {
 export function updateCustomerEmail(customerId: string, newEmail: string): void {
   const customerIndex = store.customers.findIndex(c => c.id === customerId);
   if (customerIndex > -1) {
-    store.customers[customerIndex].email = newEmail;
+    // Ensure email property exists before assigning
+    store.customers[customerIndex] = {
+      ...store.customers[customerIndex],
+      email: newEmail,
+    };
     saveStoreToLocalStorage();
     console.log(`Customer ${customerId} email updated in mock store to ${newEmail}`);
   } else {
