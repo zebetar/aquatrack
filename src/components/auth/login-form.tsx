@@ -16,11 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Eye, EyeOff } from "lucide-react"; 
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const loginFormSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }).trim(),
+  email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
   password: z.string().min(1, { message: "Password is required." }),
   role: z.enum(["admin", "viewer"], { required_error: "You need to select a role." }),
 });
@@ -30,7 +30,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -75,11 +75,11 @@ export function LoginForm() {
               <FormLabel>Password</FormLabel>
               <div className="relative">
                 <FormControl>
-                  <Input 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="••••••••" 
-                    {...field} 
-                    className="pr-10" 
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    {...field}
+                    className="pr-10"
                   />
                 </FormControl>
                 <Button
@@ -88,7 +88,7 @@ export function LoginForm() {
                   size="icon"
                   className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   onClick={togglePasswordVisibility}
-                  tabIndex={-1} 
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
