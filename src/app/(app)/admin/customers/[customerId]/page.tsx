@@ -18,7 +18,9 @@ import {
   getMockPaymentsByCustomerId,
   addMockUsageRecord,
   addMockPayment,
-  updateMockCustomer
+  updateMockCustomer,
+  updateMockUsageRecord,
+  updateMockPaymentRecord
 } from '@/lib/mock-data-store';
 
 export default function CustomerDetailPage() {
@@ -40,32 +42,32 @@ export default function CustomerDetailPage() {
     }
     setIsLoading(true);
     try {
-      // Simulate async fetch
-      await new Promise(resolve => setTimeout(resolve, 200)); 
+      await new Promise(resolve => setTimeout(resolve, 100)); 
       const custData = getMockCustomerById(customerId);
       const usageData = getMockUsageRecordsByCustomerId(customerId);
       const paymentData = getMockPaymentsByCustomerId(customerId);
       
       setCustomer(custData || null);
-      if (custData) { // Initialize editedCustomerData when customer data is fetched
+      if (custData) { 
         setEditedCustomerData(custData);
       }
       setUsageRecords(usageData || []);
       setPayments(paymentData || []);
     } catch (error) {
       console.error("Failed to load customer data from store", error);
+      const fallbackName = customerId ? `Customer ${customerId.substring(0,5)}` : 'Customer';
       if (!customer) { 
         setCustomer({ 
-            id: customerId, 
-            name: `Customer ${customerId.substring(0,5)} (Error Loading)`, 
+            id: customerId || 'unknown', 
+            name: `${fallbackName} (Error Loading)`, 
             contactInfo: 'N/A', 
             email: 'N/A',
             createdAt: new Date(), 
             balance: 0 
         });
         setEditedCustomerData({ 
-            id: customerId, 
-            name: `Customer ${customerId.substring(0,5)} (Error Loading)`, 
+            id: customerId || 'unknown', 
+            name: `${fallbackName} (Error Loading)`, 
             contactInfo: 'N/A',
             email: 'N/A',
         });
@@ -74,7 +76,7 @@ export default function CustomerDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [customerId, toast]); // Removed 'customer' from dependencies to avoid re-triggering fetch on its own update
+  }, [customerId, toast]); 
 
   useEffect(() => {
     fetchCustomerData();
@@ -83,36 +85,33 @@ export default function CustomerDetailPage() {
   const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
     if (!customerId) return;
     addMockUsageRecord(newRecord); 
-    
-    const updatedCustomer = getMockCustomerById(customerId);
-    const updatedUsageRecords = getMockUsageRecordsByCustomerId(customerId);
-    
-    if (updatedCustomer) {
-      setCustomer(updatedCustomer);
-      setEditedCustomerData(updatedCustomer); // Also update edited data if currently editing or for next edit
-    }
-    setUsageRecords([...updatedUsageRecords]); 
+    fetchCustomerData(); // Re-fetch all data to ensure consistency
     toast({ title: "Usage Logged", description: `${newRecord.durationHours.toFixed(2)} hours logged for ${newRecord.customerName}.` });
   };
 
   const handleAddPaymentRecord = (newPayment: Payment) => {
     if (!customerId) return;
     addMockPayment(newPayment);
-    
-    const updatedCustomer = getMockCustomerById(customerId);
-    const updatedPayments = getMockPaymentsByCustomerId(customerId);
-
-    if (updatedCustomer) {
-      setCustomer(updatedCustomer);
-      setEditedCustomerData(updatedCustomer);
-    }
-    setPayments([...updatedPayments]); 
+    fetchCustomerData(); // Re-fetch all data
     toast({ title: "Payment Recorded", description: `PKR ${newPayment.amountPaid.toLocaleString()} recorded.`});
+  };
+
+  const handleUpdateUsageRecord = (updatedRecord: WaterUsageRecord) => {
+    if (!customerId) return;
+    updateMockUsageRecord(updatedRecord);
+    fetchCustomerData(); // Re-fetch all data
+    toast({ title: "Usage Record Updated", description: `Usage record for ${updatedRecord.customerName} has been updated.` });
+  };
+
+  const handleUpdatePaymentRecord = (updatedPayment: Payment) => {
+    if (!customerId) return;
+    updateMockPaymentRecord(updatedPayment);
+    fetchCustomerData(); // Re-fetch all data
+    toast({ title: "Payment Record Updated", description: `Payment record for ${updatedPayment.customerName} has been updated.` });
   };
 
   const handleToggleEdit = () => {
     if (!isEditing && customer) {
-      // When starting to edit, populate form with current customer data
       setEditedCustomerData({ ...customer });
     }
     setIsEditing(!isEditing);
@@ -125,13 +124,13 @@ export default function CustomerDetailPage() {
   const handleSaveChanges = () => {
     if (customer && editedCustomerData) {
       const updatedCustomerData: Customer = {
-        ...customer, // Preserve non-editable fields like id, createdAt, balance, authUID
+        ...customer, 
         name: editedCustomerData.name || customer.name,
-        contactInfo: editedCustomerData.contactInfo, // Can be undefined
-        email: editedCustomerData.email, // Can be undefined
+        contactInfo: editedCustomerData.contactInfo, 
+        email: editedCustomerData.email, 
       };
       updateMockCustomer(updatedCustomerData);
-      setCustomer(updatedCustomerData); // Immediately update displayed customer
+      fetchCustomerData(); // Re-fetch to display updated customer
       setIsEditing(false);
       toast({ title: "Customer Updated", description: "Customer details have been saved." });
     }
@@ -139,12 +138,10 @@ export default function CustomerDetailPage() {
 
   const handleCancelChanges = () => {
     if (customer) {
-      // Reset edited data to original customer data
       setEditedCustomerData({ ...customer });
     }
     setIsEditing(false);
   };
-
 
   if (isLoading && !customer) {
     return (
@@ -173,7 +170,6 @@ export default function CustomerDetailPage() {
     <>
       <PageHeader 
         title={customer.name} 
-        // description prop removed here
         actions={
           <div className="flex gap-2">
             {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
@@ -202,6 +198,8 @@ export default function CustomerDetailPage() {
         onToggleEdit={handleToggleEdit}
         onSaveChanges={handleSaveChanges}
         onCancelChanges={handleCancelChanges}
+        onUsageRecordUpdated={handleUpdateUsageRecord}
+        onPaymentRecordUpdated={handleUpdatePaymentRecord}
       />
     </>
   );

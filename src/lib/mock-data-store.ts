@@ -1,5 +1,6 @@
 
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
+import { CORE_WATER_RATE_PER_HOUR } from './constants';
 
 interface MockDataStore {
   customers: Customer[];
@@ -45,7 +46,6 @@ function loadStoreFromLocalStorage(): void {
         console.log("Mock data store loaded from localStorage.");
       } else {
         console.log("No mock data found in localStorage, initializing empty store.");
-        // Initialize with empty store if nothing is found
         store = { customers: [], usageRecords: [], payments: [] };
       }
     } catch (error) {
@@ -53,7 +53,6 @@ function loadStoreFromLocalStorage(): void {
       store = { customers: [], usageRecords: [], payments: [] };
     }
   } else {
-    // Fallback for environments where localStorage is not available (e.g., SSR pre-hydration)
     console.warn("localStorage not available, mock data store will be in-memory for this session.");
     store = { customers: [], usageRecords: [], payments: [] };
   }
@@ -71,7 +70,6 @@ function saveStoreToLocalStorage(): void {
   }
 }
 
-// Load store on initial script execution
 loadStoreFromLocalStorage();
 
 
@@ -108,7 +106,6 @@ export function getAllMockCustomers(): Customer[] {
 export function updateCustomerEmail(customerId: string, newEmail: string): void {
   const customerIndex = store.customers.findIndex(c => c.id === customerId);
   if (customerIndex > -1) {
-    // Ensure email property exists before assigning
     store.customers[customerIndex] = {
       ...store.customers[customerIndex],
       email: newEmail,
@@ -125,7 +122,6 @@ export function deleteMockCustomer(customerId: string): void {
   store.customers = store.customers.filter(c => c.id !== customerId);
   
   if (store.customers.length < initialCustomerCount) {
-    // Also remove associated usage records and payments
     store.usageRecords = store.usageRecords.filter(ur => ur.customerId !== customerId);
     store.payments = store.payments.filter(p => p.customerId !== customerId);
     
@@ -147,6 +143,23 @@ export function addMockUsageRecord(record: WaterUsageRecord): void {
   saveStoreToLocalStorage();
 }
 
+export function updateMockUsageRecord(updatedRecord: WaterUsageRecord): void {
+  const recordIndex = store.usageRecords.findIndex(r => r.id === updatedRecord.id);
+  if (recordIndex > -1) {
+    const oldRecord = store.usageRecords[recordIndex];
+    const customerIndex = store.customers.findIndex(c => c.id === updatedRecord.customerId);
+
+    if (customerIndex > -1) {
+      const costDifference = updatedRecord.cost - oldRecord.cost;
+      store.customers[customerIndex].balance += costDifference;
+    }
+    store.usageRecords[recordIndex] = { ...oldRecord, ...updatedRecord };
+    saveStoreToLocalStorage();
+  } else {
+    console.warn(`Attempted to update non-existent usage record ID: ${updatedRecord.id}`);
+  }
+}
+
 export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageRecord[] {
   return store.usageRecords
     .filter(r => r.customerId === customerId)
@@ -165,6 +178,24 @@ export function addMockPayment(payment: Payment): void {
     store.customers[customerIndex].balance -= payment.amountPaid;
   }
   saveStoreToLocalStorage();
+}
+
+export function updateMockPaymentRecord(updatedPayment: Payment): void {
+  const paymentIndex = store.payments.findIndex(p => p.id === updatedPayment.id);
+  if (paymentIndex > -1) {
+    const oldPayment = store.payments[paymentIndex];
+    const customerIndex = store.customers.findIndex(c => c.id === updatedPayment.customerId);
+
+    if (customerIndex > -1) {
+      // Adjust balance: add back old amount, subtract new amount
+      const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid;
+      store.customers[customerIndex].balance += amountDifference;
+    }
+    store.payments[paymentIndex] = { ...oldPayment, ...updatedPayment };
+    saveStoreToLocalStorage();
+  } else {
+    console.warn(`Attempted to update non-existent payment ID: ${updatedPayment.id}`);
+  }
 }
 
 export function getMockPaymentsByCustomerId(customerId: string): Payment[] {

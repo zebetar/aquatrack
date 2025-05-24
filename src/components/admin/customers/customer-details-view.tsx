@@ -10,13 +10,15 @@ import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Save, XCircle } from 'lucide-react';
+import { Edit, Save, XCircle, Pencil } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { EditUsageRecordDialog } from './edit-usage-record-dialog';
+import { EditPaymentRecordDialog } from './edit-payment-record-dialog';
 
 interface CustomerDetailsViewProps {
   customer: Customer;
@@ -28,6 +30,8 @@ interface CustomerDetailsViewProps {
   onToggleEdit: () => void;
   onSaveChanges: () => void;
   onCancelChanges: () => void;
+  onUsageRecordUpdated: (updatedRecord: WaterUsageRecord) => void;
+  onPaymentRecordUpdated: (updatedPayment: Payment) => void;
 }
 
 const DetailItem = ({ label, value, isEditing = false, id, field, editedValue, onChange, inputType = "text" }: {
@@ -66,12 +70,14 @@ export function CustomerDetailsView({
   onFieldChange,
   onToggleEdit,
   onSaveChanges,
-  onCancelChanges 
+  onCancelChanges,
+  onUsageRecordUpdated,
+  onPaymentRecordUpdated
 }: CustomerDetailsViewProps) {
   return (
     <div className="space-y-6">
       <Card>
-        <Accordion type="single" collapsible className="w-full"> {/* Removed defaultValue */}
+        <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="customer-info">
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <AccordionTrigger className="flex-1 py-0">
@@ -79,7 +85,7 @@ export function CustomerDetailsView({
               </AccordionTrigger>
               {!isEditing ? (
                 <Button variant="outline" size="sm" onClick={onToggleEdit} className="ml-4">
-                  <Edit className="mr-2 h-4 w-4" /> Edit
+                  <Edit className="mr-2 h-4 w-4" /> Edit Details
                 </Button>
               ) : (
                 <div className="flex gap-2 ml-4">
@@ -157,11 +163,12 @@ export function CustomerDetailsView({
                   <TableHead>End Time</TableHead>
                   <TableHead className="text-right">Duration (Hrs)</TableHead>
                   <TableHead className="text-right">Cost (PKR)</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {usageRecords.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center h-24">No usage records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center h-24">No usage records found.</TableCell></TableRow>
                 )}
                 {usageRecords.map(record => (
                   <TableRow key={record.id}>
@@ -170,6 +177,12 @@ export function CustomerDetailsView({
                     <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
                     <TableCell className="text-right">{record.durationHours.toFixed(2)}</TableCell>
                     <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
+                    <TableCell className="text-center">
+                      <EditUsageRecordDialog 
+                        usageRecord={record} 
+                        onUsageRecordUpdated={onUsageRecordUpdated} 
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -190,17 +203,24 @@ export function CustomerDetailsView({
                   <TableHead>Payment Date</TableHead>
                   <TableHead className="text-right">Amount Paid (PKR)</TableHead>
                   <TableHead>Recorded By</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payments.length === 0 && (
-                  <TableRow><TableCell colSpan={3} className="text-center h-24">No payment records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center h-24">No payment records found.</TableCell></TableRow>
                 )}
                 {payments.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
                     <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
                     <TableCell>{payment.recordedBy === 'admin001' ? "Admin" : payment.recordedBy}</TableCell>
+                    <TableCell className="text-center">
+                      <EditPaymentRecordDialog 
+                        paymentRecord={payment} 
+                        onPaymentRecordUpdated={onPaymentRecordUpdated} 
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
