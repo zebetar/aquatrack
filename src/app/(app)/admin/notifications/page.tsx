@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BellRing, CheckCircle2 } from 'lucide-react';
@@ -5,12 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import type { Notification } from '@/types'; // Assuming Notification type exists
 
-// Placeholder data
-const mockNotifications: Notification[] = [
-  { id: 'notif_admin_1', userId: 'admin001', message: 'Payment of PKR 2,400 recorded for Aarav Sharma.', type: 'PAYMENT_RECORDED', isRead: false, createdAt: new Date(Date.now() - 3600000 * 1) }, // 1 hour ago
-  { id: 'notif_admin_2', userId: 'admin001', message: 'Water usage (2 hrs) logged for Priya Patel.', type: 'USAGE_LOGGED', isRead: true, createdAt: new Date(Date.now() - 3600000 * 3) }, // 3 hours ago
-  { id: 'notif_admin_3', userId: 'admin001', message: 'New customer Sneha Reddy added.', type: 'ANNOUNCEMENT', isRead: true, createdAt: new Date(Date.now() - 3600000 * 24) }, // 1 day ago
-];
+// Placeholder data - now an empty array
+const mockNotifications: Notification[] = [];
 
 
 export default function AdminNotificationsPage() {
@@ -27,7 +24,7 @@ export default function AdminNotificationsPage() {
         </CardHeader>
         <CardContent>
           {notifications.length === 0 ? (
-            <p className="text-muted-foreground">No notifications yet.</p>
+            <p className="text-muted-foreground py-4 text-center">No notifications yet.</p>
           ) : (
             <ScrollArea className="h-[400px] pr-4">
               <ul className="space-y-3">

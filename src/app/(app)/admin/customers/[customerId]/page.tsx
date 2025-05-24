@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/shared/page-header';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
 import { CustomerDetailsView } from '@/components/admin/customers/customer-details-view';
@@ -7,33 +8,22 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-// Placeholder data fetching functions
+// Placeholder data fetching functions - now returning empty/null
 async function getCustomerDetails(customerId: string): Promise<Customer | null> {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  if (customerId === 'cust001') {
-    return { id: 'cust001', name: 'Aarav Sharma', contactInfo: '9876543210', createdAt: new Date('2023-01-15'), balance: 1200, authUID: 'viewer001' };
-  }
+  await new Promise(resolve => setTimeout(resolve, 100)); // Shorter delay
+  // Return null to indicate no customer found or data cleared
   return null;
 }
 
 async function getWaterUsage(customerId: string): Promise<WaterUsageRecord[]> {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  if (customerId === 'cust001') {
-    return [
-      { id: 'usage001', customerId: 'cust001', customerName: 'Aarav Sharma', date: new Date('2024-07-10'), startTime: new Date('2024-07-10T10:00:00'), endTime: new Date('2024-07-10T12:00:00'), durationHours: 2, cost: 2400, recordedBy: 'admin001', createdAt: new Date() },
-      { id: 'usage002', customerId: 'cust001', customerName: 'Aarav Sharma', date: new Date('2024-07-15'), startTime: new Date('2024-07-15T14:00:00'), endTime: new Date('2024-07-15T15:30:00'), durationHours: 1.5, cost: 1800, recordedBy: 'admin001', createdAt: new Date() },
-    ];
-  }
+  await new Promise(resolve => setTimeout(resolve, 100));
+  // Return empty array
   return [];
 }
 
 async function getPayments(customerId: string): Promise<Payment[]> {
-   await new Promise(resolve => setTimeout(resolve, 300));
-  if (customerId === 'cust001') {
-    return [
-      { id: 'pay001', customerId: 'cust001', customerName: 'Aarav Sharma', paymentDate: new Date('2024-07-12'), amountPaid: 2000, recordedBy: 'admin001', createdAt: new Date() },
-    ];
-  }
+   await new Promise(resolve => setTimeout(resolve, 100));
+  // Return empty array
   return [];
 }
 
@@ -46,8 +36,8 @@ export default async function CustomerDetailPage({ params }: { params: { custome
   if (!customer) {
     return (
       <>
-        <PageHeader title="Customer Not Found" />
-        <p>The requested customer could not be found.</p>
+        <PageHeader title="Customer Not Found" description="This customer may not exist or data has been cleared." />
+        <p className="text-muted-foreground">The requested customer could not be found or their data is not available.</p>
         <Button variant="outline" asChild className="mt-4">
           <Link href="/admin/customers"><ArrowLeft className="mr-2 h-4 w-4" />Back to Customers</Link>
         </Button>

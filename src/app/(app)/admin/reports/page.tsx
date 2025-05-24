@@ -1,3 +1,4 @@
+
 "use client"; // Required for Recharts
 
 import { PageHeader } from '@/components/shared/page-header';
@@ -7,22 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useMemo } from 'react';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
-const monthlySupplyData = [
-  { month: 'Jan', supply: 600, revenue: 600 * 1200 },
-  { month: 'Feb', supply: 750, revenue: 750 * 1200 },
-  { month: 'Mar', supply: 820, revenue: 820 * 1200 },
-  { month: 'Apr', supply: 700, revenue: 700 * 1200 },
-  { month: 'May', supply: 900, revenue: 900 * 1200 },
-  { month: 'Jun', supply: 850, revenue: 850 * 1200 },
-];
+// Data cleared
+const monthlySupplyData: { month: string, supply: number, revenue: number }[] = [];
 
-const customerConsumptionData = [
-  { name: 'Aarav S.', consumption: 12, bill: 14400, paid: 14000 },
-  { name: 'Priya P.', consumption: 15, bill: 18000, paid: 18000 },
-  { name: 'Rohan M.', consumption: 8, bill: 9600, paid: 9600 },
-  { name: 'Sneha R.', consumption: 10, bill: 12000, paid: 10000 },
-  { name: 'Vikram B.', consumption: 18, bill: 21600, paid: 20000 },
-];
+const customerConsumptionData: { name: string, consumption: number, bill: number, paid: number }[] = [];
 
 
 export default function AdminReportsPage() {
@@ -40,9 +29,8 @@ export default function AdminReportsPage() {
     return options;
   }, []);
   
-  // Filtered data based on selected month (example)
-  const filteredSupplyData = monthlySupplyData; // Replace with actual filtering logic
-  const filteredCustomerData = customerConsumptionData; // Replace with actual filtering logic
+  const filteredSupplyData = monthlySupplyData; 
+  const filteredCustomerData = customerConsumptionData;
 
 
   return (
@@ -69,18 +57,22 @@ export default function AdminReportsPage() {
             <CardTitle>Monthly Supply & Revenue (Hours & PKR)</CardTitle>
           </CardHeader>
           <CardContent className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredSupplyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" />
-                <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
-                <Tooltip formatter={(value, name) => name === 'revenue' ? `PKR ${Number(value).toLocaleString('en-US')}`: `${value} hrs`}/>
-                <Legend />
-                <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--primary))" name="Supply (Hours)" />
-                <Bar yAxisId="right" dataKey="revenue" fill="hsl(var(--chart-2))" name="Revenue (PKR)" />
-              </BarChart>
-            </ResponsiveContainer>
+            {filteredSupplyData.length === 0 ? (
+              <p className="text-muted-foreground flex h-full items-center justify-center">No supply data available for the selected period.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={filteredSupplyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" />
+                  <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
+                  <Tooltip formatter={(value, name) => name === 'revenue' ? `PKR ${Number(value).toLocaleString('en-US')}`: `${value} hrs`}/>
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--primary))" name="Supply (Hours)" />
+                  <Bar yAxisId="right" dataKey="revenue" fill="hsl(var(--chart-2))" name="Revenue (PKR)" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -89,26 +81,32 @@ export default function AdminReportsPage() {
             <CardTitle>Top Customers by Consumption (Hours)</CardTitle>
           </CardHeader>
           <CardContent className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={filteredCustomerData.sort((a,b) => b.consumption - a.consumption).slice(0,5)} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={80} />
-                <Tooltip formatter={(value) => `${value} hrs`}/>
-                <Legend />
-                <Bar dataKey="consumption" fill="hsl(var(--primary))" name="Consumption (Hours)" />
-              </BarChart>
-            </ResponsiveContainer>
+            {filteredCustomerData.length === 0 ? (
+              <p className="text-muted-foreground flex h-full items-center justify-center">No customer consumption data available.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={filteredCustomerData.sort((a,b) => b.consumption - a.consumption).slice(0,5)} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={80} />
+                  <Tooltip formatter={(value) => `${value} hrs`}/>
+                  <Legend />
+                  <Bar dataKey="consumption" fill="hsl(var(--primary))" name="Consumption (Hours)" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
         <Card className="lg:col-span-2 shadow-md">
           <CardHeader>
-            <CardTitle>Customer Bill vs. Paid (Example Customer: Priya P.)</CardTitle>
+            <CardTitle>Customer Bill vs. Paid</CardTitle>
           </CardHeader>
           <CardContent className="h-[400px]">
-            {/* This chart would typically fetch data for a selected customer */}
-            {/* For demo, using Priya P. from customerConsumptionData */}
+             <p className="text-muted-foreground flex h-full items-center justify-center">No specific customer bill data to display.</p>
+            {/* 
+            // Example for when data exists:
+            filteredCustomerData.length > 1 ? (
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={[{name: filteredCustomerData[1].name, bill: filteredCustomerData[1].bill, paid: filteredCustomerData[1].paid}]}> 
                     <CartesianGrid strokeDasharray="3 3" />
@@ -120,6 +118,10 @@ export default function AdminReportsPage() {
                     <Line type="monotone" dataKey="paid" stroke="hsl(var(--chart-5))" name="Amount Paid (PKR)" />
                 </LineChart>
             </ResponsiveContainer>
+            ) : (
+              <p className="text-muted-foreground flex h-full items-center justify-center">No specific customer bill data to display.</p>
+            )
+            */}
           </CardContent>
         </Card>
       </div>

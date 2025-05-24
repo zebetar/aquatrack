@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, DollarSign, Clock } from 'lucide-react';
@@ -22,11 +23,11 @@ const SummaryCard = ({ title, value, icon: Icon, actionLink, actionLabel }: { ti
 );
 
 export default function ViewerDashboardPage() {
-  // Placeholder data
+  // Placeholder data - reflecting cleared state
   const summaries = [
-    { title: 'Current Outstanding Bill', value: 'PKR 2,400', icon: FileText, actionLink: '/viewer/billing', actionLabel: 'View Details' },
-    { title: 'Recent Usage (Last 7 Days)', value: '5 hrs', icon: Clock, actionLink: '/viewer/usage', actionLabel: 'View History' },
-    { title: 'Last Payment Made', value: 'PKR 1,800 on 15th Jul', icon: DollarSign, actionLink: '/viewer/billing', actionLabel: 'View Payments' },
+    { title: 'Current Outstanding Bill', value: 'PKR 0', icon: FileText, actionLink: '/viewer/billing', actionLabel: 'View Details' },
+    { title: 'Recent Usage (Last 7 Days)', value: '0 hrs', icon: Clock, actionLink: '/viewer/usage', actionLabel: 'View History' },
+    { title: 'Last Payment Made', value: 'N/A', icon: DollarSign, actionLink: '/viewer/billing', actionLabel: 'View Payments' },
   ];
 
   return (
@@ -43,7 +44,7 @@ export default function ViewerDashboardPage() {
             <CardTitle>Recent Notifications</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Your recent notifications will appear here.</p>
+            <p className="text-muted-foreground">No recent notifications.</p>
             <Button variant="default" asChild className="mt-4">
               <Link href="/viewer/notifications">View All Notifications</Link>
             </Button>

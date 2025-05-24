@@ -1,35 +1,29 @@
+
 import { PageHeader } from '@/components/shared/page-header';
-import type { Payment, Customer } from '@/types'; // Assuming Customer type holds balance
+import type { Payment, Customer } from '@/types'; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Placeholder data fetching functions
+// Placeholder data fetching functions - now returning empty/null
 async function getMyPayments(viewerId: string): Promise<Payment[]> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  if (viewerId === 'viewer001') {
-    return [
-      { id: 'pay001', customerId: 'cust001', customerName: 'Aarav Sharma', paymentDate: new Date('2024-07-12T10:30:00'), amountPaid: 2000, recordedBy: 'admin001', createdAt: new Date() },
-      { id: 'pay002', customerId: 'cust001', customerName: 'Aarav Sharma', paymentDate: new Date('2024-06-15T14:00:00'), amountPaid: 2500, recordedBy: 'admin001', createdAt: new Date() },
-    ];
-  }
+  await new Promise(resolve => setTimeout(resolve, 100));
   return [];
 }
 
 async function getMyCustomerProfile(viewerId: string): Promise<Customer | null> {
-  await new Promise(resolve => setTimeout(resolve, 300));
-   // This should fetch customer linked to viewerId
-  if (viewerId === 'viewer001') { 
-    return { id: 'cust001', name: 'Aarav Sharma', contactInfo: '9876543210', createdAt: new Date('2023-01-15'), balance: 1200, authUID: 'viewer001' };
-  }
-  return null;
+  await new Promise(resolve => setTimeout(resolve, 100));
+   // For cleared data, return a default "empty" profile or null
+  return null; 
+  // Or if you want a shell with 0 balance:
+  // return { id: 'clearedCust', name: 'N/A', contactInfo: 'N/A', createdAt: new Date(), balance: 0, authUID: viewerId };
 }
 
 
 export default async function ViewerBillingPage() {
   // In a real app, get viewerId from auth context
-  const viewerId = 'viewer001';
+  const viewerId = 'viewer001'; // This would come from auth context
   const payments = await getMyPayments(viewerId);
   const customerProfile = await getMyCustomerProfile(viewerId);
 
@@ -39,7 +33,7 @@ export default async function ViewerBillingPage() {
     <>
       <PageHeader title="My Billing & Payments" description="View your outstanding balance and payment history." />
       
-      {customerProfile && (
+      {customerProfile ? (
         <Card className="mb-6 shadow-md">
           <CardHeader>
             <CardTitle>Billing Summary</CardTitle>
@@ -53,6 +47,15 @@ export default async function ViewerBillingPage() {
                 <p className="text-sm text-muted-foreground">Total Amount Paid (All Time)</p>
                 <p className="text-2xl font-bold">PKR {totalPaid.toLocaleString('en-US')}</p>
             </div>
+          </CardContent>
+        </Card>
+      ) : (
+         <Card className="mb-6 shadow-md">
+          <CardHeader>
+            <CardTitle>Billing Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+             <p className="text-muted-foreground">Billing information is currently unavailable.</p>
           </CardContent>
         </Card>
       )}
@@ -80,7 +83,7 @@ export default async function ViewerBillingPage() {
                   <TableRow key={payment.id}>
                     <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
                     <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                    <TableCell className="text-green-600">Recorded</TableCell> {/* Placeholder status */}
+                    <TableCell className="text-green-600">Recorded</TableCell> 
                   </TableRow>
                 ))}
               </TableBody>

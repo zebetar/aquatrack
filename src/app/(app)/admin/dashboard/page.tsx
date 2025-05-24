@@ -1,3 +1,4 @@
+
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Droplets, CreditCard, BarChart3 } from 'lucide-react';
@@ -16,12 +17,12 @@ const KeyMetricCard = ({ title, value, icon: Icon, description }: { title: strin
 );
 
 export default function AdminDashboardPage() {
-  // Placeholder data
+  // Placeholder data - now reflecting cleared state
   const metrics = [
-    { title: 'Total Customers', value: '125', icon: Users, description: '+5 since last month' },
-    { title: 'Monthly Supply (Hours)', value: '850 hrs', icon: Droplets, description: 'Avg. 6.8 hrs/customer' },
-    { title: 'Monthly Revenue', value: 'PKR 1,020,000', icon: CreditCard, description: 'Based on 1200 PKR/hr' },
-    { title: 'Outstanding Bills', value: 'PKR 150,000', icon: BarChart3, description: 'From 15 customers' },
+    { title: 'Total Customers', value: '0', icon: Users, description: 'No customer data' },
+    { title: 'Monthly Supply (Hours)', value: '0 hrs', icon: Droplets, description: 'No usage data' },
+    { title: 'Monthly Revenue', value: 'PKR 0', icon: CreditCard, description: 'No revenue data' },
+    { title: 'Outstanding Bills', value: 'PKR 0', icon: BarChart3, description: 'No billing data' },
   ];
 
   return (
@@ -38,8 +39,7 @@ export default function AdminDashboardPage() {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Recent activities will be shown here (e.g., new usage logs, payments).</p>
-            {/* Placeholder for recent activity list or quick actions */}
+            <p className="text-muted-foreground">No recent activity found.</p>
           </CardContent>
         </Card>
       </div>
