@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +20,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import type { Customer } from "@/types";
+import type { Customer, Payment } from "@/types";
 import { useState } from "react";
 
 const recordPaymentFormSchema = z.object({
@@ -31,7 +32,7 @@ type RecordPaymentFormValues = z.infer<typeof recordPaymentFormSchema>;
 
 interface RecordPaymentFormProps {
   customer: Customer;
-  onSuccess?: () => void;
+  onSuccess?: (newPayment: Payment) => void;
 }
 
 export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProps) {
@@ -42,16 +43,26 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     resolver: zodResolver(recordPaymentFormSchema),
     defaultValues: {
       paymentDate: new Date(),
-      amountPaid: 0,
+      amountPaid: customer.balance > 0 ? customer.balance : 0, // Pre-fill with balance if due
     },
   });
 
   async function onSubmit(values: RecordPaymentFormValues) {
     setIsLoading(true);
-    // Here you would typically call a server action or API endpoint
-    console.log("Record Payment Data:", { ...values, customerId: customer.id });
+    
+    const newPayment: Payment = {
+      id: `payment-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
+      customerId: customer.id,
+      customerName: customer.name,
+      paymentDate: values.paymentDate,
+      amountPaid: values.amountPaid,
+      recordedBy: "admin001", // Mock admin ID
+      createdAt: new Date(),
+    };
 
-    // Simulate API call
+    console.log("Record Payment Data (New Payment):", newPayment);
+
+    // Simulate API call - in a real app, this would interact with a backend
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     toast({
@@ -60,8 +71,11 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     });
 
     setIsLoading(false);
-    onSuccess?.();
-    form.reset();
+    onSuccess?.(newPayment); 
+    form.reset({ // Reset form to defaults after submission
+        paymentDate: new Date(),
+        amountPaid: 0, 
+    });
   }
 
   return (
@@ -115,6 +129,9 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
             </FormItem>
           )}
         />
+        <p className="text-sm text-muted-foreground">
+            Current Balance: PKR {customer.balance.toLocaleString('en-US')}
+        </p>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Record Payment

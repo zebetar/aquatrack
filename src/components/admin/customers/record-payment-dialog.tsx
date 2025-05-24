@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -11,15 +12,21 @@ import {
 } from "@/components/ui/dialog";
 import { CreditCard } from "lucide-react";
 import { RecordPaymentForm } from "./record-payment-form";
-import type { Customer } from "@/types";
+import type { Customer, Payment } from "@/types";
 import { useState } from "react";
 
 interface RecordPaymentDialogProps {
   customer: Customer;
+  onPaymentRecorded?: (newPayment: Payment) => void;
 }
 
-export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
+export function RecordPaymentDialog({ customer, onPaymentRecorded }: RecordPaymentDialogProps) {
   const [open, setOpen] = useState(false);
+
+  const handleSuccess = (newPayment: Payment) => {
+    onPaymentRecorded?.(newPayment);
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -35,7 +42,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
             Enter the amount paid and the date of payment.
           </DialogDescription>
         </DialogHeader>
-        <RecordPaymentForm customer={customer} onSuccess={() => setOpen(false)} />
+        <RecordPaymentForm customer={customer} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

@@ -6,35 +6,37 @@ import { AddCustomerDialog } from '@/components/admin/customers/add-customer-dia
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer } from '@/types';
 import { useState, useEffect } from 'react';
-
-// Placeholder data fetching function - now returning empty array for initial load
-async function getInitialCustomers(): Promise<Customer[]> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return []; // Return empty array to clear data
-}
+import { getAllMockCustomers, addMockCustomer as addCustomerToStore } from '@/lib/mock-data-store';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadCustomers() {
-      setIsLoading(true);
-      const initialCustomers = await getInitialCustomers();
-      setCustomers(initialCustomers);
-      setIsLoading(false);
-    }
-    loadCustomers();
+    // Load customers from our mock store on initial mount
+    setIsLoading(true);
+    // Simulate a small delay for loading from store if needed, or direct load
+    // await new Promise(resolve => setTimeout(resolve, 50)); 
+    const storedCustomers = getAllMockCustomers();
+    setCustomers(storedCustomers);
+    setIsLoading(false);
   }, []);
 
   const handleAddCustomer = (newCustomer: Customer) => {
+    // Add to the mock store
+    addCustomerToStore(newCustomer);
+    // Update local state to re-render the list
     setCustomers(prevCustomers => [...prevCustomers, newCustomer]);
   };
 
   if (isLoading) {
-    // Optional: Add a loading state indicator if desired
-    // return <p>Loading customers...</p>; 
+    return (
+        <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="ml-2">Loading customers...</p>
+        </div>
+    );
   }
 
   return (
