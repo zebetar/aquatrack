@@ -105,6 +105,7 @@ export default function AdminUsersPage() {
         customers={customers} 
         onCustomerDeleted={handleCustomerDeleted}
         deletingCustomerId={deletingCustomerId}
+        enableActions={true} // Show actions column on this page
       />
     </>
   );

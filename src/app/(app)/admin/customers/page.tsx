@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   getAllMockCustomers, 
   addMockCustomer as addCustomerToStore,
-  deleteMockCustomer as deleteCustomerFromStore,
+  deleteMockCustomer as deleteCustomerFromStore, // This function will not be used here directly
   getMockCustomerById,
   getMockUsageRecordsByCustomerId,
   getMockPaymentsByCustomerId 
@@ -21,14 +21,17 @@ import { useToast } from '@/hooks/use-toast';
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
+  // deletingCustomerId state is no longer needed here as delete action is moved
   const { toast } = useToast();
 
   const fetchCustomers = useCallback(() => {
     setIsLoading(true);
-    const storedCustomers = getAllMockCustomers();
-    setCustomers(storedCustomers);
-    setIsLoading(false);
+    // Simulate a small delay
+    setTimeout(() => {
+      const storedCustomers = getAllMockCustomers();
+      setCustomers(storedCustomers);
+      setIsLoading(false);
+    }, 100);
   }, []);
 
   useEffect(() => {
@@ -37,51 +40,11 @@ export default function AdminCustomersPage() {
 
   const handleAddCustomer = (newCustomer: Customer) => {
     addCustomerToStore(newCustomer);
-    fetchCustomers(); // Re-fetch from store to update list
+    fetchCustomers(); 
   };
 
-  const handleCustomerDeleted = async (customerId: string) => {
-    setDeletingCustomerId(customerId); // Show loading state for the specific delete action
-
-    const customerForToastName = customers.find(c => c.id === customerId); // Get customer name for toast before deletion
-    const customerDataForPdf = getMockCustomerById(customerId); // Get full customer data for PDF generation
-
-    if (customerDataForPdf) {
-      try {
-        const usageRecords = getMockUsageRecordsByCustomerId(customerId);
-        const payments = getMockPaymentsByCustomerId(customerId);
-        await generateCustomerPdf(customerDataForPdf, usageRecords, payments);
-        toast({
-          title: "Statement Generated",
-          description: `PDF statement for ${customerDataForPdf.name} is being downloaded.`,
-        });
-      } catch (error) {
-        console.error("Error generating PDF before deletion:", error);
-        toast({
-          variant: "destructive",
-          title: "PDF Generation Failed",
-          description: "Could not generate PDF statement. Customer will still be deleted.",
-        });
-      }
-    } else {
-      // This case should ideally not happen if customerId is valid, but good to handle
-      toast({
-        variant: "destructive",
-        title: "Customer Data Not Found for PDF",
-        description: "Could not retrieve customer details for PDF generation. Proceeding with deletion.",
-      });
-    }
-
-    // Proceed with deletion from store
-    deleteCustomerFromStore(customerId);
-    fetchCustomers(); // Re-fetch to update the UI list
-
-    setDeletingCustomerId(null); // Clear loading state
-    toast({
-      title: "Customer Deleted",
-      description: `${customerForToastName?.name || 'Customer'} and all associated data have been removed.`,
-    });
-  };
+  // handleCustomerDeleted is no longer needed on this page. 
+  // It will be handled by AdminUsersPage.
 
   if (isLoading && customers.length === 0) { 
     return (
@@ -106,8 +69,9 @@ export default function AdminCustomersPage() {
       )}
       <CustomerListTable 
         customers={customers} 
-        onCustomerDeleted={handleCustomerDeleted}
-        deletingCustomerId={deletingCustomerId}
+        onCustomerDeleted={() => { /* Deletion handled on User Management page */ }}
+        deletingCustomerId={null} // Not used on this page
+        enableActions={false} // Hide actions column on this page
       />
     </>
   );
