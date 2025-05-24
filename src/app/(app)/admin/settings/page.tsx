@@ -11,7 +11,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, Image as ImageIcon, UploadCloud } from 'lucide-react';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form'; // Added FormDescription
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -367,7 +367,9 @@ export default function AdminSettingsPage() {
                       ref={fileInputRef}
                       className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                     />
-                     <FormDescription>Select a PNG, JPG, or GIF image (max 2MB).</FormDescription>
+                    <p className="text-sm text-muted-foreground">
+                      Select a PNG, JPG, or GIF image (max 2MB).
+                    </p>
                     <div className="flex gap-2">
                       <Button onClick={handleAdminAvatarChange} disabled={isSavingAvatar}>
                         {isSavingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -523,5 +525,3 @@ export default function AdminSettingsPage() {
     </>
   );
 }
-
-    
