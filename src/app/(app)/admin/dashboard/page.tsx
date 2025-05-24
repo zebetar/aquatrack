@@ -17,6 +17,7 @@ import { format, isThisMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
+import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog'; // New Import
 
 const KeyMetricCard = ({ 
   title, 
@@ -54,7 +55,7 @@ const KeyMetricCard = ({
     href || onClick ? "hover:shadow-lg transition-all duration-150 ease-in-out hover:border-primary" : ""
   );
 
-  if (href) {
+  if (href && !onClick) { // Prioritize onClick if both are present for cards that become dialog triggers
     return (
       <Link href={href} className="block h-full group">
         <Card className={cardClasses}>
@@ -91,6 +92,10 @@ export default function AdminDashboardPage() {
   const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
   const [customersWithMonthlyUsageData, setCustomersWithMonthlyUsageData] = useState<CustomerMonthlyUsage[]>([]);
 
+  const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false); // New state for outstanding bills dialog
+  const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]); // New state for dialog data
+
+
   const loadDashboardData = useCallback(() => {
     const customers = getAllMockCustomers();
     const usageRecords = getAllMockUsageRecords();
@@ -106,7 +111,9 @@ export default function AdminDashboardPage() {
     setMonthlySupply(currentSupply);
     setMonthlyRevenue(currentRevenue);
 
-    const totalDue = customers.reduce((sum, customer) => sum + (customer.balance > 0 ? customer.balance : 0), 0);
+    const customersWithDues = customers.filter(c => c.balance > 0).sort((a,b) => b.balance - a.balance);
+    setCustomersWithOutstandingBills(customersWithDues);
+    const totalDue = customersWithDues.reduce((sum, customer) => sum + customer.balance, 0);
     setOutstandingBillsValue(totalDue);
     
     setRecentNotifications(notifications.slice(0, 3)); 
@@ -125,8 +132,8 @@ export default function AdminDashboardPage() {
     
     const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
       .map(([id, data]) => ({ id, ...data }))
-      .filter(item => item.usageHours > 0) // Only show customers with usage this month
-      .sort((a,b) => b.usageHours - a.usageHours); // Sort by highest usage
+      .filter(item => item.usageHours > 0) 
+      .sort((a,b) => b.usageHours - a.usageHours); 
     setCustomersWithMonthlyUsageData(processedDialogData);
 
   }, []);
@@ -158,7 +165,7 @@ export default function AdminDashboardPage() {
       value: `PKR ${outstandingBillsValue.toLocaleString('en-US')}`, 
       icon: BarChart3, 
       description: 'Total amount due',
-      href: '/admin/reports/outstanding-bills'
+      onClick: () => setIsOutstandingBillsDialogOpen(true) // Changed from href to onClick
     },
   ];
 
@@ -215,6 +222,11 @@ export default function AdminDashboardPage() {
         isOpen={isMonthlySupplyDialogOpen}
         onClose={() => setIsMonthlySupplyDialogOpen(false)}
         data={customersWithMonthlyUsageData}
+      />
+      <OutstandingBillsDialog 
+        isOpen={isOutstandingBillsDialogOpen}
+        onClose={() => setIsOutstandingBillsDialogOpen(false)}
+        data={customersWithOutstandingBills}
       />
     </>
   );
