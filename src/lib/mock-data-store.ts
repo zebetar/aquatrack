@@ -7,22 +7,74 @@ interface MockDataStore {
   payments: Payment[];
 }
 
-// Initialize store. This will be cleared on page refresh.
+const STORAGE_KEY = 'aquaTrackMockDataStore';
+
+// Initialize store
 let store: MockDataStore = {
   customers: [],
   usageRecords: [],
   payments: [],
 };
 
+function loadStoreFromLocalStorage(): void {
+  try {
+    const serializedStore = localStorage.getItem(STORAGE_KEY);
+    if (serializedStore) {
+      const parsedStore: MockDataStore = JSON.parse(serializedStore);
+      
+      // Convert date strings back to Date objects
+      parsedStore.customers = parsedStore.customers.map(c => ({
+        ...c,
+        createdAt: new Date(c.createdAt),
+      }));
+      parsedStore.usageRecords = parsedStore.usageRecords.map(ur => ({
+        ...ur,
+        date: new Date(ur.date),
+        startTime: new Date(ur.startTime),
+        endTime: new Date(ur.endTime),
+        createdAt: new Date(ur.createdAt),
+      }));
+      parsedStore.payments = parsedStore.payments.map(p => ({
+        ...p,
+        paymentDate: new Date(p.paymentDate),
+        createdAt: new Date(p.createdAt),
+      }));
+      
+      store = parsedStore;
+      console.log("Mock data store loaded from localStorage.");
+    } else {
+      console.log("No mock data found in localStorage, initializing empty store.");
+    }
+  } catch (error) {
+    console.error("Error loading mock data store from localStorage:", error);
+    // If error, initialize with empty store to prevent app crash
+    store = { customers: [], usageRecords: [], payments: [] };
+  }
+}
+
+function saveStoreToLocalStorage(): void {
+  try {
+    const serializedStore = JSON.stringify(store);
+    localStorage.setItem(STORAGE_KEY, serializedStore);
+    // console.log("Mock data store saved to localStorage.");
+  } catch (error) {
+    console.error("Error saving mock data store to localStorage:", error);
+  }
+}
+
+// Load store from localStorage when the script is first imported/run
+loadStoreFromLocalStorage();
+
+
 // --- Customer Functions ---
 export function addMockCustomer(customer: Customer): void {
   const existingIndex = store.customers.findIndex(c => c.id === customer.id);
   if (existingIndex > -1) {
-    // Update existing customer
     store.customers[existingIndex] = { ...store.customers[existingIndex], ...customer };
   } else {
     store.customers.push(customer);
   }
+  saveStoreToLocalStorage();
 }
 
 export function getMockCustomerById(customerId: string): Customer | undefined {
@@ -36,11 +88,11 @@ export function getAllMockCustomers(): Customer[] {
 // --- Water Usage Record Functions ---
 export function addMockUsageRecord(record: WaterUsageRecord): void {
   store.usageRecords.push(record);
-  // Update customer balance
   const customerIndex = store.customers.findIndex(c => c.id === record.customerId);
   if (customerIndex > -1) {
     store.customers[customerIndex].balance += record.cost;
   }
+  saveStoreToLocalStorage();
 }
 
 export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageRecord[] {
@@ -56,11 +108,11 @@ export function getAllMockUsageRecords(): WaterUsageRecord[] {
 // --- Payment Functions ---
 export function addMockPayment(payment: Payment): void {
   store.payments.push(payment);
-  // Update customer balance
   const customerIndex = store.customers.findIndex(c => c.id === payment.customerId);
   if (customerIndex > -1) {
     store.customers[customerIndex].balance -= payment.amountPaid;
   }
+  saveStoreToLocalStorage();
 }
 
 export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
@@ -80,7 +132,8 @@ export function clearAllMockData(): void {
     usageRecords: [],
     payments: [],
   };
-  console.log("Mock data store cleared.");
+  saveStoreToLocalStorage(); // Also clear it from localStorage
+  console.log("Mock data store cleared from memory and localStorage.");
 }
 
 // Optional: Log store changes for debugging
