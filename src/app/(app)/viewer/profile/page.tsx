@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth, MOCK_VIEWER_PASSWORD } from '@/contexts/auth-context';
 import { updateCustomerEmail } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
@@ -196,7 +196,7 @@ export default function ViewerProfilePage() {
               ref={fileInputRef}
               className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
-            <FormDescription>Select a PNG, JPG, or GIF image (max 2MB).</FormDescription>
+            <p className="text-sm text-muted-foreground">Select a PNG, JPG, or GIF image (max 2MB).</p>
             <div className="flex gap-2">
                 <Button onClick={handleAvatarChange} disabled={isAvatarSaving}>
                     {isAvatarSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
