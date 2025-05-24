@@ -38,11 +38,12 @@ body {
     --input: 200 30% 90%;
     --ring: 195 85% 50%; /* Primary color for rings */
 
-    --chart-1: 195 85% 45%;   /* Primary Blue/Teal */
-    --chart-2: 180 70% 55%;   /* Accent Teal */
-    --chart-3: 210 70% 60%;   /* Brighter Desaturated Blue */
-    --chart-4: 40 90% 60%;    /* Soft Yellow/Sand */
-    --chart-5: 0 70% 70%;     /* Soft Coral/Red */
+    /* Updated chart colors for light theme */
+    --chart-1: 195 85% 45%;   /* Primary Blue/Teal (matches --primary) */
+    --chart-2: 190 75% 60%;   /* Lighter Cyan/Aqua */
+    --chart-3: 205 70% 50%;   /* Medium Desaturated Blue */
+    --chart-4: 45 80% 65%;    /* Soft Gold/Sand */
+    --chart-5: 340 80% 70%;   /* Soft Coral/Pink for contrast */
     
     --radius: 0.5rem;
 
@@ -87,11 +88,12 @@ body {
     --input: 205 30% 20%;  /* Dark blue input background */
     --ring: 185 90% 55%;   /* Brighter cyan for rings */
 
-    --chart-1: 185 90% 50%; /* Primary Cyan */
-    --chart-2: 40 100% 65%;  /* Accent Gold/Orange */
-    --chart-3: 220 80% 70%;  /* Luminous Blue */
-    --chart-4: 160 70% 50%;  /* Muted Seafoam Green */
-    --chart-5: 270 70% 70%;  /* Soft Purple */
+    /* Updated chart colors for dark theme */
+    --chart-1: 185 90% 50%; /* Primary Cyan (matches --primary) */
+    --chart-2: 175 80% 60%; /* Brighter Aqua/Teal */
+    --chart-3: 195 60% 40%; /* Deeper Muted Cyan */
+    --chart-4: 40 100% 70%;  /* Brighter Gold/Orange (similar to --accent) */
+    --chart-5: 350 90% 75%;   /* Luminous Pink/Magenta */
 
     /* Sidebar specific colors for dark mode */
     --sidebar-background: 210 30% 9%; /* Even darker blue than main bg */
@@ -121,5 +123,4 @@ body {
   }
 }
 
-/* Removed previous specific dark mode card styling for .glassmorphic and .key-metric-card */
-/* Standard card styling will apply using the new dark theme variables */
+/* Standard card styling will apply using the new theme variables */

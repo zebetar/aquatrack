@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth, parseISO, getMonth, getYear } from 'date-fns';
+import { format, subMonths, parseISO } from 'date-fns';
 import { getAllMockCustomers, getAllMockUsageRecords, getAllMockPayments } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
 
@@ -21,14 +21,21 @@ interface CustomerConsumption {
   id: string;
   name: string;
   consumption: number;
-  bill: number; // total cost from usage
-  paid: number; // total amount paid
+  bill: number; // total cost from usage for the selected month
+  paid: number; // total amount paid for the selected month
+}
+
+interface MonthlyFinancialSummary {
+  name: string; // e.g., "Aggregate"
+  bill: number; // Total billed for the month
+  paid: number; // Total paid for the month
 }
 
 export default function AdminReportsPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   const [monthlySupplyData, setMonthlySupplyData] = useState<MonthlySupply[]>([]);
   const [customerConsumptionData, setCustomerConsumptionData] = useState<CustomerConsumption[]>([]);
+  const [monthlyFinancialSummary, setMonthlyFinancialSummary] = useState<MonthlyFinancialSummary[]>([]);
 
   const monthOptions = useMemo(() => {
     const options = [];
@@ -47,10 +54,10 @@ export default function AdminReportsPage() {
     const usageRecords = getAllMockUsageRecords();
     const payments = getAllMockPayments();
 
-    // Process Monthly Supply & Revenue
+    // Process Monthly Supply & Revenue (all-time for trend, chart will filter)
     const supplyMap = new Map<string, { supply: number, revenue: number }>();
     usageRecords.forEach(record => {
-      const recordDate = new Date(record.date); // Ensure record.date is a Date object or string
+      const recordDate = new Date(record.date);
       const monthKey = format(recordDate, 'yyyy-MM');
       const current = supplyMap.get(monthKey) || { supply: 0, revenue: 0 };
       current.supply += record.durationHours;
@@ -60,14 +67,13 @@ export default function AdminReportsPage() {
 
     const allMonthlyData: MonthlySupply[] = Array.from(supplyMap.entries()).map(([month, data]) => ({
       month,
-      monthLabel: format(parseISO(month + '-01'), 'MMM yyyy'), // Construct a valid date for formatting
+      monthLabel: format(parseISO(month + '-01'), 'MMM yyyy'),
       supply: data.supply,
       revenue: data.revenue,
-    })).sort((a,b) => a.month.localeCompare(b.month)); // Sort by month
+    })).sort((a,b) => a.month.localeCompare(b.month));
     setMonthlySupplyData(allMonthlyData);
 
-
-    // Process Customer Consumption
+    // Process Customer Consumption & Aggregate Financials for the selectedMonth
     const customerMap = new Map<string, CustomerConsumption>();
     customers.forEach(customer => {
       customerMap.set(customer.id, {
@@ -79,33 +85,36 @@ export default function AdminReportsPage() {
       });
     });
 
+    let totalBilledThisMonth = 0;
+    let totalPaidThisMonth = 0;
+
     usageRecords.forEach(record => {
       const customerEntry = customerMap.get(record.customerId);
-      if (customerEntry) {
-        // Filter for selected month if needed, or show all-time
-        // For this example, let's assume we want data for the *selectedMonth* context
-        const recordDate = new Date(record.date);
-        if (format(recordDate, 'yyyy-MM') === selectedMonth) {
-            customerEntry.consumption += record.durationHours;
-            customerEntry.bill += record.cost;
+      const recordDate = new Date(record.date);
+      if (format(recordDate, 'yyyy-MM') === selectedMonth) {
+        if (customerEntry) {
+          customerEntry.consumption += record.durationHours;
+          customerEntry.bill += record.cost;
         }
+        totalBilledThisMonth += record.cost;
       }
     });
     
     payments.forEach(payment => {
-        const customerEntry = customerMap.get(payment.customerId);
+      const customerEntry = customerMap.get(payment.customerId);
+      const paymentDate = new Date(payment.paymentDate);
+      if (format(paymentDate, 'yyyy-MM') === selectedMonth) {
         if (customerEntry) {
-            // Filter for selected month if needed for payments too
-            const paymentDate = new Date(payment.paymentDate);
-            if (format(paymentDate, 'yyyy-MM') === selectedMonth) {
-                 customerEntry.paid += payment.amountPaid;
-            }
+           customerEntry.paid += payment.amountPaid;
         }
+        totalPaidThisMonth += payment.amountPaid;
+      }
     });
 
     setCustomerConsumptionData(Array.from(customerMap.values()));
+    setMonthlyFinancialSummary([{ name: monthOptions.find(m=>m.value === selectedMonth)?.label || "Selected Month", bill: totalBilledThisMonth, paid: totalPaidThisMonth }]);
 
-  }, [selectedMonth]);
+  }, [selectedMonth, monthOptions]);
 
   useEffect(() => {
     loadReportsData();
@@ -114,16 +123,9 @@ export default function AdminReportsPage() {
   const filteredSupplyDataForChart = monthlySupplyData.filter(d => d.month === selectedMonth);
   
   const topCustomersByConsumption = customerConsumptionData
-    .filter(c => c.consumption > 0) // Only customers with consumption in the selected month
+    .filter(c => c.consumption > 0)
     .sort((a,b) => b.consumption - a.consumption)
     .slice(0,10);
-
-  // For Bill vs Paid, pick one customer (e.g., first with activity) or show aggregate
-  // For simplicity, let's try to show the first customer from topConsumers who has bill/paid data
-  const billVsPaidChartCustomer = topCustomersByConsumption.find(c => c.bill > 0 || c.paid > 0);
-  const billVsPaidChartData = billVsPaidChartCustomer ? 
-    [{ name: billVsPaidChartCustomer.name, bill: billVsPaidChartCustomer.bill, paid: billVsPaidChartCustomer.paid }] : [];
-
 
   return (
     <>
@@ -156,11 +158,11 @@ export default function AdminReportsPage() {
                 <BarChart data={filteredSupplyDataForChart}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="monthLabel" />
-                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" />
+                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" />
                   <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
                   <Tooltip formatter={(value, name) => name === 'revenue' ? `PKR ${Number(value).toLocaleString('en-US')}`: `${Number(value).toFixed(1)} hrs`}/>
                   <Legend />
-                  <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--primary))" name="Supply (Hours)" />
+                  <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--chart-1))" name="Supply (Hours)" />
                   <Bar yAxisId="right" dataKey="revenue" fill="hsl(var(--chart-2))" name="Revenue (PKR)" />
                 </BarChart>
               </ResponsiveContainer>
@@ -183,7 +185,7 @@ export default function AdminReportsPage() {
                   <YAxis dataKey="name" type="category" width={100} interval={0} />
                   <Tooltip formatter={(value) => `${Number(value).toFixed(1)} hrs`}/>
                   <Legend />
-                  <Bar dataKey="consumption" fill="hsl(var(--primary))" name="Consumption (Hours)" />
+                  <Bar dataKey="consumption" fill="hsl(var(--chart-3))" name="Consumption (Hours)" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -192,21 +194,21 @@ export default function AdminReportsPage() {
 
         <Card className="lg:col-span-2 shadow-md">
           <CardHeader>
-            <CardTitle>Customer Bill vs. Paid ({billVsPaidChartCustomer ? billVsPaidChartCustomer.name : 'N/A'}, {monthOptions.find(m=>m.value === selectedMonth)?.label})</CardTitle>
+            <CardTitle>Monthly Financial Summary ({monthOptions.find(m=>m.value === selectedMonth)?.label})</CardTitle>
           </CardHeader>
           <CardContent className="h-[400px]">
-            {billVsPaidChartData.length === 0 ? (
-              <p className="text-muted-foreground flex h-full items-center justify-center">No bill vs. paid data for a specific customer this month.</p>
+            {monthlyFinancialSummary.length === 0 || (monthlyFinancialSummary[0].bill === 0 && monthlyFinancialSummary[0].paid === 0) ? (
+              <p className="text-muted-foreground flex h-full items-center justify-center">No billing or payment data for this month.</p>
             ) : (
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={billVsPaidChartData}> 
+                <LineChart data={monthlyFinancialSummary}> 
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip formatter={(value) => `PKR ${Number(value).toLocaleString('en-US')}`}/>
                     <Legend />
-                    <Line type="monotone" dataKey="bill" stroke="hsl(var(--destructive))" name="Total Bill (PKR)" />
-                    <Line type="monotone" dataKey="paid" stroke="hsl(var(--chart-5))" name="Amount Paid (PKR)" />
+                    <Line type="monotone" dataKey="bill" stroke="hsl(var(--destructive))" name="Total Billed (PKR)" activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="paid" stroke="hsl(var(--chart-5))" name="Total Paid (PKR)" activeDot={{ r: 6 }} />
                 </LineChart>
             </ResponsiveContainer>
             )}
