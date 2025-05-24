@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string, role: 'admin' | 'viewer') => Promise<void>;
   logout: () => void;
   updateUserEmail: (newEmail: string) => void;
+  updateAdminName: (newName: string) => void; // Added for admin name change
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (parsedUser && parsedUser.id && parsedUser.email && parsedUser.role) {
           setUser(parsedUser);
         } else {
+          console.warn("Stored user data is incomplete or invalid. Clearing.");
           localStorage.removeItem('authUser');
         }
       } catch (error) {
@@ -78,17 +80,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await delay(500);
 
     let loggedInUser: User | null = null;
-    // email is already trimmed and lowercased by the login form's Zod schema
+    const processedEmail = email.trim().toLowerCase();
 
-    if (role === 'admin' && email === MOCK_ADMIN_USER.email && password === MOCK_ADMIN_PASSWORD) {
-      loggedInUser = MOCK_ADMIN_USER;
+    if (role === 'admin' && processedEmail === MOCK_ADMIN_USER.email && password === MOCK_ADMIN_PASSWORD) {
+      // Use a copy of MOCK_ADMIN_USER to allow for name changes in session
+      loggedInUser = { ...MOCK_ADMIN_USER };
     } else if (role === 'viewer') {
       const customers = getAllMockCustomers();
-      // Customer emails in the store are also guaranteed to be trimmed and lowercased by the add customer form's Zod schema
       const foundCustomer = customers.find(
         (c: Customer) =>
-          c.email === email && // Direct comparison as both should be processed
-          c.authUID // Ensure customer has an authUID (is eligible for login)
+          c.email?.trim().toLowerCase() === processedEmail &&
+          c.authUID 
       );
 
       if (foundCustomer && password === MOCK_VIEWER_PASSWORD) {
@@ -128,8 +130,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateAdminName = (newName: string) => {
+    if (user && user.role === 'admin') {
+      const trimmedName = newName.trim();
+      if (trimmedName) {
+        const updatedUser = { ...user, name: trimmedName };
+        setUser(updatedUser);
+        localStorage.setItem('authUser', JSON.stringify(updatedUser));
+        toast({ title: "Admin Name Updated", description: `Your display name is now ${trimmedName}.` });
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Admin name cannot be empty." });
+      }
+    }
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUserEmail }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUserEmail, updateAdminName }}>
       {children}
     </AuthContext.Provider>
   );

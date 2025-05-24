@@ -10,7 +10,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette } from 'lucide-react'; 
+import { Loader2, Eye, EyeOff, Users, KeyRound, FileDown, Palette, User } from 'lucide-react'; 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,7 +24,12 @@ import {
 } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
 
-// Schemas for admin (though functionality is mocked)
+// Schemas for admin (though functionality is mocked for email/password)
+const adminChangeNameSchema = z.object({
+  newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
+});
+type AdminChangeNameFormValues = z.infer<typeof adminChangeNameSchema>;
+
 const adminChangeEmailSchema = z.object({
   newAdminEmail: z.string().email({ message: "Please enter a valid email address." }),
 });
@@ -43,7 +48,7 @@ type AdminChangePasswordFormValues = z.infer<typeof adminChangePasswordSchema>;
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
-  const { user } = useAuth(); 
+  const { user, updateAdminName } = useAuth(); 
   const [currentRate, setCurrentRate] = useState(CORE_WATER_RATE_PER_HOUR);
   const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
   const [isSavingRate, setIsSavingRate] = useState(false);
@@ -56,6 +61,7 @@ export default function AdminSettingsPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
+  const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingEmail, setIsSavingEmail] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
@@ -63,6 +69,19 @@ export default function AdminSettingsPage() {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
     setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
   }, []);
+
+  const adminNameForm = useForm<AdminChangeNameFormValues>({
+    resolver: zodResolver(adminChangeNameSchema),
+    defaultValues: { newAdminName: user?.name || "" },
+    values: { newAdminName: user?.name || "" } // Keep form in sync if user.name changes
+  });
+  
+  useEffect(() => {
+    if (user?.name) {
+      adminNameForm.reset({ newAdminName: user.name });
+    }
+  }, [user?.name, adminNameForm]);
+
 
   const adminEmailForm = useForm<AdminChangeEmailFormValues>({
     resolver: zodResolver(adminChangeEmailSchema),
@@ -99,6 +118,14 @@ export default function AdminSettingsPage() {
       description: `The core water rate has been set to PKR ${rateValue}/hour.`,
     });
     setIsSavingRate(false);
+  };
+
+  const handleAdminNameChange = async (values: AdminChangeNameFormValues) => {
+    setIsSavingName(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    updateAdminName(values.newAdminName);
+    // Toast is handled by updateAdminName function in AuthContext
+    setIsSavingName(false);
   };
 
   const handleAdminEmailChange = async (values: AdminChangeEmailFormValues) => {
@@ -144,7 +171,7 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <Accordion type="multiple" className="w-full space-y-4">
+      <Accordion type="multiple" className="w-full space-y-4 mt-6">
         <AccordionItem value="water-rate" className="border-none">
           <Card className="shadow-md glassmorphism-card">
             <CardHeader className="p-4">
@@ -247,6 +274,34 @@ export default function AdminSettingsPage() {
             </CardHeader>
             <AccordionContent>
               <CardContent className="p-4 pt-0 space-y-6">
+                
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Change Admin Name</h4>
+                  <Form {...adminNameForm}>
+                    <form onSubmit={adminNameForm.handleSubmit(handleAdminNameChange)} className="space-y-4">
+                      <FormField
+                        control={adminNameForm.control}
+                        name="newAdminName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Admin Display Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Site Administrator" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={isSavingName}>
+                        {isSavingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Name
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+
+                <Separator className="my-6 bg-border/50"/>
+                
                 <div>
                   <h4 className="text-md font-semibold mb-2">Change Admin Email</h4>
                   <div className="mb-2">
