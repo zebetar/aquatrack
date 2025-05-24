@@ -1,8 +1,43 @@
 
+"use client";
+
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import type { WaterUsageRecord } from '@/types';
+import { useState, useEffect, useCallback } from 'react';
+import { getAllMockUsageRecords } from '@/lib/mock-data-store';
+import { format } from 'date-fns';
+import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminUsagePage() {
+  const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadUsageData = useCallback(() => {
+    setIsLoading(true);
+    const records = getAllMockUsageRecords();
+    // Sort by most recent first
+    records.sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    setUsageRecords(records);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadUsageData();
+  }, [loadUsageData]);
+
+  if (isLoading) {
+    return (
+        <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="ml-2">Loading usage records...</p>
+        </div>
+    );
+  }
+
   return (
     <>
       <PageHeader 
@@ -12,13 +47,45 @@ export default function AdminUsagePage() {
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle>All Usage Records</CardTitle>
+          <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Water usage records for all customers will be displayed and managed here. 
-            Functionality to view, filter, and possibly add/edit records can be implemented.
-          </p>
-          {/* Placeholder for table or list of usage records */}
+          <ScrollArea className="h-[calc(100vh-18rem)] w-full"> {/* Adjust height as needed */}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Start Time</TableHead>
+                  <TableHead>End Time</TableHead>
+                  <TableHead className="text-right">Duration (Hrs)</TableHead>
+                  <TableHead className="text-right">Cost (PKR)</TableHead>
+                  <TableHead>Recorded By</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {usageRecords.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No water usage records found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  usageRecords.map(record => (
+                    <TableRow key={record.id}>
+                      <TableCell className="font-medium">{record.customerName}</TableCell>
+                      <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
+                      <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
+                      <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
+                      <TableCell className="text-right">{record.durationHours.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
+                      <TableCell>{record.recordedBy === 'admin001' ? 'Admin' : record.recordedBy}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </CardContent>
       </Card>
     </>

@@ -49,6 +49,10 @@ export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageR
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 }
 
+export function getAllMockUsageRecords(): WaterUsageRecord[] {
+  return [...store.usageRecords]; // Return a copy
+}
+
 // --- Payment Functions ---
 export function addMockPayment(payment: Payment): void {
   store.payments.push(payment);
@@ -61,8 +65,12 @@ export function addMockPayment(payment: Payment): void {
 
 export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
   return store.payments
-    .filter(p => p.customerId === customerId) // Corrected line: payment.customerId to customerId
+    .filter(p => p.customerId === customerId) 
     .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+}
+
+export function getAllMockPayments(): Payment[] {
+  return [...store.payments]; // Return a copy
 }
 
 // --- Utility Functions ---
@@ -87,4 +95,3 @@ export const addMockCustomerLogged = (customer: Customer) => {
   logStore(`addMockCustomer: ${customer.id}`);
 };
 // Similar wrappers for other add functions if needed for debugging.
-
