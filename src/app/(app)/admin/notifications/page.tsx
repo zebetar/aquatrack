@@ -1,7 +1,6 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Loader2, Palette } from 'lucide-react'; // Added more icons
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -65,8 +64,8 @@ export default function AdminNotificationsPage() {
 
   return (
     <>
-      <PageHeader title="Admin Notifications" description="Log of system events and admin-relevant notifications." />
-      <Card className="shadow-md glassmorphism-card">
+      {/* PageHeader removed as per request */}
+      <Card className="shadow-md glassmorphism-card mt-6"> {/* Added mt-6 for spacing after removing PageHeader */}
         <CardHeader>
            <div className="flex justify-between items-center">
             <div>
@@ -86,7 +85,7 @@ export default function AdminNotificationsPage() {
           {notifications.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center">No notifications yet.</p>
           ) : (
-            <ScrollArea className="h-[calc(100vh-20rem)] pr-4">
+            <ScrollArea className="h-[calc(100vh-16rem)] pr-4"> {/* Adjusted height assuming no PageHeader */}
               <ul className="space-y-4">
                 {notifications.map((notification) => (
                   <li
