@@ -25,7 +25,7 @@ async function getCustomerDetailsFromStore(customerId: string): Promise<Customer
   const customer = getMockCustomerById(customerId);
   if (customer) return customer;
 
-  // Fallback for testing or if customerId is not in store (should ideally not happen in normal flow)
+  // Fallback for testing or if customerId is not in store
   return { 
     id: customerId, 
     name: `Customer ${customerId.substring(0,5)} (Not in Store)`, 
@@ -56,7 +56,7 @@ export default function CustomerDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCustomerData = useCallback(async () => {
-    if (!customerId) return; // Guard clause if customerId is not available
+    if (!customerId) return; 
     setIsLoading(true);
     try {
       const [custData, usageData, paymentData] = await Promise.all([
@@ -69,6 +69,7 @@ export default function CustomerDetailPage() {
       setPayments(paymentData);
     } catch (error) {
       console.error("Failed to load customer data from store", error);
+      // Optionally set an error state here
     } finally {
       setIsLoading(false);
     }
@@ -81,21 +82,25 @@ export default function CustomerDetailPage() {
   const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
     if (!customerId) return;
     addMockUsageRecord(newRecord); // Adds to store & updates customer balance in store
+    
     // Refresh data from store for this page
     const updatedCustomer = getMockCustomerById(customerId);
     const updatedUsageRecords = getMockUsageRecordsByCustomerId(customerId);
+    
     if (updatedCustomer) setCustomer(updatedCustomer);
-    setUsageRecords(updatedUsageRecords);
+    setUsageRecords(updatedUsageRecords); // This is the key state update
   };
 
   const handleAddPaymentRecord = (newPayment: Payment) => {
     if (!customerId) return;
     addMockPayment(newPayment); // Adds to store & updates customer balance in store
+    
     // Refresh data from store for this page
     const updatedCustomer = getMockCustomerById(customerId);
     const updatedPayments = getMockPaymentsByCustomerId(customerId);
+
     if (updatedCustomer) setCustomer(updatedCustomer);
-    setPayments(updatedPayments);
+    setPayments(updatedPayments); // This is the key state update
   };
 
   if (isLoading) {
@@ -110,7 +115,7 @@ export default function CustomerDetailPage() {
   if (!customer) {
     return (
       <>
-        <PageHeader title="Customer Not Found" description="This customer may not exist in the mock store." />
+        <PageHeader title="Customer Not Found" description="This customer may not exist or data could not be loaded." />
         <p className="text-muted-foreground">The requested customer could not be found or their data is not available.</p>
         <Button variant="outline" asChild className="mt-4">
           <Link href="/admin/customers"><ArrowLeft className="mr-2 h-4 w-4" />Back to Customers</Link>
