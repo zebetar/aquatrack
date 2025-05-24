@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription as ShadCnCardDescription } from '@/components/ui/card'; // Renamed CardDescription to avoid conflict
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed ShadCnCardDescription as it's not used
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
