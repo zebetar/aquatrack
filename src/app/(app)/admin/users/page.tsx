@@ -3,14 +3,15 @@
 
 import { PageHeader } from '@/components/shared/page-header';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer } from '@/types';
+import type { Customer, WaterUsageRecord } from '@/types'; // Added WaterUsageRecord
 import { useState, useEffect, useCallback } from 'react';
 import { 
   getAllMockCustomers, 
   deleteMockCustomer as deleteCustomerFromStore,
   getMockCustomerById,
   getMockUsageRecordsByCustomerId,
-  getMockPaymentsByCustomerId 
+  getMockPaymentsByCustomerId,
+  getAllMockUsageRecords // Added
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { Loader2 } from 'lucide-react';
@@ -18,18 +19,30 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
+// Augment Customer type for display purposes
+type CustomerWithUsage = Customer & { totalUsageHours?: number };
+
 export default function AdminUsersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchCustomers = useCallback(() => {
     setIsLoading(true);
-    // Simulate a small delay
     setTimeout(() => {
       const storedCustomers = getAllMockCustomers();
-      setCustomers(storedCustomers);
+      const usageRecords = getAllMockUsageRecords(); // Fetch all usage records
+
+      // Augment customers with total usage hours
+      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
+        const customerUsage = usageRecords
+          .filter(record => record.customerId === customer.id)
+          .reduce((sum, record) => sum + record.durationHours, 0);
+        return { ...customer, totalUsageHours: customerUsage };
+      });
+
+      setCustomers(customersWithUsage);
       setIsLoading(false);
     }, 100);
   }, []);

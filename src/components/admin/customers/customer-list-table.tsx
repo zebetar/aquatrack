@@ -20,18 +20,23 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
 
+// Expect an optional totalUsageHours property
+interface CustomerWithUsage extends Customer {
+  totalUsageHours?: number;
+}
+
 interface CustomerListTableProps {
-  customers: Customer[];
+  customers: CustomerWithUsage[];
   onCustomerDeleted: (customerId: string) => void; 
   deletingCustomerId: string | null;
-  enableActions?: boolean; // New prop to control visibility of actions column
+  enableActions?: boolean; 
 }
 
 export function CustomerListTable({ 
   customers, 
   onCustomerDeleted, 
   deletingCustomerId,
-  enableActions = false // Default to false
+  enableActions = false 
 }: CustomerListTableProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -71,6 +76,7 @@ export function CustomerListTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Contact Info</TableHead>
+            <TableHead className="text-right">Total Usage (Hrs)</TableHead>
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-center">PDF</TableHead>
@@ -80,7 +86,7 @@ export function CustomerListTable({
         <TableBody>
           {customers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={enableActions ? 6 : 5} className="h-24 text-center">
+              <TableCell colSpan={enableActions ? 7 : 6} className="h-24 text-center">
                 No customers found.
               </TableCell>
             </TableRow>
@@ -93,6 +99,7 @@ export function CustomerListTable({
             >
               <TableCell className="font-medium">{customer.name}</TableCell>
               <TableCell>{customer.contactInfo || '-'}</TableCell>
+              <TableCell className="text-right">{(customer.totalUsageHours ?? 0).toFixed(1)}</TableCell>
               <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
               <TableCell className="text-center">
                 <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>

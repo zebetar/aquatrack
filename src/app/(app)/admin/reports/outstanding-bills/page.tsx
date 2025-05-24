@@ -3,24 +3,36 @@
 
 import { PageHeader } from '@/components/shared/page-header';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer } from '@/types';
+import type { Customer, WaterUsageRecord } from '@/types'; // Added WaterUsageRecord
 import { useState, useEffect, useCallback } from 'react';
-import { getAllMockCustomers } from '@/lib/mock-data-store';
+import { getAllMockCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store'; // Added getAllMockUsageRecords
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
+// Augment Customer type for display purposes
+type CustomerWithUsage = Customer & { totalUsageHours?: number };
+
 export default function OutstandingBillsPage() {
-  const [outstandingCustomers, setOutstandingCustomers] = useState<Customer[]>([]);
+  const [outstandingCustomers, setOutstandingCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchOutstandingCustomers = useCallback(() => {
     setIsLoading(true);
     setTimeout(() => {
       const allCustomers = getAllMockCustomers();
-      const filteredCustomers = allCustomers
+      const usageRecords = getAllMockUsageRecords(); // Fetch all usage records
+
+      const augmentedCustomers = allCustomers.map(customer => {
+        const customerUsage = usageRecords
+          .filter(record => record.customerId === customer.id)
+          .reduce((sum, record) => sum + record.durationHours, 0);
+        return { ...customer, totalUsageHours: customerUsage };
+      });
+      
+      const filteredCustomers = augmentedCustomers
         .filter(customer => customer.balance > 0)
-        .sort((a, b) => b.balance - a.balance); // Sort by highest balance first
+        .sort((a, b) => b.balance - a.balance); 
       setOutstandingCustomers(filteredCustomers);
       setIsLoading(false);
     }, 100);
@@ -63,12 +75,10 @@ export default function OutstandingBillsPage() {
         <CustomerListTable
           customers={outstandingCustomers}
           onCustomerDeleted={() => {
-            // Deletion should ideally be handled on User Management or Customer Detail page
-            // For now, we'll just re-fetch if this page were to support deletion directly
             fetchOutstandingCustomers(); 
           }}
           deletingCustomerId={null}
-          enableActions={false} // No delete actions directly on this specific report view
+          enableActions={false} 
         />
       ) : (
         !isLoading && (
