@@ -6,9 +6,9 @@ import { UserNav } from '@/components/layout/user-nav';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { adminNavItems, viewerNavItems } from '@/config/nav-config';
 import { useAuth } from '@/contexts/auth-context';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'; // Added SheetHeader, SheetTitle
 import { Button } from '@/components/ui/button';
-import { Menu, Droplets, Loader2 } from 'lucide-react'; // Changed Water to Droplets
+import { Menu, Droplets, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,8 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-     // This should ideally be handled by AuthProvider redirecting, but as a fallback:
-    return null; // Or a redirect component
+    return null; 
   }
 
   const navItems = user.role === 'admin' ? adminNavItems : viewerNavItems;
@@ -36,7 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center border-b border-sidebar-border px-4 shrink-0">
         <Link href="/" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
-          <Droplets className="h-7 w-7 text-primary" /> {/* Changed Water to Droplets */}
+          <Droplets className="h-7 w-7 text-primary" /> 
           <span className="text-xl">AquaTrack</span>
         </Link>
       </div>
@@ -66,6 +65,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="flex flex-col p-0 w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+                {/* Added SheetHeader and sr-only SheetTitle for accessibility */}
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Navigation Menu</SheetTitle>
+                </SheetHeader>
                 {sidebarContent}
               </SheetContent>
             </Sheet>
