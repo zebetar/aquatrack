@@ -16,12 +16,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react"; // Added Eye and EyeOff
 import { useState } from "react";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password is required." }), // Simple validation for demo
+  password: z.string().min(1, { message: "Password is required." }),
   role: z.enum(["admin", "viewer"], { required_error: "You need to select a role." }),
 });
 
@@ -30,6 +30,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -42,13 +43,13 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
-    // Pass email, password, and role to the login function
     await login(values.email, values.password, values.role);
-    // In a real app, role might be determined server-side after successful auth
     setIsSubmitting(false);
   }
 
   const isLoading = authLoading || isSubmitting;
+
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return (
     <Form {...form}>
@@ -72,9 +73,27 @@ export function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
+              <div className="relative">
+                <FormControl>
+                  <Input 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    {...field} 
+                    className="pr-10" // Add padding for the icon
+                  />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={togglePasswordVisibility}
+                  tabIndex={-1} // Prevents button from being focused by tab
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -113,12 +132,6 @@ export function LoginForm() {
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Login
         </Button>
-        <div className="text-center text-sm">
-          {/* Add Forgot Password / Sign Up links here if needed */}
-          {/* <p className="text-muted-foreground">
-            <a href="#" className="hover:underline">Forgot Password?</a>
-          </p> */}
-        </div>
       </form>
     </Form>
   );
