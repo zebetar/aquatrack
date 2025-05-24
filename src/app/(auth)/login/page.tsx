@@ -2,7 +2,6 @@
 import { LoginForm } from '@/components/auth/login-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Droplets } from 'lucide-react'; 
-import Link from 'next/link';
 
 export default function LoginPage() {
   return (
@@ -16,12 +15,7 @@ export default function LoginPage() {
       </CardHeader>
       <CardContent>
         <LoginForm />
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-semibold text-primary hover:underline">
-            Sign Up
-          </Link>
-        </p>
+        {/* Removed link to signup page */}
       </CardContent>
     </Card>
   );
