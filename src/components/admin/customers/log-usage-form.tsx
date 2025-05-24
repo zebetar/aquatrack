@@ -29,15 +29,26 @@ const logUsageFormSchema = z.object({
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)"),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)"),
 }).refine(data => {
-  if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.startTime) || !/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.endTime)) {
-    return true; 
+  // Ensure startTime and endTime strings are valid before attempting to parse and compare.
+  // Field-level regex should catch basic format errors. This refine focuses on cross-field logic.
+  const [startH, startM] = data.startTime.split(':').map(Number);
+  const [endH, endM] = data.endTime.split(':').map(Number);
+
+  // Use the date from the form for constructing full Date objects
+  const baseDate = data.date; 
+
+  const startDateTime = set(baseDate, { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
+  const endDateTime = set(baseDate, { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+  
+  // Check if date constructions are valid
+  if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+    return false; // If dates are invalid (e.g. due to bad H/M numbers if regex was bypassed), refinement fails.
   }
-  const start = parse(data.startTime, "HH:mm", new Date());
-  const end = parse(data.endTime, "HH:mm", new Date());
-  return end > start;
+
+  return endDateTime > startDateTime;
 }, {
   message: "End time must be after start time.",
-  path: ["endTime"],
+  path: ["endTime"], // Error reported on endTime field
 });
 
 type LogUsageFormValues = z.infer<typeof logUsageFormSchema>;
@@ -56,20 +67,19 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     defaultValues: {
       date: new Date(),
       startTime: format(new Date(), "HH:mm"),
-      endTime: format(new Date(Date.now() + 60 * 60 * 1000), "HH:mm"),
+      endTime: format(new Date(Date.now() + 60 * 60 * 1000), "HH:mm"), // Default to 1 hour later
     },
     mode: "onChange", 
   });
 
-  const { getValues, watch } = form;
-  const watchedValues = watch(); // Watch all form values
+  const { getValues, watch, formState } = form; // Added formState
+  const watchedValues = watch(); 
 
   const calculatedMetrics = useMemo(() => {
-    // Use watchedValues for calculating metrics to ensure it's always based on the latest form state
     const parseResult = logUsageFormSchema.safeParse(watchedValues);
 
     if (!parseResult.success || !watchedValues.date || !watchedValues.startTime || !watchedValues.endTime) {
-      return { durationHours: 0, cost: 0, isValid: false };
+      return { durationHours: 0, cost: 0 };
     }
     
     const [startH, startM] = watchedValues.startTime.split(':').map(Number);
@@ -78,46 +88,42 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     const actualStartTime = set(new Date(watchedValues.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
     const actualEndTime = set(new Date(watchedValues.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
     
-    if (actualEndTime <= actualStartTime) {
-      return { durationHours: 0, cost: 0, isValid: false };
+    if (actualEndTime <= actualStartTime || isNaN(actualStartTime.getTime()) || isNaN(actualEndTime.getTime())) {
+      return { durationHours: 0, cost: 0 };
     }
 
     const durationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
     const durationHours = durationMinutes / 60;
     const cost = durationHours * CORE_WATER_RATE_PER_HOUR;
-    return { durationHours, cost, isValid: true };
-  }, [watchedValues]); // Depend on the watchedValues object
+    return { durationHours, cost };
+  }, [watchedValues]); 
 
   const { durationHours, cost } = calculatedMetrics;
   
-  // Determine if the form is currently valid by parsing current (watched) values
   const isFormCurrentlyValid = logUsageFormSchema.safeParse(watchedValues).success;
 
   async function onSubmit(values: LogUsageFormValues) {
     setIsLoading(true);
     
-    const finalCalculation = (() => {
-        const [startH, startM] = values.startTime.split(':').map(Number);
-        const [endH, endM] = values.endTime.split(':').map(Number);
-        const actualStartTime = set(new Date(values.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
-        const actualEndTime = set(new Date(values.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
-        if (actualEndTime <= actualStartTime) return { durationHours: 0, cost: 0, actualStartTime, actualEndTime };
-        const durationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
-        const durationHours = durationMinutes / 60;
-        const cost = durationHours * CORE_WATER_RATE_PER_HOUR;
-        return { durationHours, cost, actualStartTime, actualEndTime };
-    })();
-
+    // Re-calculate using validated values for safety, although schema validation should ensure correctness.
+    const [startH, startM] = values.startTime.split(':').map(Number);
+    const [endH, endM] = values.endTime.split(':').map(Number);
+    const actualStartTime = set(new Date(values.date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
+    const actualEndTime = set(new Date(values.date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
+    
+    const finalDurationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
+    const finalDurationHours = finalDurationMinutes / 60;
+    const finalCost = finalDurationHours * CORE_WATER_RATE_PER_HOUR;
 
     const newUsageRecord: WaterUsageRecord = {
       id: `usage-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
       customerId: customer.id,
       customerName: customer.name,
       date: values.date, 
-      startTime: finalCalculation.actualStartTime, 
-      endTime: finalCalculation.actualEndTime,  
-      durationHours: finalCalculation.durationHours,
-      cost: finalCalculation.cost,
+      startTime: actualStartTime, 
+      endTime: actualEndTime,  
+      durationHours: finalDurationHours,
+      cost: finalCost,
       recordedBy: "admin001", 
       createdAt: new Date(),
     };
@@ -126,7 +132,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     
     toast({
       title: "Usage Logged Successfully!",
-      description: `Logged ${finalCalculation.durationHours.toFixed(2)} hours for ${customer.name}. Cost: PKR ${finalCalculation.cost.toLocaleString('en-US')}.`,
+      description: `Logged ${finalDurationHours.toFixed(2)} hours for ${customer.name}. Cost: PKR ${finalCost.toLocaleString('en-US')}.`,
     });
     setIsLoading(false);
     onSuccess?.(newUsageRecord); 
@@ -223,4 +229,3 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     </Form>
   );
 }
-
