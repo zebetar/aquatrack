@@ -11,12 +11,12 @@ export default function LoginPage() {
           <Droplets className="h-10 w-10" />
         </div>
         <CardTitle className="text-3xl font-bold">AquaTrack</CardTitle>
-        <CardDescription>Sign in to manage your water supply</CardDescription>
+        {/* <CardDescription>Sign in to manage your water supply</CardDescription> */} {/* Removed this line */}
       </CardHeader>
       <CardContent>
         <LoginForm />
-        {/* Removed link to signup page */}
       </CardContent>
     </Card>
   );
 }
+
