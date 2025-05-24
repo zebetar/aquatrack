@@ -141,11 +141,11 @@ export default function AdminSettingsPage() {
     <>
       {/* PageHeader removed as per user request */}
       <Accordion type="multiple" className="w-full space-y-4">
-        <AccordionItem value="general-config" className="border-none">
+        <AccordionItem value="water-rate" className="border-none">
           <Card className="shadow-md glassmorphism-card">
             <CardHeader className="p-4">
               <AccordionTrigger className="p-0 hover:no-underline">
-                <CardTitle>General Configuration</CardTitle>
+                <CardTitle>Water Rate</CardTitle>
               </AccordionTrigger>
             </CardHeader>
             <AccordionContent>
