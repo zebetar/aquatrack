@@ -114,7 +114,8 @@ body {
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold; /* Make headings bold by default */
   }
-  .card-title { 
+  /* Ensure CardTitle matches the updated component structure if it uses h3 */
+  .card-title-class { /* Renamed to avoid conflict if CardTitle itself is used as a selector */
     @apply text-2xl font-bold; 
   }
 }
@@ -139,30 +140,22 @@ body {
   @apply transform scale-105 shadow-lg;
 }
 
-.dark .btn-primary-dark-pulse:not(:disabled) {
-  /* Keeping a subtle glow for primary buttons in dark mode, but removed pulse */
-  box-shadow: 0 0 8px hsla(var(--primary), 0.6), 0 0 12px hsla(var(--primary), 0.4);
-}
-.dark .btn-primary-dark-pulse:hover:not(:disabled) {
-  box-shadow: 0 0 12px hsla(var(--primary), 0.8), 0 0 18px hsla(var(--primary), 0.6);
+/* Updated general .card utility class for hover effects */
+.card-utility { /* Renamed to avoid conflict with Shadcn's Card component default styling */
+  @apply bg-card rounded-lg shadow-lg transition-all duration-300 ease-in-out;
 }
 
-/* Enhance aesthetics with subtle shadows and transitions */
-.card { /* This is a NEW utility class, distinct from Shadcn's Card component default styling */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle card shadow */
-  transition: box-shadow 0.3s ease-in-out; /* Smooth shadow transition */
+.card-utility:hover {
+  @apply shadow-xl transform -translate-y-1;
 }
 
-.card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
-}
 
 /* Base button styling - note that Shadcn buttons have their own variants and transitions */
 button {
   transition: background-color 0.3s ease; /* Button background transition */
 }
 
-button:hover {
+button:hover:not(:disabled) { /* Added :not(:disabled) */
   /* Using theme's accent color for a more consistent feel. */
   /* This might be overridden by more specific Tailwind classes on Shadcn buttons. */
   background-color: hsl(var(--accent)); 
