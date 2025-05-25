@@ -4,8 +4,8 @@
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer, WaterUsageRecord } from '@/types'; // Added WaterUsageRecord
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  getAllMockCustomers, 
+import {
+  getAllMockCustomers,
   deleteMockCustomer as deleteCustomerFromStore,
   getMockCustomerById,
   getMockUsageRecordsByCustomerId,
@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
         return { ...customer, totalUsageHours: customerUsage };
       });
 
-      setCustomers(customersWithUsage);
+      setCustomers(customersWithUsage.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setIsLoading(false);
     }, 100);
   }, []);
@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
     }
 
     deleteCustomerFromStore(customerId);
-    fetchCustomers(); 
+    fetchCustomers();
     setDeletingCustomerId(null);
     toast({
       title: "Customer Deleted",
@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
     });
   };
 
-  if (isLoading && customers.length === 0) { 
+  if (isLoading && customers.length === 0) {
     return (
         <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -100,23 +100,22 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      {/* PageHeader removed */}
-      <Button variant="outline" asChild className="mb-6 mt-6"> {/* Added mt-6 for spacing */}
+      <Button variant="outline" asChild className="mb-6 mt-6">
         <Link href="/admin/settings">
-          <>
+          <span className="inline-flex items-center"> {/* Wrapped Link content in a span */}
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Settings
-          </>
+          </span>
         </Link>
       </Button>
-      {isLoading && customers.length > 0 && ( 
+      {isLoading && customers.length > 0 && (
         <div className="my-4 flex items-center justify-center text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           <span>Refreshing user list...</span>
         </div>
       )}
-      <CustomerListTable 
-        customers={customers} 
+      <CustomerListTable
+        customers={customers}
         onCustomerDeleted={handleCustomerDeleted}
         deletingCustomerId={deletingCustomerId}
         enableActions={true} // Show actions column on this page
