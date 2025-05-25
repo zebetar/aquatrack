@@ -1,7 +1,6 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer, WaterUsageRecord } from '@/types'; // Added WaterUsageRecord
 import { useState, useEffect, useCallback } from 'react';
@@ -14,7 +13,7 @@ import {
   getAllMockUsageRecords // Added
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -101,12 +100,12 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <PageHeader 
-        title="User Management" 
-        description="View and manage customer accounts. Deleting a customer will also download their statement."
-      />
-        <Button variant="outline" asChild className="mb-6">
-          <Link href="/admin/settings">Back to Settings</Link>
+      {/* PageHeader removed */}
+      <Button variant="outline" asChild className="mb-6 mt-6"> {/* Added mt-6 for spacing */}
+        <Link href="/admin/settings">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Settings
+        </Link>
       </Button>
       {isLoading && customers.length > 0 && ( 
         <div className="my-4 flex items-center justify-center text-muted-foreground">
