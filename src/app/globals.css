@@ -4,169 +4,308 @@
 @tailwind utilities;
 
 body {
-  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif; /* Set Montserrat as base */
+  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
+  /* Light theme body gradient */
+  background: linear-gradient(to bottom right, hsl(var(--sky-100)), hsl(var(--white)), hsl(var(--cyan-50)));
+  /* overflow-x: hidden; /* Let specific containers manage this */
+  /* width: 100%; */
+  /* max-width: 100vw; */
 }
 
+.dark body {
+  background: hsl(var(--background)); /* Solid dark background for dark theme */
+}
+
+
 @layer base {
+  /* Define HSL values for easier theming - using comma-separated for rgb() compatibility */
   :root {
-    /* Light Theme: Elegant, Clean, Aquatic */
-    --background: 210 30% 98%; /* Very light, cool off-white */
-    --foreground: 220 25% 25%; /* Dark, slightly desaturated blue-grey for text */
-    
-    --card: 0 0% 100%; /* White cards */
-    --card-foreground: 220 25% 25%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 25%;
-    
-    --primary: 205 70% 48%; /* Clear, professional blue */
-    --primary-foreground: 0 0% 100%; 
-    
-    --secondary: 210 50% 93%; /* Light, soft cool grey-blue */
-    --secondary-foreground: 205 70% 30%; 
-    
-    --muted: 210 40% 95%; /* Lighter cool grey-blue */
-    --muted-foreground: 220 20% 50%;
-    
-    --accent: 180 60% 55%; /* Soft teal/aqua accent */
-    --accent-foreground: 220 25% 20%; 
-    
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 98%;
-    
-    --border: 210 20% 88%;
-    --input: 210 20% 94%;
-    --ring: 205 70% 50%; 
+    /* Light Theme: Clean, Realistic, Aesthetic */
+    --background-light: 210 40% 98%; /* Very light cool grey */
+    --foreground-light: 220 25% 25%; /* Dark, desaturated blue-grey */
+    --card-light: 0 0% 100%; /* White */
+    --card-foreground-light: 220 25% 25%;
+    --popover-light: 0 0% 100%;
+    --popover-foreground-light: 220 25% 25%;
+    --primary-light: 205 70% 48%; /* Clear, professional blue */
+    --primary-foreground-light: 0 0% 100%;
+    --secondary-light: 210 50% 93%; /* Light, soft cool grey-blue */
+    --secondary-foreground-light: 205 70% 30%;
+    --muted-light: 210 40% 95%;
+    --muted-foreground-light: 220 20% 50%;
+    --accent-light: 180 60% 55%; /* Soft teal/aqua */
+    --accent-foreground-light: 220 25% 20%;
+    --destructive-light: 0 75% 55%;
+    --destructive-foreground-light: 0 0% 98%;
+    --border-light: 210 20% 88%;
+    --input-light: 210 20% 94%;
+    --ring-light: 205 70% 50%;
 
-    --chart-1: 205 70% 48%;   /* Primary Blue */
-    --chart-2: 180 60% 55%;   /* Soft Teal/Aqua */
-    --chart-3: 220 50% 65%;   /* Desaturated Blue/Lavender */
-    --chart-4: 45 70% 65%;    /* Soft Gold */
-    --chart-5: 330 65% 70%;   /* Muted Pink/Rose */
-    
-    --radius: 0.5rem;
+    --sidebar-background-light: 215 35% 92%; /* Light greyish blue */
+    --sidebar-text-light: 220, 25%, 30%; /* Dark blue-grey for text */
+    --sidebar-icon-light: 220, 25%, 35%; /* Slightly darker for icons */
+    --sidebar-active-bg-light: 205 70% 48%; /* Primary blue */
+    --sidebar-active-text-light: 0, 0%, 100%; /* White */
+    --sidebar-hover-bg-light: 205 70% 88%; /* Lighter primary blue */
+    --sidebar-hover-text-light: 205 70% 28%; /* Darker blue for hover text */
+    --sidebar-border-light: 210 20% 85%;
 
-    --sidebar-background: 215 35% 92%; 
-    --sidebar-foreground: 220 25% 30%; 
-    --sidebar-primary: 205 70% 48%;  
-    --sidebar-primary-foreground: 0 0% 100%; 
-    --sidebar-accent: 205 70% 88%;    
-    --sidebar-accent-foreground: 205 70% 28%;
-    --sidebar-border: 210 20% 85%;
-    --sidebar-ring: 205 70% 50%;
+
+    /* Sky & Cyan for light body gradient */
+    --sky-100: 200 80% 95%;
+    --white: 0 0% 100%;
+    --cyan-50: 185 70% 96%;
+
+    /* Dark Theme: Futuristic, Sleek, Cool */
+    --background-dark: 222 80% 6%; /* Deep, rich navy/charcoal */
+    --foreground-dark: 210 30% 85%; /* Light, cool grey for text */
+    --card-dark: 222 70% 9%; /* Slightly lighter than bg, or transparent for glass */
+    --card-foreground-dark: 210 30% 85%;
+    --popover-dark: 222 80% 5%;
+    --popover-foreground-dark: 210 30% 85%;
+    --primary-dark: 185 90% 50%; /* Vibrant cyan/teal */
+    --primary-foreground-dark: 222 80% 8%; /* Dark contrast for primary */
+    --secondary-dark: 210 30% 25%; /* Muted dark blue */
+    --secondary-foreground-dark: 200 15% 80%;
+    --muted-dark: 220 30% 20%;
+    --muted-foreground-dark: 200 15% 65%;
+    --accent-dark: 280 75% 65%; /* Vivid Magenta/Purple */
+    --accent-foreground-dark: 222 80% 8%;
+    --destructive-dark: 0 65% 50%;
+    --destructive-foreground-dark: 0 0% 98%;
+    --border-dark: 210 25% 20%; /* Subtle border, slightly lighter than card */
+    --input-dark: 220 30% 15%;
+    --ring-dark: 185 90% 55%;
+
+    --sidebar-background-dark: 222 75% 8%; /* Matches main dark bg or slightly different */
+    --sidebar-text-dark: 210, 30%, 80%;
+    --sidebar-icon-dark: 185, 85%, 60%; /* Primary cyan for icons */
+    --sidebar-active-bg-dark: 185 90% 50%; /* Primary cyan */
+    --sidebar-active-text-dark: 222, 80%, 8%; /* Dark contrast */
+    --sidebar-hover-bg-dark: 220 30% 15%; /* Slightly lighter dark */
+    --sidebar-hover-text-dark: 185, 90%, 60%; /* Primary cyan for hover text */
+    --sidebar-border-dark: 210 25% 15%;
+    
+
+    /* Chart Colors */
+    --chart-1-light: 205 70% 48%; /* Primary Blue */
+    --chart-2-light: 180 60% 55%; /* Soft Teal/Aqua */
+    --chart-3-light: 220 50% 65%; /* Desaturated Blue/Lavender */
+    --chart-4-light: 45 70% 65%;  /* Soft Gold */
+    --chart-5-light: 330 65% 70%; /* Muted Pink/Rose */
+
+    --chart-1-dark: 185 90% 50%; /* Primary Cyan/Teal */
+    --chart-2-dark: 280 75% 65%; /* Accent Magenta/Purple */
+    --chart-3-dark: 230 60% 70%; /* Lighter Desaturated Blue/Purple */
+    --chart-4-dark: 30 90% 55%;  /* Gold/Orange */
+    --chart-5-dark: 170 70% 50%; /* Seafoam Green */
+    
+    --radius: 0.75rem; /* 12px */
+
+    /* Sidebar specific variables */
+    --sidebar-collapsed-width: 60px;
+    --sidebar-expanded-width: 256px; /* 16rem */
+    --sidebar-header-height: 64px; /* h-16 */
+    --sidebar-footer-height: 64px; /* h-16 */
+    --sidebar-transition-duration: 0.3s;
+  }
+
+  /* Apply light theme by default */
+  :root {
+    --background: var(--background-light);
+    --foreground: var(--foreground-light);
+    --card: var(--card-light);
+    --card-foreground: var(--card-foreground-light);
+    --popover: var(--popover-light);
+    --popover-foreground: var(--popover-foreground-light);
+    --primary: var(--primary-light);
+    --primary-foreground: var(--primary-foreground-light);
+    --secondary: var(--secondary-light);
+    --secondary-foreground: var(--secondary-foreground-light);
+    --muted: var(--muted-light);
+    --muted-foreground: var(--muted-foreground-light);
+    --accent: var(--accent-light);
+    --accent-foreground: var(--accent-foreground-light);
+    --destructive: var(--destructive-light);
+    --destructive-foreground: var(--destructive-foreground-light);
+    --border: var(--border-light);
+    --input: var(--input-light);
+    --ring: var(--ring-light);
+
+    --sidebar-bg: var(--sidebar-background-light);
+    --sidebar-fg: rgb(var(--sidebar-text-light));
+    --sidebar-icon-fg: rgb(var(--sidebar-icon-light));
+    --sidebar-active-bg: var(--sidebar-active-bg-light);
+    --sidebar-active-fg: rgb(var(--sidebar-active-text-light));
+    --sidebar-hover-bg: var(--sidebar-hover-bg-light);
+    --sidebar-hover-fg: rgb(var(--sidebar-hover-text-light));
+    --sidebar-border-color: var(--sidebar-border-light);
+
+    --chart-1: var(--chart-1-light);
+    --chart-2: var(--chart-2-light);
+    --chart-3: var(--chart-3-light);
+    --chart-4: var(--chart-4-light);
+    --chart-5: var(--chart-5-light);
   }
 
   .dark {
-    /* Dark Theme: Futuristic, Elegant, Deep Ocean */
-    --background: 220 40% 10%; /* Deep, dark desaturated blue */
-    --foreground: 200 20% 90%; /* Light, cool grey for text */
-    
-    --card: 220 35% 15%; /* Dark blue, slightly lighter than background */
-    --card-foreground: 200 20% 90%;
-    
-    --popover: 220 40% 8%; 
-    --popover-foreground: 200 20% 90%;
-    
-    --primary: 185 85% 55%; /* Vibrant, sharp cyan/teal */
-    --primary-foreground: 220 30% 12%; 
-    
-    --secondary: 210 30% 25%; /* Muted dark blue */
-    --secondary-foreground: 200 15% 80%; 
-    
-    --muted: 210 30% 20%; 
-    --muted-foreground: 200 15% 65%; 
-    
-    --accent: 170 75% 60%; /* Slightly greener vibrant teal/cyan */
-    --accent-foreground: 220 30% 8%; 
-    
-    --destructive: 0 65% 50%; 
-    --destructive-foreground: 0 0% 98%;
-    
-    --border: 210 25% 30%; 
-    --input: 210 30% 18%;  
-    --ring: 185 85% 60%;   
+    --background: var(--background-dark);
+    --foreground: var(--foreground-dark);
+    --card: var(--card-dark);
+    --card-foreground: var(--card-foreground-dark);
+    --popover: var(--popover-dark);
+    --popover-foreground: var(--popover-foreground-dark);
+    --primary: var(--primary-dark);
+    --primary-foreground: var(--primary-foreground-dark);
+    --secondary: var(--secondary-dark);
+    --secondary-foreground: var(--secondary-foreground-dark);
+    --muted: var(--muted-dark);
+    --muted-foreground: var(--muted-foreground-dark);
+    --accent: var(--accent-dark);
+    --accent-foreground: var(--accent-foreground-dark);
+    --destructive: var(--destructive-dark);
+    --destructive-foreground: var(--destructive-foreground-dark);
+    --border: var(--border-dark);
+    --input: var(--input-dark);
+    --ring: var(--ring-dark);
 
-    --chart-1: 185 85% 55%; /* Primary Cyan/Teal */
-    --chart-2: 170 75% 60%; /* Greener Teal/Cyan */
-    --chart-3: 230 60% 70%; /* Lighter Desaturated Blue/Purple */
-    --chart-4: 40 90% 65%;  /* Gold/Orange */
-    --chart-5: 300 70% 70%; /* Magenta/Purple */
-
-    --sidebar-background: 220 40% 8%; 
-    --sidebar-foreground: 200 15% 85%; 
-    --sidebar-primary: 185 85% 55%;  
-    --sidebar-primary-foreground: 220 30% 12%; 
-    --sidebar-accent: 185 85% 45%; 
-    --sidebar-accent-foreground: 200 15% 95%;
-    --sidebar-border: 210 25% 25%;
-    --sidebar-ring: 185 85% 60%;
+    --sidebar-bg: var(--sidebar-background-dark);
+    --sidebar-fg: rgb(var(--sidebar-text-dark));
+    --sidebar-icon-fg: rgb(var(--sidebar-icon-dark));
+    --sidebar-active-bg: var(--sidebar-active-bg-dark);
+    --sidebar-active-fg: rgb(var(--sidebar-active-text-dark));
+    --sidebar-hover-bg: var(--sidebar-hover-bg-dark);
+    --sidebar-hover-fg: rgb(var(--sidebar-hover-text-dark));
+    --sidebar-border-color: var(--sidebar-border-dark);
+    
+    --chart-1: var(--chart-1-dark);
+    --chart-2: var(--chart-2-dark);
+    --chart-3: var(--chart-3-dark);
+    --chart-4: var(--chart-4-dark);
+    --chart-5: var(--chart-5-dark);
   }
 }
 
+/* Custom global styles */
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border; /* Uses theme's border color */
+    box-sizing: border-box;
+  }
+  html {
+    /* overflow-x: hidden; Removed to let ScrollArea manage its own overflow */
+    /* width: 100%; */
+    /* max-width: 100vw; */
+    scroll-behavior: smooth;
   }
   body {
-    @apply bg-background text-foreground;
-    font-size: 16px; /* Base body font size */
+    @apply text-foreground;
+    font-size: 16px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold; /* Make headings bold by default */
+    @apply font-bold;
   }
-  /* Ensure CardTitle matches the updated component structure if it uses h3 */
-  .card-title-class { /* Renamed to avoid conflict if CardTitle itself is used as a selector */
-    @apply text-2xl font-bold; 
+  .card-title-class { /* Matches updated CardTitle in ui/card.tsx */
+    @apply text-2xl font-bold;
+  }
+
+  /* Ensure ScrollArea can work by not overly restricting its parents */
+  .main-content-area { /* Applied to <main> tag in AppShell */
+    flex-grow: 1; /* Allow main content to take available space */
+    /* overflow-x: hidden; Let specific containers manage this */
+    /* max-width: 100vw; */
   }
 }
 
-/* Refined Glassmorphism for Dark Mode - apply .glassmorphism-card class to cards */
+/* Glassmorphism for Dark Mode - Opt-in utility class */
 .dark .glassmorphism-card {
-  background-color: hsla(var(--card-foreground), 0.05); /* More subtle background */
-  backdrop-filter: blur(12px); /* Slightly more blur for depth */
+  background-color: hsla(var(--card-foreground-dark), 0.08); /* More subtle dark background */
+  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid hsla(var(--primary), 0.25); /* Subtle border with primary color tint */
-  box-shadow: 0 0 20px hsla(var(--primary), 0.15), /* Softer, more diffused glow */
-              0 6px 12px rgba(0, 0, 0, 0.2); /* Standard subtle shadow for depth */
+  border: 1px solid hsla(var(--primary-dark), 0.3); /* Subtle border with primary color tint */
+  box-shadow: 0 0 20px hsla(var(--primary-dark), 0.1), /* Softer, more diffused glow */
+              0 6px 12px rgba(0, 0, 0, 0.25); /* Standard subtle shadow for depth */
 }
 
-/* Standard card styling will apply using the new theme variables for light mode */
-
-/* Button hover/pop effect - applied to default variant */
-.btn-pop-hover { /* Add this class to buttons you want to have this effect */
+/* Card hover effect - Opt-in utility class */
+.interactive-card-hover {
   @apply transition-all duration-300 ease-in-out;
 }
-.btn-pop-hover:hover:not(:disabled) {
-  @apply transform scale-105 shadow-lg;
+.interactive-card-hover:hover {
+  @apply shadow-xl transform -translate-y-1 scale-[1.02];
 }
 
-/* Updated general .card utility class for hover effects */
-.card-utility { /* Renamed to avoid conflict with Shadcn's Card component default styling */
-  @apply bg-card rounded-lg shadow-lg transition-all duration-300 ease-in-out;
+/* Gradient text utility */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  font-weight: 700; /* Ensure it's bold */
+  display: inline-block; /* Helps with clipping and layout */
+  line-height: 1.2; /* Adjust for full character visibility */
 }
 
-.card-utility:hover {
-  @apply shadow-xl transform -translate-y-1;
+/* Styles for the hover-to-expand sidebar */
+.sidebar-main-container {
+  width: var(--sidebar-collapsed-width);
+  transition: width var(--sidebar-transition-duration) ease-in-out;
+  @apply bg-sidebar border-r border-[hsl(var(--sidebar-border-color))];
+}
+
+.sidebar-main-container:hover {
+  width: var(--sidebar-expanded-width);
+}
+
+.sidebar-header {
+  height: var(--sidebar-header-height);
+  @apply flex items-center px-4 border-b border-[hsl(var(--sidebar-border-color))];
+}
+
+.sidebar-app-name-text {
+  @apply font-semibold transition-opacity duration-200 ease-in-out text-xl ml-2;
+}
+
+.sidebar-main-container:not(:hover) .sidebar-app-name-text {
+  @apply opacity-0 pointer-events-none;
+}
+
+.sidebar-nav-item-text {
+  @apply truncate transition-opacity duration-200 ease-in-out ml-3;
+}
+
+.sidebar-main-container:not(:hover) .sidebar-nav-item-text {
+  @apply opacity-0 pointer-events-none ml-0;
+}
+.sidebar-main-container:not(:hover) .sidebar-nav-item-badge {
+  @apply opacity-0 pointer-events-none;
+}
+
+.sidebar-scroll-area {
+  /* Base styling for the scroll area in the sidebar */
+}
+.sidebar-scroll-area-thumb {
+  @apply bg-muted rounded-full;
+}
+.dark .sidebar-scroll-area-thumb {
+  @apply bg-[hsl(var(--muted-dark))] rounded-full;
+}
+
+.sidebar-footer {
+    @apply mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2 opacity-0 transition-opacity duration-200 ease-in-out;
+}
+
+.sidebar-main-container:hover .sidebar-footer {
+    @apply opacity-100;
 }
 
 
-/* Base button styling - note that Shadcn buttons have their own variants and transitions */
-button {
-  transition: background-color 0.3s ease; /* Button background transition */
-}
-
-button:hover:not(:disabled) { /* Added :not(:disabled) */
-  /* Using theme's accent color for a more consistent feel. */
-  /* This might be overridden by more specific Tailwind classes on Shadcn buttons. */
-  background-color: hsl(var(--accent)); 
-}
-
-/* Add a subtle animation to an element */
-.animated-element {
-  opacity: 0.9;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.animated-element:hover {
-  opacity: 1;
+/* Mobile specific sidebar styles */
+@layer components {
+  .bg-mobile-sidebar-light {
+    background: hsl(var(--sidebar-bg)); /* Uses HSL variable for solid color */
+  }
+  .bg-mobile-sidebar-dark {
+     background: hsl(var(--sidebar-bg)); /* Uses HSL variable for solid color */
+  }
 }

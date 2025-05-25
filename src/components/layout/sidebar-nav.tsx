@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -11,43 +12,44 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useSidebar } from "@/components/ui/sidebar"; // Assuming this exists or we'll use simple state
 
 interface SidebarNavProps {
   items: NavItem[];
-  isCollapsed?: boolean; // To handle icon-only view
 }
 
-export function SidebarNav({ items, isCollapsed }: SidebarNavProps) {
+export function SidebarNav({ items }: SidebarNavProps) {
   const pathname = usePathname();
-  // const { state } = useSidebar(); // if using full shadcn sidebar
-  // const isCollapsed = state === "collapsed";
 
   if (!items?.length) {
     return null;
   }
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <nav className="grid items-start gap-1 px-2 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-2">
+    <TooltipProvider delayDuration={100}>
+      <nav className="grid items-start gap-1 p-2 group-[.sidebar-main-container]:py-2">
         {items.map((item, index) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           
           const linkContent = (
             <>
-              <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-sidebar-foreground/80 group-hover:text-sidebar-accent-foreground")} />
+              <Icon className={cn(
+                "h-5 w-5 shrink-0", 
+                isActive ? "text-sidebar-active-fg" : "text-sidebar-icon-fg group-hover:text-sidebar-hover-fg"
+              )} />
               <span
                 className={cn(
-                  "truncate transition-all duration-200",
-                  isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto ml-2",
-                  isActive ? "font-semibold" : ""
+                  "sidebar-nav-item-text text-sm",
+                  isActive ? "font-semibold text-sidebar-active-fg" : "text-sidebar-fg group-hover:text-sidebar-hover-fg"
                 )}
               >
                 {item.title}
               </span>
-              {item.label && !isCollapsed && (
-                <Badge variant={isActive ? "default" : "secondary"} className="ml-auto">
+              {item.label && (
+                <Badge 
+                  variant={isActive ? "default" : "secondary"} 
+                  className="sidebar-nav-item-badge ml-auto shrink-0 bg-primary/20 text-primary dark:bg-primary-dark/20 dark:text-primary-dark"
+                >
                   {item.label}
                 </Badge>
               )}
@@ -55,46 +57,38 @@ export function SidebarNav({ items, isCollapsed }: SidebarNavProps) {
           );
 
           const linkClasses = cn(
-            "flex items-center rounded-md px-3 py-2.5 text-sm transition-colors",
-            "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/80",
-            isCollapsed ? "justify-center" : ""
+            "flex items-center rounded-md px-3 py-2.5 transition-colors duration-150 ease-in-out",
+            "hover:bg-sidebar-hover-bg",
+            isActive ? "bg-sidebar-active-bg" : "",
+            item.disabled && "cursor-not-allowed opacity-60 hover:bg-transparent"
           );
 
-          if (isCollapsed) {
-            return (
-              <Tooltip key={`${item.href}-${index}`}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.disabled ? "#" : item.href}
-                    className={cn(linkClasses, item.disabled && "cursor-not-allowed opacity-50")}
-                    aria-disabled={item.disabled}
-                    tabIndex={item.disabled ? -1 : undefined}
-                  >
-                    {linkContent}
-                    <span className="sr-only">{item.title}</span>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="flex items-center gap-4">
-                  {item.title}
-                  {item.label && (
-                    <Badge variant="secondary">{item.label}</Badge>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            );
-          }
-
           return (
-            <Link
-              key={`${item.href}-${index}`}
-              href={item.disabled ? "#" : item.href}
-              className={cn(linkClasses, item.disabled && "cursor-not-allowed opacity-50")}
-              aria-disabled={item.disabled}
-              tabIndex={item.disabled ? -1 : undefined}
-            >
-              {linkContent}
-            </Link>
+            <Tooltip key={`${item.href}-${index}`}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.disabled ? "#" : item.href}
+                  className={linkClasses}
+                  aria-disabled={item.disabled}
+                  tabIndex={item.disabled ? -1 : undefined}
+                >
+                  {linkContent}
+                </Link>
+              </TooltipTrigger>
+              {/* Tooltip only shows when sidebar is collapsed (achieved via CSS on parent) */}
+              <TooltipContent 
+                side="right" 
+                align="center" 
+                className="ml-2 group-[.sidebar-main-container:hover]:hidden"
+                sideOffset={8}
+              >
+                <p>{item.title}</p>
+                {item.label && (
+                    <Badge variant="secondary" className="ml-2">{item.label}</Badge>
+                  )}
+                {/* <TooltipArrow className="fill-popover" /> Removed this line */}
+              </TooltipContent>
+            </Tooltip>
           );
         })}
       </nav>
