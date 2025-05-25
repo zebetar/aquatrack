@@ -1,10 +1,11 @@
 
 // src/lib/firebase-config.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, Timestamp } from 'firebase/firestore'; // Added Timestamp
 import { getAuth } from 'firebase/auth';
 
-// Replace this with your project's actual Firebase configuration
+// IMPORTANT: Replace these with your project's actual Firebase configuration
+// You can find this in your Firebase project settings.
 const firebaseConfig: FirebaseOptions = {
   apiKey: "YOUR_API_KEY", // Replace with your actual API key
   authDomain: "YOUR_AUTH_DOMAIN", // Replace with your actual auth domain
@@ -26,4 +27,4 @@ if (!getApps().length) {
 const db = getFirestore(app);
 const auth = getAuth(app); // If you plan to use Firebase Authentication
 
-export { db, auth, app };
+export { db, auth, app, Timestamp }; // Export Timestamp

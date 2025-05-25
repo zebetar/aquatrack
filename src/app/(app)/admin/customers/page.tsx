@@ -10,33 +10,57 @@ import {
   getAllMockCustomers, 
   addMockCustomer as addCustomerToStore,
   addMockNotification,
-  getAllMockUsageRecords // Added
+  getAllMockUsageRecords 
 } from '@/lib/mock-data-store';
+// --- Firestore Example Import (uncomment when ready) ---
+// import { getAllCustomersFromFirestore } from '@/lib/firestore-service'; // Assuming you create this file
 import { Loader2 } from 'lucide-react';
 
-// Augment Customer type for display purposes
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  const fetchCustomers = useCallback(() => {
+  const fetchCustomers = useCallback(async () => { // Made async for Firestore example
     setIsLoading(true);
-    setTimeout(() => {
-      const storedCustomers = getAllMockCustomers();
-      const usageRecords = getAllMockUsageRecords();
+    
+    // --- Current localStorage logic ---
+    await new Promise(resolve => setTimeout(resolve, 100)); // Simulate delay
+    const storedCustomers = getAllMockCustomers();
+    const usageRecords = getAllMockUsageRecords();
 
-      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
-        const customerUsage = usageRecords
-          .filter(record => record.customerId === customer.id)
-          .reduce((sum, record) => sum + record.durationHours, 0);
-        return { ...customer, totalUsageHours: customerUsage };
-      });
+    const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
+      const customerUsage = usageRecords
+        .filter(record => record.customerId === customer.id)
+        .reduce((sum, record) => sum + record.durationHours, 0);
+      return { ...customer, totalUsageHours: customerUsage };
+    });
+    setCustomers(customersWithUsage.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    // --- End localStorage logic ---
 
-      setCustomers(customersWithUsage.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      setIsLoading(false);
-    }, 100);
+    // --- Firestore Example (replace above block when ready) ---
+    /* 
+    try {
+      const firestoreCustomers = await getAllCustomersFromFirestore(); 
+      // You would also fetch all usage records from Firestore here to calculate totalUsageHours
+      // const firestoreUsageRecords = await getAllUsageRecordsFromFirestore(); 
+      // const customersWithUsage: CustomerWithUsage[] = firestoreCustomers.map(customer => {
+      //   const customerUsage = firestoreUsageRecords
+      //     .filter(record => record.customerId === customer.id)
+      //     .reduce((sum, record) => sum + record.durationHours, 0);
+      //   return { ...customer, totalUsageHours: customerUsage };
+      // });
+      // setCustomers(customersWithUsage.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()));
+      setCustomers(firestoreCustomers); // Simplified for example
+    } catch (error) {
+      console.error("Failed to fetch customers from Firestore:", error);
+      // Handle error appropriately, e.g., show a toast
+    }
+    */
+    // --- End Firestore Example ---
+    
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -44,7 +68,11 @@ export default function AdminCustomersPage() {
   }, [fetchCustomers]);
 
   const handleAddCustomer = (newCustomer: Customer) => {
-    addCustomerToStore(newCustomer);
+    // This currently uses the mock store (localStorage)
+    addCustomerToStore(newCustomer); 
+    
+    // --- Firestore Example: addCustomerToFirestore would be async ---
+    // await addCustomerToFirestore(newCustomer); 
     
     const adminNotification: Notification = {
         id: `noti-${Date.now()}-admin-newcust`,
@@ -55,9 +83,9 @@ export default function AdminCustomersPage() {
         linkTo: `/admin/customers/${newCustomer.id}`,
         createdAt: new Date(),
     };
-    addMockNotification(adminNotification);
+    addMockNotification(adminNotification); // This would also go to Firestore
 
-    fetchCustomers(); // Re-fetch the list from the store to update the UI
+    fetchCustomers(); // Re-fetch to update UI (from localStorage or Firestore)
   };
 
   if (isLoading && customers.length === 0) { 
@@ -90,4 +118,3 @@ export default function AdminCustomersPage() {
     </>
   );
 }
-

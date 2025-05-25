@@ -1,9 +1,11 @@
 
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
-// Import Firestore and specific functions if you were to use Firestore
-// import { db } from '@/lib/firebase-config'; // Assumes firebase-config.ts is set up
-// import { collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc, writeBatch, orderBy, limit, Timestamp } from 'firebase/firestore';
-
+// --- Firestore Import Examples (uncomment and use when ready) ---
+// import { db, Timestamp } from '@/lib/firebase-config'; 
+// import { 
+//   collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc, 
+//   writeBatch, orderBy, limit, increment 
+// } from 'firebase/firestore';
 
 interface MockDataStore {
   customers: Customer[];
@@ -30,7 +32,7 @@ function loadStoreFromLocalStorage(): void {
         
         store.customers = parsedStore.customers?.map(c => ({
           ...c,
-          createdAt: new Date(c.createdAt), // Ensure Date objects are properly revived
+          createdAt: new Date(c.createdAt), 
         })) || [];
         store.usageRecords = parsedStore.usageRecords?.map(ur => ({
           ...ur,
@@ -76,39 +78,29 @@ function saveStoreToLocalStorage(): void {
   }
 }
 
-// Load the store when the module is first imported
 loadStoreFromLocalStorage();
-
 
 // --- Customer Functions ---
 
-// EXAMPLE: How you might add a customer to Firestore
-// Note: This is an EXAMPLE and is not currently called by the app.
-// You would need to make components async and handle loading states.
+// Example of what addMockCustomer would look like with Firestore
 /*
-import { db } from '@/lib/firebase-config'; // Ensure this path is correct
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
-
 export async function addCustomerToFirestore(customer: Customer): Promise<void> {
   try {
-    const customerDocRef = doc(db, 'customers', customer.id);
-    // Convert Date objects to Firestore Timestamps or ISO strings
+    const customerRef = doc(db, 'customers', customer.id);
+    // Convert Date objects to Firestore Timestamps for proper storage and querying
     const customerDataForFirestore = {
       ...customer,
       createdAt: Timestamp.fromDate(customer.createdAt),
-      // any other Date fields would need similar conversion
     };
-    await setDoc(customerDocRef, customerDataForFirestore);
+    await setDoc(customerRef, customerDataForFirestore);
     console.log("Customer added to Firestore with ID: ", customer.id);
   } catch (e) {
     console.error("Error adding customer to Firestore: ", e);
-    throw e; // Re-throw the error to be handled by the caller
+    throw e; // Re-throw to be handled by the caller
   }
 }
 */
-
 export function addMockCustomer(customer: Customer): void {
-  // Current localStorage logic:
   const existingIndex = store.customers.findIndex(c => c.id === customer.id);
   if (existingIndex > -1) {
     store.customers[existingIndex] = { ...store.customers[existingIndex], ...customer };
@@ -116,17 +108,29 @@ export function addMockCustomer(customer: Customer): void {
     store.customers.push(customer);
   }
   saveStoreToLocalStorage();
-  // If using Firestore, you would call:
+  // When using Firestore, you would call:
   // addCustomerToFirestore(customer).catch(console.error);
-  // And your component would need to handle the async nature and loading/error states.
+  // And your component would need to handle the async nature.
 }
 
+// Example for updateMockCustomer with Firestore
+/*
+export async function updateCustomerInFirestore(updatedCustomer: Customer): Promise<void> {
+  try {
+    const customerRef = doc(db, 'customers', updatedCustomer.id);
+    const customerDataForFirestore = {
+      ...updatedCustomer,
+      createdAt: Timestamp.fromDate(updatedCustomer.createdAt), 
+    };
+    await updateDoc(customerRef, customerDataForFirestore); // or setDoc with merge: true
+    console.log(`Customer ${updatedCustomer.id} updated in Firestore.`);
+  } catch (e) {
+    console.error("Error updating customer in Firestore: ", e);
+    throw e;
+  }
+}
+*/
 export function updateMockCustomer(updatedCustomer: Customer): void {
-  // Firestore equivalent:
-  // const customerDocRef = doc(db, 'customers', updatedCustomer.id);
-  // const customerDataForFirestore = { ...updatedCustomer, createdAt: Timestamp.fromDate(updatedCustomer.createdAt) };
-  // await updateDoc(customerDocRef, customerDataForFirestore); // Or setDoc with merge:true
-
   const customerIndex = store.customers.findIndex(c => c.id === updatedCustomer.id);
   if (customerIndex > -1) {
     store.customers[customerIndex] = { ...store.customers[customerIndex], ...updatedCustomer };
@@ -137,38 +141,58 @@ export function updateMockCustomer(updatedCustomer: Customer): void {
   }
 }
 
+// Example for getMockCustomerById with Firestore
+/*
+export async function getCustomerByIdFromFirestore(customerId: string): Promise<Customer | undefined> {
+  try {
+    const customerRef = doc(db, 'customers', customerId);
+    const docSnap = await getDoc(customerRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return { 
+        ...data, 
+        id: docSnap.id, 
+        createdAt: (data.createdAt as Timestamp).toDate() // Convert Timestamp back to Date
+      } as Customer;
+    }
+    return undefined;
+  } catch (e) {
+    console.error("Error fetching customer by ID from Firestore: ", e);
+    throw e;
+  }
+}
+*/
 export function getMockCustomerById(customerId: string): Customer | undefined {
-  // Firestore equivalent:
-  // const customerDocRef = doc(db, 'customers', customerId);
-  // const docSnap = await getDoc(customerDocRef);
-  // if (docSnap.exists()) {
-  //   const data = docSnap.data();
-  //   return { ...data, id: docSnap.id, createdAt: data.createdAt.toDate() } as Customer; // Convert Timestamp to Date
-  // }
-  // return undefined;
-
   return store.customers.find(c => c.id === customerId);
 }
 
+// Example for getAllMockCustomers with Firestore
+/*
+export async function getAllCustomersFromFirestore(): Promise<Customer[]> {
+  try {
+    const customersCol = collection(db, 'customers');
+    // Example: order by createdAt descending
+    const q = query(customersCol, orderBy('createdAt', 'desc')); 
+    const customerSnapshot = await getDocs(q);
+    return customerSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        ...data, 
+        id: doc.id, 
+        createdAt: (data.createdAt as Timestamp).toDate() 
+      } as Customer;
+    });
+  } catch (e) {
+    console.error("Error fetching all customers from Firestore: ", e);
+    throw e;
+  }
+}
+*/
 export function getAllMockCustomers(): Customer[] {
-  // Firestore equivalent:
-  // const customersCol = collection(db, 'customers');
-  // const q = query(customersCol, orderBy('createdAt', 'desc')); // Example ordering
-  // const customerSnapshot = await getDocs(q);
-  // return customerSnapshot.docs.map(doc => {
-  //   const data = doc.data();
-  //   return { ...data, id: doc.id, createdAt: data.createdAt.toDate() } as Customer;
-  // });
-
   return [...store.customers];
 }
 
 export function updateCustomerEmail(customerId: string, newEmail: string): void {
-  // Firestore equivalent:
-  // const customerDocRef = doc(db, 'customers', customerId);
-  // await updateDoc(customerDocRef, { email: newEmail.trim().toLowerCase() });
-  // Also, update Firebase Auth user email if using Firebase Auth.
-
   const customerIndex = store.customers.findIndex(c => c.id === customerId);
   if (customerIndex > -1) {
     const processedNewEmail = newEmail.trim().toLowerCase();
@@ -181,34 +205,46 @@ export function updateCustomerEmail(customerId: string, newEmail: string): void 
   } else {
     console.warn(`Attempted to update email for non-existent customer ID: ${customerId}`);
   }
+  // Firestore equivalent:
+  // const customerRef = doc(db, 'customers', customerId);
+  // await updateDoc(customerRef, { email: newEmail.trim().toLowerCase() });
 }
 
-export function deleteMockCustomer(customerId: string): void {
-  // Firestore equivalent (using a batch for atomicity):
-  // const batch = writeBatch(db);
-  // const customerRef = doc(db, 'customers', customerId);
-  // batch.delete(customerRef);
-  //
-  // // Delete associated usage records (query for them first)
-  // const usageQuery = query(collection(db, 'usageRecords'), where('customerId', '==', customerId));
-  // const usageSnapshot = await getDocs(usageQuery);
-  // usageSnapshot.forEach(doc => batch.delete(doc.ref));
-  //
-  // // Delete associated payments (query for them first)
-  // const paymentQuery = query(collection(db, 'payments'), where('customerId', '==', customerId));
-  // const paymentSnapshot = await getDocs(paymentQuery);
-  // paymentSnapshot.forEach(doc => batch.delete(doc.ref));
-  //
-  // // Delete associated notifications (query for them first)
-  // const customerData = store.customers.find(c => c.id === customerId);
-  // if (customerData?.authUID) { // Check if there's an authUID to link notifications
-  //    const notificationQuery = query(collection(db, 'notifications'), where('userId', '==', customerData.authUID));
-  //    const notificationSnapshot = await getDocs(notificationQuery);
-  //    notificationSnapshot.forEach(doc => batch.delete(doc.ref));
-  // }
-  // // Also consider notifications targeted at the admin about this customer.
-  // await batch.commit();
+// Example for deleteMockCustomer with Firestore (using a batch for atomicity)
+/*
+export async function deleteCustomerFromFirestore(customerId: string): Promise<void> {
+  try {
+    const batch = writeBatch(db);
+    const customerRef = doc(db, 'customers', customerId);
+    batch.delete(customerRef);
 
+    // Example: Deleting associated usage records (if stored as a top-level collection)
+    const usageQuery = query(collection(db, 'usageRecords'), where('customerId', '==', customerId));
+    const usageSnapshot = await getDocs(usageQuery);
+    usageSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    // Example: Deleting associated payments
+    const paymentQuery = query(collection(db, 'payments'), where('customerId', '==', customerId));
+    const paymentSnapshot = await getDocs(paymentQuery);
+    paymentSnapshot.forEach(doc => batch.delete(doc.ref));
+    
+    // Example: Deleting associated notifications
+    // const customerData = await getCustomerByIdFromFirestore(customerId); // Fetch customer to get authUID
+    // if (customerData?.authUID) {
+    //   const notificationQuery = query(collection(db, 'notifications'), where('userId', '==', customerData.authUID));
+    //   const notificationSnapshot = await getDocs(notificationQuery);
+    //   notificationSnapshot.forEach(doc => batch.delete(doc.ref));
+    // }
+
+    await batch.commit();
+    console.log(`Customer ${customerId} and associated data deleted from Firestore.`);
+  } catch (e) {
+    console.error("Error deleting customer from Firestore: ", e);
+    throw e;
+  }
+}
+*/
+export function deleteMockCustomer(customerId: string): void {
   const initialCustomerCount = store.customers.length;
   const customerToDelete = store.customers.find(c => c.id === customerId);
 
@@ -217,7 +253,6 @@ export function deleteMockCustomer(customerId: string): void {
   if (store.customers.length < initialCustomerCount && customerToDelete) {
     store.usageRecords = store.usageRecords.filter(ur => ur.customerId !== customerId);
     store.payments = store.payments.filter(p => p.customerId !== customerId);
-    // Remove notifications for this customer (if they had a login/authUID) and notifications mentioning them.
     store.notifications = store.notifications.filter(n => {
         const isForThisUser = customerToDelete.authUID && n.userId === customerToDelete.authUID;
         const isAdminNotificationAboutThisUser = n.linkTo?.includes(`/admin/customers/${customerId}`);
@@ -233,8 +268,16 @@ export function deleteMockCustomer(customerId: string): void {
 
 
 // --- Water Usage Record Functions ---
+// Firestore: Dates (date, startTime, endTime, createdAt) should be Firestore Timestamps.
+// Balance updates should ideally happen in a Firestore Transaction or Cloud Function.
 export function addMockUsageRecord(record: WaterUsageRecord): void {
-  // Firestore equivalent:
+  store.usageRecords.push(record);
+  const customerIndex = store.customers.findIndex(c => c.id === record.customerId);
+  if (customerIndex > -1) {
+    store.customers[customerIndex].balance += record.cost;
+  }
+  saveStoreToLocalStorage();
+  // Firestore Example:
   // const recordForFirestore = {
   //   ...record,
   //   date: Timestamp.fromDate(record.date),
@@ -242,38 +285,14 @@ export function addMockUsageRecord(record: WaterUsageRecord): void {
   //   endTime: Timestamp.fromDate(record.endTime),
   //   createdAt: Timestamp.fromDate(record.createdAt),
   // };
-  // await addDoc(collection(db, 'usageRecords'), recordForFirestore);
-  //
-  // // Update customer balance (ideally in a transaction or Cloud Function for consistency)
+  // const usageCollectionRef = collection(db, 'usageRecords');
+  // await addDoc(usageCollectionRef, recordForFirestore);
+  // // Update customer balance
   // const customerRef = doc(db, 'customers', record.customerId);
-  // const { increment } = await import('firebase/firestore'); // For atomic increments
   // await updateDoc(customerRef, { balance: increment(record.cost) });
-
-  store.usageRecords.push(record);
-  const customerIndex = store.customers.findIndex(c => c.id === record.customerId);
-  if (customerIndex > -1) {
-    store.customers[customerIndex].balance += record.cost;
-  }
-  saveStoreToLocalStorage();
 }
 
 export function updateMockUsageRecord(updatedRecord: WaterUsageRecord): void {
-  // Firestore equivalent:
-  // const recordForFirestore = { /* ... convert dates ... */ };
-  // const usageRef = doc(db, 'usageRecords', updatedRecord.id);
-  //
-  // // Get old record to calculate balance difference (or do this in a transaction/Cloud Function)
-  // const oldDocSnap = await getDoc(usageRef);
-  // if (oldDocSnap.exists()) {
-  //   const oldCost = oldDocSnap.data().cost;
-  //   const costDifference = updatedRecord.cost - oldCost;
-  //   const customerRef = doc(db, 'customers', updatedRecord.customerId);
-  //   const { increment } = await import('firebase/firestore');
-  //   await updateDoc(customerRef, { balance: increment(costDifference) });
-  // }
-  // await updateDoc(usageRef, recordForFirestore);
-
-
   const recordIndex = store.usageRecords.findIndex(r => r.id === updatedRecord.id);
   if (recordIndex > -1) {
     const oldRecord = store.usageRecords[recordIndex];
@@ -288,73 +307,71 @@ export function updateMockUsageRecord(updatedRecord: WaterUsageRecord): void {
   } else {
     console.warn(`Attempted to update non-existent usage record ID: ${updatedRecord.id}`);
   }
+  // Firestore Example:
+  // const usageRecordRef = doc(db, 'usageRecords', updatedRecord.id);
+  // const oldRecordSnap = await getDoc(usageRecordRef); // To calculate cost difference for balance
+  // if (oldRecordSnap.exists()) {
+  //   const oldCost = oldRecordSnap.data().cost;
+  //   const costDifference = updatedRecord.cost - oldCost;
+  //   const customerRef = doc(db, 'customers', updatedRecord.customerId);
+  //   await updateDoc(customerRef, { balance: increment(costDifference) });
+  // }
+  // const updatedRecordForFirestore = { /* ...convert dates to Timestamps... */ };
+  // await updateDoc(usageRecordRef, updatedRecordForFirestore);
 }
 
 export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageRecord[] {
-  // Firestore equivalent:
-  // const q = query(collection(db, 'usageRecords'), where('customerId', '==', customerId), orderBy('startTime', 'desc'));
-  // const snapshot = await getDocs(q);
-  // return snapshot.docs.map(doc => {
-  //   const data = doc.data();
-  //   return { /* ... convert dates ... */ } as WaterUsageRecord;
-  // });
-
   return store.usageRecords
     .filter(r => r.customerId === customerId)
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+  // Firestore Example:
+  // const q = query(
+  //   collection(db, 'usageRecords'), 
+  //   where('customerId', '==', customerId), 
+  //   orderBy('startTime', 'desc')
+  // );
+  // const snapshot = await getDocs(q);
+  // return snapshot.docs.map(doc => { /* ... convert Timestamps to Dates ... */ } as WaterUsageRecord);
 }
 
 export function getAllMockUsageRecords(): WaterUsageRecord[] {
-  // Firestore equivalent:
+  return [...store.usageRecords].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // Firestore Example:
   // const q = query(collection(db, 'usageRecords'), orderBy('createdAt', 'desc'));
   // const snapshot = await getDocs(q);
-  // return snapshot.docs.map(doc => { /* ... convert dates ... */ } as WaterUsageRecord);
-
-  return [...store.usageRecords].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // return snapshot.docs.map(doc => { /* ... convert Timestamps to Dates ... */ } as WaterUsageRecord);
 }
 
 // --- Payment Functions ---
+// Firestore: paymentDate and createdAt should be Firestore Timestamps.
+// Balance updates should ideally happen in a Firestore Transaction or Cloud Function.
 export function addMockPayment(payment: Payment): void {
-  // Firestore equivalent:
-  // const paymentForFirestore = { /* ... convert dates ... */ };
-  // await addDoc(collection(db, 'payments'), paymentForFirestore);
-  //
-  // // Update customer balance (transaction or Cloud Function preferred)
-  // const customerRef = doc(db, 'customers', payment.customerId);
-  // const { increment } = await import('firebase/firestore');
-  // await updateDoc(customerRef, { balance: increment(-payment.amountPaid) }); // Decrement balance
-
   store.payments.push(payment);
   const customerIndex = store.customers.findIndex(c => c.id === payment.customerId);
   if (customerIndex > -1) {
     store.customers[customerIndex].balance -= payment.amountPaid;
   }
   saveStoreToLocalStorage();
+  // Firestore Example:
+  // const paymentForFirestore = {
+  //   ...payment,
+  //   paymentDate: Timestamp.fromDate(payment.paymentDate),
+  //   createdAt: Timestamp.fromDate(payment.createdAt),
+  // };
+  // await addDoc(collection(db, 'payments'), paymentForFirestore);
+  // // Update customer balance
+  // const customerRef = doc(db, 'customers', payment.customerId);
+  // await updateDoc(customerRef, { balance: increment(-payment.amountPaid) });
 }
 
 export function updateMockPaymentRecord(updatedPayment: Payment): void {
-  // Firestore equivalent:
-  // const paymentForFirestore = { /* ... convert dates ... */ };
-  // const paymentRef = doc(db, 'payments', updatedPayment.id);
-  //
-  // // Adjust balance (transaction or Cloud Function preferred)
-  // const oldPaymentSnap = await getDoc(paymentRef);
-  // if (oldPaymentSnap.exists()) {
-  //   const oldAmount = oldPaymentSnap.data().amountPaid;
-  //   const amountDifference = oldAmount - updatedPayment.amountPaid; // old - new: if new is smaller, diff is positive (add back to balance)
-  //   const customerRef = doc(db, 'customers', updatedPayment.customerId);
-  //   const { increment } = await import('firebase/firestore');
-  //   await updateDoc(customerRef, { balance: increment(amountDifference) });
-  // }
-  // await updateDoc(paymentRef, paymentForFirestore);
-
   const paymentIndex = store.payments.findIndex(p => p.id === updatedPayment.id);
   if (paymentIndex > -1) {
     const oldPayment = store.payments[paymentIndex];
     const customerIndex = store.customers.findIndex(c => c.id === updatedPayment.customerId);
 
     if (customerIndex > -1) {
-      const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid; // How much the balance needs to be adjusted
+      const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid; 
       store.customers[customerIndex].balance += amountDifference;
     }
     store.payments[paymentIndex] = { ...oldPayment, ...updatedPayment };
@@ -362,99 +379,98 @@ export function updateMockPaymentRecord(updatedPayment: Payment): void {
   } else {
     console.warn(`Attempted to update non-existent payment ID: ${updatedPayment.id}`);
   }
+  // Firestore Example:
+  // Similar logic to updateMockUsageRecord, involving fetching old record for balance adjustment.
 }
 
 export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
-  // Firestore equivalent:
-  // const q = query(collection(db, 'payments'), where('customerId', '==', customerId), orderBy('paymentDate', 'desc'));
-  // const snapshot = await getDocs(q);
-  // return snapshot.docs.map(doc => { /* ... convert dates ... */ } as Payment);
-
   return store.payments
     .filter(p => p.customerId === customerId) 
     .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+  // Firestore Example:
+  // const q = query(
+  //   collection(db, 'payments'), 
+  //   where('customerId', '==', customerId), 
+  //   orderBy('paymentDate', 'desc')
+  // );
+  // const snapshot = await getDocs(q);
+  // return snapshot.docs.map(doc => { /* ... convert Timestamps to Dates ... */ } as Payment);
 }
 
 export function getAllMockPayments(): Payment[] {
-  // Firestore equivalent:
+  return [...store.payments].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // Firestore Example:
   // const q = query(collection(db, 'payments'), orderBy('createdAt', 'desc'));
   // const snapshot = await getDocs(q);
-  // return snapshot.docs.map(doc => { /* ... convert dates ... */ } as Payment);
-
-  return [...store.payments].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // return snapshot.docs.map(doc => { /* ... convert Timestamps to Dates ... */ } as Payment);
 }
 
 // --- Notification Functions ---
+// Firestore: createdAt should be a Firestore Timestamp.
 export function addMockNotification(notification: Notification): void {
-  // Firestore equivalent:
-  // const notificationForFirestore = { ...notification, createdAt: Timestamp.fromDate(notification.createdAt) };
-  // await addDoc(collection(db, 'notifications'), notificationForFirestore);
-  // Could also add TTL policies in Firestore for notifications if desired.
-
-  store.notifications.unshift(notification); // Add to the beginning for most recent first
-  if (store.notifications.length > 100) { // Keep only the last 100 notifications
+  store.notifications.unshift(notification); 
+  if (store.notifications.length > 100) { 
     store.notifications.pop();
   }
   saveStoreToLocalStorage();
+  // Firestore Example:
+  // const notificationForFirestore = { 
+  //   ...notification, 
+  //   createdAt: Timestamp.fromDate(notification.createdAt) 
+  // };
+  // await addDoc(collection(db, 'notifications'), notificationForFirestore);
 }
 
 export function getMockNotificationsByUserId(userId: string): Notification[] {
-  // Firestore equivalent:
-  // const q = query(collection(db, 'notifications'), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(50)); // Example limit
-  // const snapshot = await getDocs(q);
-  // return snapshot.docs.map(doc => { /* ... convert dates and return as Notification ... */ });
-
   return store.notifications
     .filter(n => n.userId === userId)
     .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // Firestore Example:
+  // const q = query(
+  //   collection(db, 'notifications'), 
+  //   where('userId', '==', userId), 
+  //   orderBy('createdAt', 'desc'), 
+  //   limit(50) // Example limit
+  // );
+  // const snapshot = await getDocs(q);
+  // return snapshot.docs.map(doc => { /* ... convert Timestamps to Dates ... */ } as Notification);
 }
 
 export function getAllAdminNotifications(): Notification[] {
-  // Firestore equivalent would depend on how admin notifications are defined.
-  // Could be by a specific admin userId, or a type, or a separate collection.
-  // Example: query(collection(db, 'notifications'), where('userId', '==', 'admin001'), orderBy('createdAt', 'desc'))
-
   return store.notifications
-    .filter(n => n.userId === 'admin001' ) // Simpler: Admin only sees notifications directly for admin001
+    .filter(n => n.userId === 'admin001' ) 
     .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export function markNotificationAsRead(notificationId: string, userId: string): void {
-    // Firestore equivalent:
-    // const notificationRef = doc(db, 'notifications', notificationId);
-    // // Optional: Could add a check to ensure userId matches if rules don't cover it
-    // await updateDoc(notificationRef, { isRead: true });
-
     const notificationIndex = store.notifications.findIndex(n => n.id === notificationId && n.userId === userId);
     if (notificationIndex > -1) {
         store.notifications[notificationIndex].isRead = true;
         saveStoreToLocalStorage();
     }
+    // Firestore Example:
+    // const notificationRef = doc(db, 'notifications', notificationId);
+    // await updateDoc(notificationRef, { isRead: true });
 }
 
 export function markAllNotificationsAsRead(userId: string): void {
-    // Firestore equivalent (could be slow for many notifications, might need a Cloud Function for large scale):
+    store.notifications.forEach(n => {
+        if (n.userId === userId && !n.isRead) { 
+            n.isRead = true;
+        }
+    });
+    saveStoreToLocalStorage();
+    // Firestore Example (batch update):
     // const q = query(collection(db, 'notifications'), where('userId', '==', userId), where('isRead', '==', false));
     // const snapshot = await getDocs(q);
     // const batch = writeBatch(db);
     // snapshot.docs.forEach(doc => batch.update(doc.ref, { isRead: true }));
     // await batch.commit();
-
-    store.notifications.forEach(n => {
-        if (n.userId === userId && !n.isRead) { // Only update if it matches the userId and is unread
-            n.isRead = true;
-        }
-    });
-    saveStoreToLocalStorage();
 }
 
 
 // --- Utility Functions ---
 export function clearAllMockData(): void {
-  // Firestore equivalent: This would be a much more complex operation,
-  // typically done via a backend script or Firebase Console for safety.
-  // Deleting all documents in all collections is destructive and usually restricted.
-
   store = {
     customers: [],
     usageRecords: [],
@@ -463,4 +479,5 @@ export function clearAllMockData(): void {
   };
   saveStoreToLocalStorage();
   console.log("Mock data store cleared from memory and localStorage.");
+  // For Firestore, this would be a complex operation, likely a backend script or manual console deletion.
 }
