@@ -166,25 +166,19 @@ export default function DataExportPage() {
 
   return (
     <>
-      <PageHeader
-        title="Data Export & Management"
-        description="Manage and export application data."
-      />
-      <Button variant="outline" asChild className="mb-6">
+      {/* PageHeader removed */}
+      <Button variant="outline" asChild className="mb-6 mt-6"> {/* Added mt-6 for spacing */}
           <Link href="/admin/settings"><ArrowLeft className="mr-2 h-4 w-4" />Back to Settings</Link>
       </Button>
 
       <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
           <CardTitle>Filtered Customer Data Export (PDF)</CardTitle>
-          <CardDescription>
-            Select a customer and a date range to preview and download their usage and payment history.
-          </CardDescription>
+          {/* CardDescription removed */}
         </CardHeader>
-        <CardContent className="space-y-6"> {/* Outer spacing for sections within card content */}
-          {/* Filter Controls Group */}
-          <div className="space-y-4"> {/* Spacing between filter elements */}
-            <div className="space-y-1.5"> {/* Group label and select */}
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-1.5">
               <Label htmlFor="customer-select" className="text-sm font-medium">Select Customer</Label>
               <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                 <SelectTrigger id="customer-select" className="w-full" disabled={isLoadingCustomers}>
@@ -199,7 +193,7 @@ export default function DataExportPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-end">
-              <div className="space-y-1.5"> {/* Group label and start date */}
+              <div className="space-y-1.5">
                 <Label htmlFor="start-date-picker" className="text-sm font-medium">Start Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -227,7 +221,7 @@ export default function DataExportPage() {
                 </Popover>
               </div>
 
-              <div className="space-y-1.5"> {/* Group label and end date */}
+              <div className="space-y-1.5">
                 <Label htmlFor="end-date-picker" className="text-sm font-medium">End Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -255,7 +249,7 @@ export default function DataExportPage() {
                 </Popover>
               </div>
             </div>
-            <div> {/* Button container */}
+            <div>
                 <Button onClick={handlePreviewFilteredData} disabled={isPreviewing || !selectedCustomerId || !startDate || !endDate} className="w-full sm:w-auto">
                     {isPreviewing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Search className="mr-2 h-4 w-4" /> Preview Data
@@ -317,9 +311,7 @@ export default function DataExportPage() {
       <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
           <CardTitle>General Export Options</CardTitle>
-          <CardDescription>
-            Simulate other export types or download a full backup of current mock data.
-          </CardDescription>
+          {/* CardDescription removed */}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
