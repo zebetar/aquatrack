@@ -1,7 +1,6 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import type { Payment, Customer } from '@/types'; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,7 +23,7 @@ export default function ViewerBillingPage() {
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 200)); // Simulate async fetch
+    await new Promise(resolve => setTimeout(resolve, 200)); 
     const paymentData = getMockPaymentsByCustomerId(user.customerId);
     const profileData = getMockCustomerById(user.customerId);
     
@@ -55,11 +54,9 @@ export default function ViewerBillingPage() {
   const totalPaid = payments.reduce((sum, payment) => sum + payment.amountPaid, 0);
 
   return (
-    <>
-      <PageHeader title="My Billing & Payments" description="View your outstanding balance and payment history." />
-      
+    <div className="mt-6 space-y-6">
       {customerProfile ? (
-        <Card className="mb-6 shadow-md">
+        <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Billing Summary</CardTitle>
           </CardHeader>
@@ -75,7 +72,7 @@ export default function ViewerBillingPage() {
           </CardContent>
         </Card>
       ) : (
-         <Card className="mb-6 shadow-md">
+         <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Billing Summary</CardTitle>
           </CardHeader>
@@ -85,7 +82,7 @@ export default function ViewerBillingPage() {
         </Card>
       )}
 
-      <Card className="shadow-md">
+      <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
           <CardDescription>List of all payments you have made.</CardDescription>
@@ -117,6 +114,6 @@ export default function ViewerBillingPage() {
           </ScrollArea>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

@@ -1,10 +1,9 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Droplets, CreditCard, BarChart3, BellRing } from 'lucide-react';
-import { useState, useEffect, useCallback, memo } from 'react'; // Added memo
+import { useState, useEffect, useCallback, memo } from 'react'; 
 import Link from 'next/link';
 import { 
   getAllMockCustomers, 
@@ -19,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
 import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog';
 
-const KeyMetricCard = memo(({ // Wrapped with memo
+const KeyMetricCard = memo(({ 
   title, 
   value, 
   icon: Icon, 
@@ -81,7 +80,7 @@ const KeyMetricCard = memo(({ // Wrapped with memo
     </Card>
   );
 });
-KeyMetricCard.displayName = 'KeyMetricCard'; // Added display name for memoized component
+KeyMetricCard.displayName = 'KeyMetricCard'; 
 
 
 export default function AdminDashboardPage() {
@@ -162,7 +161,7 @@ export default function AdminDashboardPage() {
       href: '/admin/customers'
     },
     { 
-      title: 'Monthly Supply', 
+      title: 'Monthly Supply (Hours)', 
       value: formatDurationFromHours(monthlySupply), 
       icon: Droplets, 
       description: 'Current month',
@@ -180,8 +179,7 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <PageHeader title="Admin Dashboard" description="Overview of water supply operations." />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-6">
         {metrics.map(metric => (
           <KeyMetricCard 
             key={metric.title} 

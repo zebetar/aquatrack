@@ -1,14 +1,13 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
 import { CustomerDetailsView } from '@/components/admin/customers/customer-details-view';
 import { LogUsageDialog } from '@/components/admin/customers/log-usage-dialog';
 import { RecordPaymentDialog } from '@/components/admin/customers/record-payment-dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, User } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
@@ -79,7 +78,7 @@ export default function CustomerDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [customerId, toast]); // customer state removed from dependencies
+  }, [customerId, toast, customer]); // customer state added back temporarily for fallback logic
 
   useEffect(() => {
     fetchCustomerData();
@@ -91,7 +90,7 @@ export default function CustomerDetailPage() {
 
     const viewerNotification: Notification = {
         id: `noti-${Date.now()}-viewer`,
-        userId: customer.authUID || customer.id, // Prefer authUID if available for viewer login
+        userId: customer.authUID || customer.id, 
         message: `New water usage logged: ${formatDurationFromHours(newRecord.durationHours)}, Cost: PKR ${newRecord.cost.toLocaleString()}.`,
         type: 'USAGE_LOGGED',
         isRead: false,
@@ -102,7 +101,7 @@ export default function CustomerDetailPage() {
 
     const adminNotification: Notification = {
         id: `noti-${Date.now()}-admin`,
-        userId: 'admin001', // Generic admin ID
+        userId: 'admin001', 
         message: `Water usage logged for ${customer.name}: ${formatDurationFromHours(newRecord.durationHours)}.`,
         type: 'USAGE_LOGGED',
         isRead: false,
@@ -111,7 +110,7 @@ export default function CustomerDetailPage() {
     };
     addMockNotification(adminNotification);
 
-    fetchCustomerData(); // Re-fetch all data to ensure consistency
+    fetchCustomerData(); 
     toast({ title: "Usage Logged", description: `${formatDurationFromHours(newRecord.durationHours)} logged for ${newRecord.customerName}.` });
   };
 
@@ -141,23 +140,21 @@ export default function CustomerDetailPage() {
     };
     addMockNotification(adminNotification);
 
-    fetchCustomerData(); // Re-fetch all data
+    fetchCustomerData(); 
     toast({ title: "Payment Recorded", description: `PKR ${newPayment.amountPaid.toLocaleString()} recorded.`});
   };
 
   const handleUpdateUsageRecord = (updatedRecord: WaterUsageRecord) => {
     if (!customerId || !customer) return;
     updateMockUsageRecord(updatedRecord);
-    // Optionally add notifications for updates
-    fetchCustomerData(); // Re-fetch all data
+    fetchCustomerData(); 
     toast({ title: "Usage Record Updated", description: `Usage record for ${updatedRecord.customerName} has been updated.` });
   };
 
   const handleUpdatePaymentRecord = (updatedPayment: Payment) => {
     if (!customerId || !customer) return;
     updateMockPaymentRecord(updatedPayment);
-    // Optionally add notifications for updates
-    fetchCustomerData(); // Re-fetch all data
+    fetchCustomerData(); 
     toast({ title: "Payment Record Updated", description: `Payment record for ${updatedPayment.customerName} has been updated.` });
   };
 
@@ -205,8 +202,7 @@ export default function CustomerDetailPage() {
         addMockNotification(viewerNotification);
       }
 
-
-      fetchCustomerData(); // Re-fetch to display updated customer
+      fetchCustomerData(); 
       setIsEditing(false);
       toast({ title: "Customer Updated", description: "Customer details have been saved." });
     }
@@ -219,7 +215,7 @@ export default function CustomerDetailPage() {
     setIsEditing(false);
   };
 
-  if (isLoading && !customer) { // Show full page loader only if no customer data yet
+  if (isLoading && !customer) { 
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -228,33 +224,34 @@ export default function CustomerDetailPage() {
     );
   }
 
-  if (!customer) { // If still no customer after loading attempt
+  if (!customer) { 
     return (
-      <>
-        <PageHeader title="Customer Not Found" description="This customer may not exist or data could not be loaded." />
-        <p className="text-muted-foreground">The requested customer could not be found or their data is not available.</p>
-        <Button variant="outline" asChild className="mt-4">
+      <div className="mt-6">
+        <div className="rounded-lg border bg-card p-4 text-center shadow-sm glassmorphism-card">
+            <User className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-medium">Customer Not Found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+            This customer may not exist or data could not be loaded.
+            </p>
+        </div>
+        <Button variant="outline" asChild className="mt-6">
           <Link href="/admin/customers"><ArrowLeft className="mr-2 h-4 w-4" />Back to Customers</Link>
         </Button>
-      </>
+      </div>
     );
   }
 
-  // Inline loader for subsequent refreshes if customer data is already present
   const showInlineLoader = isLoading && customer;
 
   return (
-    <>
-      <PageHeader 
-        title={customer.name} 
-        // Removed description to simplify
-        actions={
-          <div className="flex gap-2">
-            {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
-            {!isEditing && <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />}
-          </div>
-        }
-      />
+    <div className="mt-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{customer.name}</h1>
+        <div className="flex gap-2 flex-wrap">
+          {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
+          {!isEditing && <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />}
+        </div>
+      </div>
       <Button variant="outline" asChild className="mb-6">
           <Link href="/admin/customers"><ArrowLeft className="mr-2 h-4 w-4" />Back to Customers List</Link>
       </Button>
@@ -279,6 +276,6 @@ export default function CustomerDetailPage() {
         onUsageRecordUpdated={handleUpdateUsageRecord}
         onPaymentRecordUpdated={handleUpdatePaymentRecord}
       />
-    </>
+    </div>
   );
 }

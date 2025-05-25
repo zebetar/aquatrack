@@ -1,7 +1,6 @@
 
 "use client"; 
 
-import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,7 +54,6 @@ export default function AdminReportsPage() {
     const usageRecords = getAllMockUsageRecords();
     const payments = getAllMockPayments();
 
-    // Process Monthly Supply & Revenue (all-time for trend, chart will filter)
     const supplyMap = new Map<string, { supply: number, revenue: number }>();
     usageRecords.forEach(record => {
       const recordDate = new Date(record.date);
@@ -74,7 +72,6 @@ export default function AdminReportsPage() {
     })).sort((a,b) => a.month.localeCompare(b.month));
     setMonthlySupplyData(allMonthlyData);
 
-    // Process Customer Consumption & Aggregate Financials for the selectedMonth
     const customerMap = new Map<string, CustomerConsumption>();
     customers.forEach(customer => {
       customerMap.set(customer.id, {
@@ -129,25 +126,21 @@ export default function AdminReportsPage() {
     .slice(0,10);
 
   return (
-    <>
-      <PageHeader 
-        title="Reports" 
-        description="Analyze water supply data and revenue for the selected month."
-        actions={
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select Month" />
-                </SelectTrigger>
-                <SelectContent>
-                    {monthOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        }
-      />
+    <div className="mt-6 space-y-6">
+       <div className="flex justify-end">
+         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select Month" />
+            </SelectTrigger>
+            <SelectContent>
+                {monthOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+      </div>
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        <Card className="shadow-md">
+        <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Supply & Revenue for {monthOptions.find(m=>m.value === selectedMonth)?.label}</CardTitle>
           </CardHeader>
@@ -171,7 +164,7 @@ export default function AdminReportsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Top Customers by Consumption ({monthOptions.find(m=>m.value === selectedMonth)?.label})</CardTitle>
           </CardHeader>
@@ -193,7 +186,7 @@ export default function AdminReportsPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 shadow-md">
+        <Card className="lg:col-span-2 shadow-md glassmorphism-card">
           <CardHeader>
             <CardTitle>Monthly Financial Summary ({monthOptions.find(m=>m.value === selectedMonth)?.label})</CardTitle>
           </CardHeader>
@@ -216,6 +209,6 @@ export default function AdminReportsPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }

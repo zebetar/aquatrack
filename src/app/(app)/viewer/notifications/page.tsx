@@ -1,7 +1,6 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import type { Notification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,6 @@ export default function ViewerNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Correctly use user.id which is the authUID for viewers
   const viewerUserId = user?.id; 
 
   const loadNotifications = useCallback(async () => {
@@ -38,7 +36,7 @@ export default function ViewerNotificationsPage() {
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 100)); // Simulate fetch
+    await new Promise(resolve => setTimeout(resolve, 100)); 
     const fetchedNotifications = getMockNotificationsByUserId(viewerUserId);
     setNotifications(fetchedNotifications || []);
     setIsLoading(false);
@@ -48,7 +46,7 @@ export default function ViewerNotificationsPage() {
     if (!authLoading && viewerUserId) {
       loadNotifications();
     } else if (!authLoading && !viewerUserId) {
-        setIsLoading(false); // No user, so stop loading
+        setIsLoading(false); 
     }
   }, [authLoading, loadNotifications, viewerUserId]);
 
@@ -76,72 +74,69 @@ export default function ViewerNotificationsPage() {
   if (!user) {
       return <p>Not authenticated. Please log in.</p>
   }
-  if (!viewerUserId) { // Should be caught by !user check, but good for robustness
+  if (!viewerUserId) { 
       return <p>Could not identify user for notifications.</p>
   }
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <>
-      <PageHeader title="My Notifications" description="Updates on your account, usage, and billing." />
-      <Card className="shadow-md glassmorphism-card">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>All Notifications</CardTitle>
-              <CardDescription>
-                You have {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}.
-              </CardDescription>
-            </div>
-            {unreadCount > 0 && (
-              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
-                Mark all as read
-              </Button>
-            )}
+    <Card className="shadow-md glassmorphism-card mt-6">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>All Notifications</CardTitle>
+            <CardDescription>
+              You have {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}.
+            </CardDescription>
           </div>
-        </CardHeader>
-        <CardContent>
-          {notifications.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">You have no notifications yet.</p>
-          ) : (
-            <ScrollArea className="h-[calc(100vh-20rem)] pr-4"> {/* Adjust height as needed */}
-              <ul className="space-y-4">
-                {notifications.map((notification) => (
-                  <li
-                    key={notification.id}
-                    className={`flex items-start space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
-                      !notification.isRead ? 'bg-primary/10 border-primary/50' : 'bg-card/80'
-                    }`}
-                  >
-                    <div className={`mt-1 shrink-0 p-2 rounded-full ${!notification.isRead ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                      <NotificationIcon type={notification.type} />
-                    </div>
-                    <div className="flex-1">
-                      <p className={`text-sm ${!notification.isRead ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground/80 mt-1">
-                        {format(new Date(notification.createdAt), 'PP p')}
-                      </p>
-                      {notification.linkTo && (
-                         <Button variant="link" size="sm" asChild className="px-0 h-auto mt-1 text-primary">
-                           <Link href={notification.linkTo}>View Details</Link>
-                         </Button>
-                      )}
-                    </div>
-                    {!notification.isRead && (
-                      <Button variant="ghost" size="sm" className="text-xs self-start" onClick={() => handleMarkAsRead(notification.id)}>
-                        <CheckCircle2 className="mr-1 h-3 w-3"/> Mark read
-                      </Button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
+          {unreadCount > 0 && (
+            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
+              Mark all as read
+            </Button>
           )}
-        </CardContent>
-      </Card>
-    </>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {notifications.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">You have no notifications yet.</p>
+        ) : (
+          <ScrollArea className="h-[calc(100vh-14rem)] pr-4"> {/* Adjusted height */}
+            <ul className="space-y-4">
+              {notifications.map((notification) => (
+                <li
+                  key={notification.id}
+                  className={`flex items-start space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
+                    !notification.isRead ? 'bg-primary/10 border-primary/50' : 'bg-card/80'
+                  }`}
+                >
+                  <div className={`mt-1 shrink-0 p-2 rounded-full ${!notification.isRead ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    <NotificationIcon type={notification.type} />
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-sm ${!notification.isRead ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground/80 mt-1">
+                      {format(new Date(notification.createdAt), 'PP p')}
+                    </p>
+                    {notification.linkTo && (
+                       <Button variant="link" size="sm" asChild className="px-0 h-auto mt-1 text-primary">
+                         <Link href={notification.linkTo}>View Details</Link>
+                       </Button>
+                    )}
+                  </div>
+                  {!notification.isRead && (
+                    <Button variant="ghost" size="sm" className="text-xs self-start" onClick={() => handleMarkAsRead(notification.id)}>
+                      <CheckCircle2 className="mr-1 h-3 w-3"/> Mark read
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
   );
 }

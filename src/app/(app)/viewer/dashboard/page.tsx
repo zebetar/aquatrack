@@ -1,19 +1,18 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, DollarSign, Clock, Loader2, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useState, useEffect, useCallback, memo } from 'react'; // Added memo
+import { useState, useEffect, useCallback, memo } from 'react'; 
 import { useAuth } from '@/contexts/auth-context';
 import { getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId, getMockNotificationsByUserId } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification } from '@/types';
 import { format } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 
-const SummaryCard = memo(({ // Wrapped with memo
+const SummaryCard = memo(({ 
   title, 
   value, 
   icon: Icon, 
@@ -43,7 +42,7 @@ const SummaryCard = memo(({ // Wrapped with memo
     </CardContent>
   </Card>
 ));
-SummaryCard.displayName = 'SummaryCard'; // Added display name for memoized component
+SummaryCard.displayName = 'SummaryCard'; 
 
 
 export default function ViewerDashboardPage() {
@@ -125,8 +124,10 @@ export default function ViewerDashboardPage() {
   ];
 
   return (
-    <>
-      <PageHeader title={`Welcome, ${customerProfile?.name ?? 'Customer'}!`} description="Your water usage and billing summary." />
+    <div className="mt-6">
+      <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl mb-6">
+        Welcome, {customerProfile?.name ?? 'Customer'}!
+      </h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {summaries.map(summary => (
           <SummaryCard key={summary.title} {...summary} />
@@ -164,6 +165,6 @@ export default function ViewerDashboardPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }

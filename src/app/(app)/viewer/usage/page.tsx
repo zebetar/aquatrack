@@ -1,7 +1,6 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import type { WaterUsageRecord } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -25,10 +24,8 @@ export default function ViewerUsagePage() {
       return;
     }
     setIsLoading(true);
-    // Simulate async fetch
     await new Promise(resolve => setTimeout(resolve, 200));
     const records = getMockUsageRecordsByCustomerId(user.customerId);
-    // Sort by most recent first before setting
     records.sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     setUsageRecords(records || []);
     setIsLoading(false);
@@ -57,9 +54,8 @@ export default function ViewerUsagePage() {
   const totalCost = usageRecords.reduce((sum, record) => sum + record.cost, 0);
 
   return (
-    <>
-      <PageHeader title="My Water Usage" description="Detailed history of your water consumption." />
-      <Card className="mb-6 shadow-md">
+    <div className="mt-6 space-y-6">
+      <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Usage Summary</CardTitle>
         </CardHeader>
@@ -74,7 +70,7 @@ export default function ViewerUsagePage() {
             </div>
         </CardContent>
       </Card>
-      <Card className="shadow-md">
+      <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Usage Records</CardTitle>
           <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription>
@@ -110,6 +106,6 @@ export default function ViewerUsagePage() {
           </ScrollArea>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

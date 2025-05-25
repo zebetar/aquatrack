@@ -1,16 +1,14 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, WaterUsageRecord } from '@/types'; // Added WaterUsageRecord
+import type { Customer, WaterUsageRecord } from '@/types'; 
 import { useState, useEffect, useCallback } from 'react';
-import { getAllMockCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store'; // Added getAllMockUsageRecords
+import { getAllMockCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store'; 
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-// Augment Customer type for display purposes
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function OutstandingBillsPage() {
@@ -21,7 +19,7 @@ export default function OutstandingBillsPage() {
     setIsLoading(true);
     setTimeout(() => {
       const allCustomers = getAllMockCustomers();
-      const usageRecords = getAllMockUsageRecords(); // Fetch all usage records
+      const usageRecords = getAllMockUsageRecords(); 
 
       const augmentedCustomers = allCustomers.map(customer => {
         const customerUsage = usageRecords
@@ -52,11 +50,7 @@ export default function OutstandingBillsPage() {
   }
 
   return (
-    <>
-      <PageHeader
-        title="Customers with Outstanding Bills"
-        description="List of customers who have a pending balance."
-      />
+    <div className="mt-6">
       <Button variant="outline" asChild className="mb-6">
         <Link href="/admin/reports">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -89,6 +83,6 @@ export default function OutstandingBillsPage() {
           </div>
         )
       )}
-    </>
+    </div>
   );
 }
