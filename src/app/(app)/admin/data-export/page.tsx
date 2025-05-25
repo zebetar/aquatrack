@@ -5,18 +5,44 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, DatabaseZap } from 'lucide-react'; 
+import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2 } from 'lucide-react'; 
 import Link from 'next/link';
-import { exportMockDataAsJSON } from '@/lib/mock-data-store';
+import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import type { Customer, WaterUsageRecord, Payment } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
+import { cn, formatDurationFromHours } from '@/lib/utils';
 
 export default function DataExportPage() {
   const { toast } = useToast();
 
-  const handleMockExport = (dataType: string, format: string) => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [filteredUsage, setFilteredUsage] = useState<WaterUsageRecord[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  useEffect(() => {
+    setIsLoadingCustomers(true);
+    const allCustomers = getAllMockCustomers();
+    setCustomers(allCustomers.sort((a,b) => a.name.localeCompare(b.name)));
+    setIsLoadingCustomers(false);
+  }, []);
+
+  const handleMockExport = (dataType: string, formatType: string) => {
     toast({
       title: "Export Initiated (Mock)",
-      description: `${dataType} data export to ${format} has started. (This is a mock action)`,
+      description: `${dataType} data export to ${formatType} has started. (This is a mock action)`,
     });
   };
 
@@ -54,6 +80,72 @@ export default function DataExportPage() {
     }
   };
 
+  const handlePreviewFilteredData = async () => {
+    if (!selectedCustomerId || !startDate) {
+      toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer and a start date." });
+      return;
+    }
+    setIsPreviewing(true);
+    setShowPreview(false); // Reset preview visibility
+
+    // Simulate delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const usage = getMockUsageRecordsByCustomerId(selectedCustomerId)
+      .filter(record => new Date(record.date) >= startDate)
+      .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    const payments = getMockPaymentsByCustomerId(selectedCustomerId)
+      .filter(payment => new Date(payment.paymentDate) >= startDate)
+      .sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+
+    setFilteredUsage(usage);
+    setFilteredPayments(payments);
+    setIsPreviewing(false);
+    setShowPreview(true);
+    if (usage.length === 0 && payments.length === 0) {
+        toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria." });
+    }
+  };
+
+  const handleDownloadFilteredPdf = async () => {
+    if (!selectedCustomerId || !startDate) {
+      toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer and a start date to download PDF." });
+      return;
+    }
+    if (filteredUsage.length === 0 && filteredPayments.length === 0 && !showPreview) {
+        toast({ variant: "destructive", title: "No Data Previewed", description: "Please preview data first or ensure records exist for the selected criteria." });
+        return;
+    }
+
+    const customer = getMockCustomerById(selectedCustomerId);
+    if (!customer) {
+      toast({ variant: "destructive", title: "Error", description: "Could not find selected customer." });
+      return;
+    }
+
+    setIsDownloading(true);
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate PDF generation time
+
+    try {
+      await generateCustomerPdf(customer, filteredUsage, filteredPayments); // Pass filtered records
+      toast({
+        title: "PDF Generated",
+        description: `Statement for ${customer.name} (from ${format(startDate, 'PP')}) is being downloaded.`,
+      });
+    } catch (error) {
+      console.error("Error generating filtered PDF:", error);
+      toast({
+        variant: "destructive",
+        title: "PDF Generation Failed",
+        description: "Could not generate the PDF statement.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+
   return (
     <>
       <PageHeader
@@ -66,9 +158,119 @@ export default function DataExportPage() {
 
       <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
-          <CardTitle>Export Options</CardTitle>
+          <CardTitle>Filtered Customer Data Export (PDF)</CardTitle>
           <CardDescription>
-            Download current mock data from localStorage or simulate other export types.
+            Select a customer and a start date to preview and download their usage and payment history from that date onwards.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 items-end">
+            <div className="space-y-1.5">
+              <label htmlFor="customer-select" className="text-sm font-medium">Select Customer</label>
+              <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                <SelectTrigger id="customer-select" className="w-full" disabled={isLoadingCustomers}>
+                  <SelectValue placeholder={isLoadingCustomers ? "Loading customers..." : "Select a customer"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map(customer => (
+                    <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1.5">
+              <label htmlFor="start-date-picker" className="text-sm font-medium">Start Date</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="start-date-picker"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    disabled={(date) => date > new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Button onClick={handlePreviewFilteredData} disabled={isPreviewing || !selectedCustomerId || !startDate} className="w-full sm:w-auto">
+              {isPreviewing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Search className="mr-2 h-4 w-4" /> Preview Data
+            </Button>
+          </div>
+
+          {showPreview && (selectedCustomerId && startDate) && (
+            <div className="mt-6 space-y-6">
+              <Separator />
+              <h3 className="text-lg font-semibold">Preview for {customers.find(c=>c.id === selectedCustomerId)?.name} (from {format(startDate, 'PP')})</h3>
+              
+              <div>
+                <h4 className="text-md font-medium mb-2">Filtered Water Usage</h4>
+                {filteredUsage.length > 0 ? (
+                  <ScrollArea className="h-[200px] border rounded-md">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Duration</TableHead><TableHead className="text-right">Cost (PKR)</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {filteredUsage.map(r => (
+                          <TableRow key={r.id}>
+                            <TableCell>{format(new Date(r.date), 'PP')}</TableCell>
+                            <TableCell>{formatDurationFromHours(r.durationHours)}</TableCell>
+                            <TableCell className="text-right">{r.cost.toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                ) : <p className="text-sm text-muted-foreground">No usage records found for this period.</p>}
+              </div>
+
+              <div>
+                <h4 className="text-md font-medium mb-2">Filtered Payments</h4>
+                 {filteredPayments.length > 0 ? (
+                  <ScrollArea className="h-[200px] border rounded-md">
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead className="text-right">Amount (PKR)</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {filteredPayments.map(p => (
+                          <TableRow key={p.id}>
+                            <TableCell>{format(new Date(p.paymentDate), 'PP p')}</TableCell>
+                            <TableCell className="text-right">{p.amountPaid.toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                ) : <p className="text-sm text-muted-foreground">No payment records found for this period.</p>}
+              </div>
+              <Separator />
+              <Button onClick={handleDownloadFilteredPdf} disabled={isDownloading || (!filteredUsage.length && !filteredPayments.length)} className="w-full sm:w-auto">
+                {isDownloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Download className="mr-2 h-4 w-4" /> Download Filtered PDF
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glassmorphism-card shadow-md mb-6">
+        <CardHeader>
+          <CardTitle>General Export Options</CardTitle>
+          <CardDescription>
+            Simulate other export types or download a full backup of current mock data.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -113,7 +315,7 @@ export default function DataExportPage() {
           </div>
         </CardContent>
       </Card>
-      {/* Removed System Reset Card and AlertDialog */}
     </>
   );
 }
+
