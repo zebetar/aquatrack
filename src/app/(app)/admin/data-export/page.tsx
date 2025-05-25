@@ -1,11 +1,10 @@
 
 "use client";
 
-import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft } from 'lucide-react';
+import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
@@ -19,6 +18,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { cn, formatDurationFromHours } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 
 export default function DataExportPage() {
   const { toast } = useToast();
@@ -166,15 +177,18 @@ export default function DataExportPage() {
 
   return (
     <>
-      {/* PageHeader removed */}
-      <Button variant="outline" asChild className="mb-6 mt-6"> {/* Added mt-6 for spacing */}
-          <Link href="/admin/settings"><ArrowLeft className="mr-2 h-4 w-4" />Back to Settings</Link>
+      <Button variant="outline" asChild className="mb-6 mt-6">
+        <Link href="/admin/settings">
+          <>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Settings
+          </>
+        </Link>
       </Button>
 
       <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
           <CardTitle>Filtered Customer Data Export (PDF)</CardTitle>
-          {/* CardDescription removed */}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
@@ -311,7 +325,6 @@ export default function DataExportPage() {
       <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
           <CardTitle>General Export Options</CardTitle>
-          {/* CardDescription removed */}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
@@ -358,5 +371,3 @@ export default function DataExportPage() {
     </>
   );
 }
-
-    
