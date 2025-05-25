@@ -481,3 +481,9 @@ export function clearAllMockData(): void {
   console.log("Mock data store cleared from memory and localStorage.");
   // For Firestore, this would be a complex operation, likely a backend script or manual console deletion.
 }
+
+export function exportMockDataAsJSON(): string {
+  // Ensure the store is up-to-date from localStorage before exporting
+  loadStoreFromLocalStorage(); 
+  return JSON.stringify(store, null, 2); // Pretty print JSON
+}
