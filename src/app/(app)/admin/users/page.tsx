@@ -13,10 +13,8 @@ import {
   getAllMockUsageRecords // Added
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 // Augment Customer type for display purposes
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
@@ -100,14 +98,7 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <Button variant="outline" asChild className="mb-6 mt-6">
-        <Link href="/admin/settings">
-          <span className="inline-flex items-center"> {/* Wrapped Link content in a span */}
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Settings
-          </span>
-        </Link>
-      </Button>
+      {/* "Back to Settings" button removed */}
       {isLoading && customers.length > 0 && (
         <div className="my-4 flex items-center justify-center text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

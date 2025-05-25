@@ -4,8 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2 } from 'lucide-react';
 import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
@@ -172,16 +171,8 @@ export default function DataExportPage() {
 
   return (
     <>
-      <Button variant="outline" asChild className="mb-6 mt-6">
-        <Link href="/admin/settings">
-          <>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Settings
-          </>
-        </Link>
-      </Button>
-
-      <Card className="glassmorphism-card shadow-md mb-6">
+      {/* "Back to Settings" button removed */}
+      <Card className="glassmorphism-card shadow-md mb-6 mt-6"> {/* Added mt-6 for spacing */}
         <CardHeader>
           <CardTitle>Customer Data (PDF)</CardTitle>
         </CardHeader>
@@ -373,5 +364,3 @@ export default function DataExportPage() {
     </>
   );
 }
-
-    
