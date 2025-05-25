@@ -193,7 +193,6 @@ export default function DataExportPage() {
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              {/* Removed "Select Customer" Label */}
               <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                 <SelectTrigger id="customer-select" className="w-full" disabled={isLoadingCustomers}>
                   <SelectValue placeholder={isLoadingCustomers ? "Loading customers..." : "Select a customer"} />
@@ -371,3 +370,4 @@ export default function DataExportPage() {
     </>
   );
 }
+
