@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2 } from 'lucide-react'; 
+import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft } from 'lucide-react'; 
 import Link from 'next/link';
 import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
@@ -25,6 +25,7 @@ export default function DataExportPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [filteredUsage, setFilteredUsage] = useState<WaterUsageRecord[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
@@ -81,22 +82,34 @@ export default function DataExportPage() {
   };
 
   const handlePreviewFilteredData = async () => {
-    if (!selectedCustomerId || !startDate) {
-      toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer and a start date." });
+    if (!selectedCustomerId || !startDate || !endDate) {
+      toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer, start date, and end date." });
       return;
     }
-    setIsPreviewing(true);
-    setShowPreview(false); // Reset preview visibility
+    if (endDate < startDate) {
+      toast({ variant: "destructive", title: "Invalid Date Range", description: "End date cannot be before start date." });
+      return;
+    }
 
-    // Simulate delay
+    setIsPreviewing(true);
+    setShowPreview(false); 
+
     await new Promise(resolve => setTimeout(resolve, 300));
 
+    const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+
     const usage = getMockUsageRecordsByCustomerId(selectedCustomerId)
-      .filter(record => new Date(record.date) >= startDate)
+      .filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate >= startDate && recordDate <= endOfDayEndDate;
+      })
       .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
     const payments = getMockPaymentsByCustomerId(selectedCustomerId)
-      .filter(payment => new Date(payment.paymentDate) >= startDate)
+      .filter(payment => {
+        const paymentDate = new Date(payment.paymentDate);
+        return paymentDate >= startDate && paymentDate <= endOfDayEndDate;
+      })
       .sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
 
     setFilteredUsage(usage);
@@ -104,13 +117,17 @@ export default function DataExportPage() {
     setIsPreviewing(false);
     setShowPreview(true);
     if (usage.length === 0 && payments.length === 0) {
-        toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria." });
+        toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria and date range." });
     }
   };
 
   const handleDownloadFilteredPdf = async () => {
-    if (!selectedCustomerId || !startDate) {
-      toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer and a start date to download PDF." });
+    if (!selectedCustomerId || !startDate || !endDate) {
+      toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer, start date, and end date to download PDF." });
+      return;
+    }
+    if (endDate < startDate) {
+      toast({ variant: "destructive", title: "Invalid Date Range", description: "End date cannot be before start date." });
       return;
     }
     if (filteredUsage.length === 0 && filteredPayments.length === 0 && !showPreview) {
@@ -125,13 +142,13 @@ export default function DataExportPage() {
     }
 
     setIsDownloading(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate PDF generation time
+    await new Promise(resolve => setTimeout(resolve, 500)); 
 
     try {
-      await generateCustomerPdf(customer, filteredUsage, filteredPayments); // Pass filtered records
+      await generateCustomerPdf(customer, filteredUsage, filteredPayments); 
       toast({
         title: "PDF Generated",
-        description: `Statement for ${customer.name} (from ${format(startDate, 'PP')}) is being downloaded.`,
+        description: `Statement for ${customer.name} (from ${format(startDate, 'PP')} to ${format(endDate, 'PP')}) is being downloaded.`,
       });
     } catch (error) {
       console.error("Error generating filtered PDF:", error);
@@ -153,20 +170,20 @@ export default function DataExportPage() {
         description="Manage and export application data."
       />
       <Button variant="outline" asChild className="mb-6">
-          <Link href="/admin/settings">Back to Settings</Link>
+          <Link href="/admin/settings"><ArrowLeft className="mr-2 h-4 w-4" />Back to Settings</Link>
       </Button>
 
       <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
           <CardTitle>Filtered Customer Data Export (PDF)</CardTitle>
           <CardDescription>
-            Select a customer and a start date to preview and download their usage and payment history from that date onwards.
+            Select a customer and a date range to preview and download their usage and payment history.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 items-end">
-            <div className="space-y-1.5">
-              <label htmlFor="customer-select" className="text-sm font-medium">Select Customer</label>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 items-end">
+            <div className="space-y-1.5 md:col-span-2 lg:col-span-1">
+              <Label htmlFor="customer-select" className="text-sm font-medium">Select Customer</Label>
               <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                 <SelectTrigger id="customer-select" className="w-full" disabled={isLoadingCustomers}>
                   <SelectValue placeholder={isLoadingCustomers ? "Loading customers..." : "Select a customer"} />
@@ -180,7 +197,7 @@ export default function DataExportPage() {
             </div>
             
             <div className="space-y-1.5">
-              <label htmlFor="start-date-picker" className="text-sm font-medium">Start Date</label>
+              <Label htmlFor="start-date-picker" className="text-sm font-medium">Start Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -201,22 +218,49 @@ export default function DataExportPage() {
                     selected={startDate}
                     onSelect={setStartDate}
                     initialFocus
-                    disabled={(date) => date > new Date()}
+                    disabled={(date) => date > new Date() || (endDate && date > endDate)}
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
-            <Button onClick={handlePreviewFilteredData} disabled={isPreviewing || !selectedCustomerId || !startDate} className="w-full sm:w-auto">
+            <div className="space-y-1.5">
+              <Label htmlFor="end-date-picker" className="text-sm font-medium">End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="end-date-picker"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                    disabled={(date) => date > new Date() || (startDate && date < startDate)}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Button onClick={handlePreviewFilteredData} disabled={isPreviewing || !selectedCustomerId || !startDate || !endDate} className="w-full">
               {isPreviewing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Search className="mr-2 h-4 w-4" /> Preview Data
             </Button>
           </div>
 
-          {showPreview && (selectedCustomerId && startDate) && (
+          {showPreview && (selectedCustomerId && startDate && endDate) && (
             <div className="mt-6 space-y-6">
-              <Separator />
-              <h3 className="text-lg font-semibold">Preview for {customers.find(c=>c.id === selectedCustomerId)?.name} (from {format(startDate, 'PP')})</h3>
+              <h3 className="text-lg font-semibold">Preview for {customers.find(c=>c.id === selectedCustomerId)?.name} (from {format(startDate, 'PP')} to {format(endDate, 'PP')})</h3>
               
               <div>
                 <h4 className="text-md font-medium mb-2">Filtered Water Usage</h4>
@@ -256,8 +300,7 @@ export default function DataExportPage() {
                   </ScrollArea>
                 ) : <p className="text-sm text-muted-foreground">No payment records found for this period.</p>}
               </div>
-              <Separator />
-              <Button onClick={handleDownloadFilteredPdf} disabled={isDownloading || (!filteredUsage.length && !filteredPayments.length)} className="w-full sm:w-auto">
+              <Button onClick={handleDownloadFilteredPdf} disabled={isDownloading || (!filteredUsage.length && !filteredPayments.length) || !selectedCustomerId || !startDate || !endDate} className="w-full sm:w-auto">
                 {isDownloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Download className="mr-2 h-4 w-4" /> Download Filtered PDF
               </Button>
@@ -274,7 +317,7 @@ export default function DataExportPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
             <div className="mb-2 sm:mb-0">
               <h3 className="font-semibold text-lg flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
               <p className="text-sm text-muted-foreground">Simulate exporting a list of all customers and their details.</p>
@@ -284,7 +327,7 @@ export default function DataExportPage() {
             </Button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
             <div className="mb-2 sm:mb-0">
               <h3 className="font-semibold text-lg flex items-center"><Droplets className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
               <p className="text-sm text-muted-foreground">Simulate exporting all logged water usage records.</p>
@@ -294,7 +337,7 @@ export default function DataExportPage() {
             </Button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
             <div className="mb-2 sm:mb-0">
               <h3 className="font-semibold text-lg flex items-center"><CreditCard className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
               <p className="text-sm text-muted-foreground">Simulate exporting all recorded payment transactions.</p>
@@ -304,7 +347,7 @@ export default function DataExportPage() {
             </Button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
             <div className="mb-2 sm:mb-0">
               <h3 className="font-semibold text-lg flex items-center"><DatabaseZap className="mr-2 h-5 w-5 text-primary"/>Download Mock Data Backup</h3>
               <p className="text-sm text-muted-foreground">Download all current data from localStorage as a single JSON file. This is useful for backup or migration.</p>
@@ -315,7 +358,46 @@ export default function DataExportPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* System Reset Card - Removed as per previous request, kept commented for reference if needed later
+      <Card className="glassmorphism-card shadow-md">
+        <CardHeader>
+          <CardTitle>System Reset</CardTitle>
+          <CardDescription>
+            Clear all mock data from the application (customers, usage, payments, notifications).
+            This action cannot be undone.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" /> Clear All Application Data (Mock)
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action will permanently delete all mock data stored in your browser for this application.
+                  This includes all customers, water usage records, payment histories, and notifications.
+                  This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleClearAllData}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Yes, delete all data
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardContent>
+      </Card>
+      */}
     </>
   );
 }
-
