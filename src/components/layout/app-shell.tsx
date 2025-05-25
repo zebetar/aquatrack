@@ -27,111 +27,103 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    // This should ideally not happen if AuthProvider handles redirection correctly,
-    // but it's a safe fallback.
-    return null; 
+    return null;
   }
 
   const navItems = user.role === 'admin' ? adminNavItems : viewerNavItems;
 
   const sidebarHeaderContent = (
-     <div className="sidebar-header group"> {/* Added group here for app name text hover */}
-      <Link href="/" className="flex items-baseline gap-2 text-sidebar-foreground">
-        <Droplets className="h-7 w-7 text-primary shrink-0" /> 
+     <div className="sidebar-header"> {/* group was for gradient-text, not strictly needed now but harmless */}
+      <Link href="/" className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-hover-fg">
+        <Droplets className="h-7 w-7 text-primary shrink-0" />
         <span className={cn(
-          "sidebar-app-name-text gradient-text",
-           "group-hover:opacity-100" // Ensure this applies when sidebar (group) is hovered
+          "sidebar-app-name-text font-bold text-xl", // Removed gradient-text, added font-bold and text-xl for consistent styling
+          "group-[.sidebar-main-container]:group-hover:opacity-100" // Opacity handled by parent group hover
           )}>
             AquaTrack
         </span>
       </Link>
     </div>
   );
-  
-  const sidebarFooterContent = (
+
+  const sidebarDesktopFooterContent = (
     <div className={cn(
-        "sidebar-footer mt-auto border-t border-sidebar-border-color p-2",
-        "opacity-0 transition-opacity duration-200 ease-in-out",
-        "group-hover:opacity-100" // Visible when sidebar is hovered
+        "sidebar-footer",
+        "group-[.sidebar-main-container]:group-hover:opacity-100" // Visible when desktop sidebar is hovered
         )}>
         <UserNav />
     </div>
   );
-
-
-  const sidebarContent = (
-    <div className="flex h-full flex-col">
-      {sidebarHeaderContent}
-      <ScrollArea className="flex-1 sidebar-scroll-area" thumbClassName="sidebar-scroll-area-thumb">
-        <SidebarNav items={navItems} />
-      </ScrollArea>
-       {/* UserNav at the bottom of the desktop sidebar, visible on hover */}
-       {sidebarFooterContent}
-    </div>
-  );
   
-  const mobileSidebarContent = (
-    <div className="flex h-full flex-col">
-      {sidebarHeaderContent}
-      <ScrollArea className="flex-1 sidebar-scroll-area" thumbClassName="sidebar-scroll-area-thumb">
-        <SidebarNav items={navItems} />
-      </ScrollArea>
-       {/* UserNav at the bottom of the mobile sidebar, always visible when sheet is open */}
-      <div className="mt-auto border-t border-sidebar-border-color p-2">
-        <UserNav />
-      </div>
+  const sidebarMobileFooterContent = (
+    <div className="mt-auto border-t border-sidebar-border-color p-2"> {/* Always visible in mobile sheet */}
+      <UserNav />
     </div>
   );
 
+  const sidebarNavContent = (
+    <ScrollArea className="flex-1 sidebar-scroll-area" thumbClassName="sidebar-scroll-area-thumb">
+      <SidebarNav items={navItems} />
+    </ScrollArea>
+  );
 
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop Sidebar */}
       {!isMobile && (
         <aside className="sidebar-main-container group fixed inset-y-0 left-0 z-40 hidden flex-col md:flex">
-          {sidebarContent}
+          {sidebarHeaderContent}
+          {sidebarNavContent}
+          {sidebarDesktopFooterContent}
         </aside>
       )}
 
-      {/* Main Content Area */}
+      {/* Main Content Area & Mobile Integration */}
       <div className={cn(
           "flex flex-1 flex-col",
-          !isMobile && "md:ml-[var(--sidebar-collapsed-width)] transition-[margin-left] duration-300 ease-in-out group-hover:md:ml-[var(--sidebar-expanded-width)]", // Adjust margin based on sidebar state
+          !isMobile && "md:ml-[var(--sidebar-collapsed-width)]",
           "overflow-x-hidden" // Crucial to prevent content from causing full page scroll
         )}
       >
-        {/* Mobile Menu Trigger & Desktop UserNav (Top Right) */}
+        {/* Top bar for mobile menu trigger and desktop UserNav */}
         <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 md:justify-end">
           {isMobile && (
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0 text-foreground">
+                <Button variant="ghost" size="icon" className="shrink-0 text-foreground md:hidden">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle navigation menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent 
-                side="left" 
+              <SheetContent
+                side="left"
                 className={cn(
                   "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r border-sidebar-border-color",
                   "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-sidebar-fg"
                 )}
               >
+                {/* Visually hidden title for accessibility for the Sheet (Dialog) */}
                 <SheetHeader className="sr-only">
                   <SheetTitle>Navigation Menu</SheetTitle>
                 </SheetHeader>
-                {mobileSidebarContent}
+                {sidebarHeaderContent}
+                {sidebarNavContent}
+                {sidebarMobileFooterContent}
               </SheetContent>
             </Sheet>
           )}
-          {!isMobile && <UserNav />} {/* Desktop UserNav fixed to header */}
+          {!isMobile && (
+            <div className="fixed top-4 right-4 z-50">
+              <UserNav />
+            </div>
+          )}
         </div>
-        
-        <main className="main-content-area flex-1 p-4 sm:p-6"> {/* Removed pt-16/pt-20, handled by sticky header */}
+
+        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 sm:pt-8 md:pt-6">
           {children}
         </main>
       </div>
-       {isMobile && ( /* UserNav for mobile, fixed bottom right for example - or keep in sheet */
+       {isMobile && ( /* UserNav for mobile, fixed bottom right for example */
         <div className="fixed bottom-4 right-4 z-50 md:hidden">
           <UserNav />
         </div>
