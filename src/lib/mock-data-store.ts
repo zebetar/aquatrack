@@ -1,10 +1,10 @@
 
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
 // --- Firestore Import Examples (uncomment and use when ready) ---
-// import { db, Timestamp } from '@/lib/firebase-config'; 
-// import { 
-//   collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc, 
-//   writeBatch, orderBy, limit, increment 
+// import { db, Timestamp } from '@/lib/firebase-config';
+// import {
+//   collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc,
+//   writeBatch, orderBy, limit, increment
 // } from 'firebase/firestore';
 
 interface MockDataStore {
@@ -29,10 +29,10 @@ function loadStoreFromLocalStorage(): void {
       const serializedStore = localStorage.getItem(STORAGE_KEY);
       if (serializedStore) {
         const parsedStore: MockDataStore = JSON.parse(serializedStore);
-        
+
         store.customers = parsedStore.customers?.map(c => ({
           ...c,
-          createdAt: new Date(c.createdAt), 
+          createdAt: new Date(c.createdAt),
         })) || [];
         store.usageRecords = parsedStore.usageRecords?.map(ur => ({
           ...ur,
@@ -50,7 +50,7 @@ function loadStoreFromLocalStorage(): void {
           ...n,
           createdAt: new Date(n.createdAt),
         })) || [];
-        
+
         console.log("Mock data store loaded from localStorage.");
       } else {
         console.log("No mock data found in localStorage, initializing empty store.");
@@ -78,6 +78,7 @@ function saveStoreToLocalStorage(): void {
   }
 }
 
+// Initialize the store from localStorage when the module loads.
 loadStoreFromLocalStorage();
 
 // --- Customer Functions ---
@@ -90,7 +91,7 @@ export async function addCustomerToFirestore(customer: Customer): Promise<void> 
     // Convert Date objects to Firestore Timestamps for proper storage and querying
     const customerDataForFirestore = {
       ...customer,
-      createdAt: Timestamp.fromDate(customer.createdAt),
+      createdAt: Timestamp.fromDate(customer.createdAt), // Assuming Timestamp is imported from 'firebase/firestore'
     };
     await setDoc(customerRef, customerDataForFirestore);
     console.log("Customer added to Firestore with ID: ", customer.id);
@@ -120,7 +121,7 @@ export async function updateCustomerInFirestore(updatedCustomer: Customer): Prom
     const customerRef = doc(db, 'customers', updatedCustomer.id);
     const customerDataForFirestore = {
       ...updatedCustomer,
-      createdAt: Timestamp.fromDate(updatedCustomer.createdAt), 
+      createdAt: Timestamp.fromDate(updatedCustomer.createdAt),
     };
     await updateDoc(customerRef, customerDataForFirestore); // or setDoc with merge: true
     console.log(`Customer ${updatedCustomer.id} updated in Firestore.`);
@@ -149,9 +150,9 @@ export async function getCustomerByIdFromFirestore(customerId: string): Promise<
     const docSnap = await getDoc(customerRef);
     if (docSnap.exists()) {
       const data = docSnap.data();
-      return { 
-        ...data, 
-        id: docSnap.id, 
+      return {
+        ...data,
+        id: docSnap.id,
         createdAt: (data.createdAt as Timestamp).toDate() // Convert Timestamp back to Date
       } as Customer;
     }
@@ -172,14 +173,14 @@ export async function getAllCustomersFromFirestore(): Promise<Customer[]> {
   try {
     const customersCol = collection(db, 'customers');
     // Example: order by createdAt descending
-    const q = query(customersCol, orderBy('createdAt', 'desc')); 
+    const q = query(customersCol, orderBy('createdAt', 'desc'));
     const customerSnapshot = await getDocs(q);
     return customerSnapshot.docs.map(doc => {
       const data = doc.data();
-      return { 
-        ...data, 
-        id: doc.id, 
-        createdAt: (data.createdAt as Timestamp).toDate() 
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: (data.createdAt as Timestamp).toDate()
       } as Customer;
     });
   } catch (e) {
@@ -227,7 +228,7 @@ export async function deleteCustomerFromFirestore(customerId: string): Promise<v
     const paymentQuery = query(collection(db, 'payments'), where('customerId', '==', customerId));
     const paymentSnapshot = await getDocs(paymentQuery);
     paymentSnapshot.forEach(doc => batch.delete(doc.ref));
-    
+
     // Example: Deleting associated notifications
     // const customerData = await getCustomerByIdFromFirestore(customerId); // Fetch customer to get authUID
     // if (customerData?.authUID) {
@@ -249,7 +250,7 @@ export function deleteMockCustomer(customerId: string): void {
   const customerToDelete = store.customers.find(c => c.id === customerId);
 
   store.customers = store.customers.filter(c => c.id !== customerId);
-  
+
   if (store.customers.length < initialCustomerCount && customerToDelete) {
     store.usageRecords = store.usageRecords.filter(ur => ur.customerId !== customerId);
     store.payments = store.payments.filter(p => p.customerId !== customerId);
@@ -258,7 +259,7 @@ export function deleteMockCustomer(customerId: string): void {
         const isAdminNotificationAboutThisUser = n.linkTo?.includes(`/admin/customers/${customerId}`);
         return !isForThisUser && !isAdminNotificationAboutThisUser;
     });
-    
+
     saveStoreToLocalStorage();
     console.log(`Customer ${customerId} and associated data deleted from mock store.`);
   } else {
@@ -326,8 +327,8 @@ export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageR
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
   // Firestore Example:
   // const q = query(
-  //   collection(db, 'usageRecords'), 
-  //   where('customerId', '==', customerId), 
+  //   collection(db, 'usageRecords'),
+  //   where('customerId', '==', customerId),
   //   orderBy('startTime', 'desc')
   // );
   // const snapshot = await getDocs(q);
@@ -371,7 +372,7 @@ export function updateMockPaymentRecord(updatedPayment: Payment): void {
     const customerIndex = store.customers.findIndex(c => c.id === updatedPayment.customerId);
 
     if (customerIndex > -1) {
-      const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid; 
+      const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid;
       store.customers[customerIndex].balance += amountDifference;
     }
     store.payments[paymentIndex] = { ...oldPayment, ...updatedPayment };
@@ -385,12 +386,12 @@ export function updateMockPaymentRecord(updatedPayment: Payment): void {
 
 export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
   return store.payments
-    .filter(p => p.customerId === customerId) 
+    .filter(p => p.customerId === customerId)
     .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
   // Firestore Example:
   // const q = query(
-  //   collection(db, 'payments'), 
-  //   where('customerId', '==', customerId), 
+  //   collection(db, 'payments'),
+  //   where('customerId', '==', customerId),
   //   orderBy('paymentDate', 'desc')
   // );
   // const snapshot = await getDocs(q);
@@ -408,15 +409,15 @@ export function getAllMockPayments(): Payment[] {
 // --- Notification Functions ---
 // Firestore: createdAt should be a Firestore Timestamp.
 export function addMockNotification(notification: Notification): void {
-  store.notifications.unshift(notification); 
-  if (store.notifications.length > 100) { 
+  store.notifications.unshift(notification);
+  if (store.notifications.length > 100) {
     store.notifications.pop();
   }
   saveStoreToLocalStorage();
   // Firestore Example:
-  // const notificationForFirestore = { 
-  //   ...notification, 
-  //   createdAt: Timestamp.fromDate(notification.createdAt) 
+  // const notificationForFirestore = {
+  //   ...notification,
+  //   createdAt: Timestamp.fromDate(notification.createdAt)
   // };
   // await addDoc(collection(db, 'notifications'), notificationForFirestore);
 }
@@ -427,9 +428,9 @@ export function getMockNotificationsByUserId(userId: string): Notification[] {
     .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   // Firestore Example:
   // const q = query(
-  //   collection(db, 'notifications'), 
-  //   where('userId', '==', userId), 
-  //   orderBy('createdAt', 'desc'), 
+  //   collection(db, 'notifications'),
+  //   where('userId', '==', userId),
+  //   orderBy('createdAt', 'desc'),
   //   limit(50) // Example limit
   // );
   // const snapshot = await getDocs(q);
@@ -438,7 +439,7 @@ export function getMockNotificationsByUserId(userId: string): Notification[] {
 
 export function getAllAdminNotifications(): Notification[] {
   return store.notifications
-    .filter(n => n.userId === 'admin001' ) 
+    .filter(n => n.userId === 'admin001' )
     .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
@@ -455,7 +456,7 @@ export function markNotificationAsRead(notificationId: string, userId: string): 
 
 export function markAllNotificationsAsRead(userId: string): void {
     store.notifications.forEach(n => {
-        if (n.userId === userId && !n.isRead) { 
+        if (n.userId === userId && !n.isRead) {
             n.isRead = true;
         }
     });
@@ -471,19 +472,21 @@ export function markAllNotificationsAsRead(userId: string): void {
 
 // --- Utility Functions ---
 export function clearAllMockData(): void {
-  store = {
-    customers: [],
-    usageRecords: [],
-    payments: [],
-    notifications: [],
-  };
-  saveStoreToLocalStorage();
+  store.customers = [];
+  store.usageRecords = [];
+  store.payments = [];
+  store.notifications = [];
+  if (typeof window !== 'undefined' && window.localStorage) {
+    localStorage.removeItem(STORAGE_KEY);
+  }
   console.log("Mock data store cleared from memory and localStorage.");
   // For Firestore, this would be a complex operation, likely a backend script or manual console deletion.
 }
 
 export function exportMockDataAsJSON(): string {
   // Ensure the store is up-to-date from localStorage before exporting
-  loadStoreFromLocalStorage(); 
+  // loadStoreFromLocalStorage(); // No need to call here if store is already in sync
   return JSON.stringify(store, null, 2); // Pretty print JSON
 }
+
+    

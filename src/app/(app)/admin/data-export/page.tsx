@@ -5,13 +5,26 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, Combine, DatabaseZap } from 'lucide-react'; // Added DatabaseZap
+import { FileDown, Users, Droplets, CreditCard, Combine, DatabaseZap, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { exportMockDataAsJSON } from '@/lib/mock-data-store';
+import { exportMockDataAsJSON, clearAllMockData } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useState } from 'react';
 
 export default function DataExportPage() {
   const { toast } = useToast();
+  const [isClearDataDialogOpen, setIsClearDataDialogOpen] = useState(false);
 
   const handleMockExport = (dataType: string, format: string) => {
     toast({
@@ -23,6 +36,14 @@ export default function DataExportPage() {
   const handleDownloadAllMockData = () => {
     try {
       const jsonData = exportMockDataAsJSON();
+      if (jsonData === "{\n  \"customers\": [],\n  \"usageRecords\": [],\n  \"payments\": [],\n  \"notifications\": []\n}") {
+         toast({
+          variant: "default",
+          title: "No Data to Export",
+          description: "The mock data store is currently empty.",
+        });
+        return;
+      }
       const blob = new Blob([jsonData], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -46,61 +67,63 @@ export default function DataExportPage() {
     }
   };
 
+  const handleConfirmClearAllData = () => {
+    clearAllMockData();
+    toast({
+      title: "Mock Data Cleared",
+      description: "All application data in localStorage has been cleared. You may need to refresh pages to see the changes.",
+      variant: "default",
+    });
+    setIsClearDataDialogOpen(false);
+    // Optionally, force a reload or redirect to reflect changes immediately
+    // window.location.reload();
+  };
+
   return (
     <>
-      <PageHeader 
-        title="Data Export" 
-        description="Select the data you wish to export from the system."
+      <PageHeader
+        title="Data Export & Management"
+        description="Manage and export application data."
       />
       <Button variant="outline" asChild className="mb-6">
           <Link href="/admin/settings">Back to Settings</Link>
       </Button>
 
-      <Card className="glassmorphism-card shadow-md">
+      <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
           <CardTitle>Export Options</CardTitle>
           <CardDescription>
-            Choose the data set and format for your export. Actual file download is not implemented in this mock for individual sets.
+            Download current mock data from localStorage or simulate other export types.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
             <div className="mb-2 sm:mb-0">
               <h3 className="font-semibold text-lg flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
-              <p className="text-sm text-muted-foreground">Export a list of all customers and their details.</p>
+              <p className="text-sm text-muted-foreground">Simulate exporting a list of all customers and their details.</p>
             </div>
             <Button onClick={() => handleMockExport("All Customer", "CSV")} variant="outline">
-              <FileDown className="mr-2 h-4 w-4" /> Export as CSV
+              <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
             </Button>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
             <div className="mb-2 sm:mb-0">
               <h3 className="font-semibold text-lg flex items-center"><Droplets className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
-              <p className="text-sm text-muted-foreground">Export all logged water usage records for all customers.</p>
+              <p className="text-sm text-muted-foreground">Simulate exporting all logged water usage records.</p>
             </div>
             <Button onClick={() => handleMockExport("All Water Usage", "CSV")} variant="outline">
-              <FileDown className="mr-2 h-4 w-4" /> Export as CSV
+              <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
             </Button>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
             <div className="mb-2 sm:mb-0">
               <h3 className="font-semibold text-lg flex items-center"><CreditCard className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
-              <p className="text-sm text-muted-foreground">Export all recorded payment transactions.</p>
+              <p className="text-sm text-muted-foreground">Simulate exporting all recorded payment transactions.</p>
             </div>
             <Button onClick={() => handleMockExport("All Payment Histories", "CSV")} variant="outline">
-               <FileDown className="mr-2 h-4 w-4" /> Export as CSV
-            </Button>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg bg-card/80">
-            <div className="mb-2 sm:mb-0">
-              <h3 className="font-semibold text-lg flex items-center"><Combine className="mr-2 h-5 w-5 text-primary"/>Combined Data Dump</h3>
-              <p className="text-sm text-muted-foreground">Export all customers, usage, and payments in a single JSON file (mock).</p>
-            </div>
-            <Button onClick={() => handleMockExport("Combined System Data", "JSON")} variant="outline">
-              <FileDown className="mr-2 h-4 w-4" /> Export as JSON
+               <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
             </Button>
           </div>
 
@@ -113,9 +136,45 @@ export default function DataExportPage() {
               <FileDown className="mr-2 h-4 w-4" /> Download localStorage Data
             </Button>
           </div>
+        </CardContent>
+      </Card>
 
+      <Card className="glassmorphism-card shadow-md border-destructive">
+        <CardHeader>
+          <CardTitle className="text-destructive flex items-center"><AlertTriangle className="mr-2 h-5 w-5"/>System Reset</CardTitle>
+          <CardDescription>
+            Permanently clear all mock data (customers, usage, payments, notifications) from this browser's localStorage.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog open={isClearDataDialogOpen} onOpenChange={setIsClearDataDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" /> Clear All Application Data (Mock)
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. All mock data including customers, water usage records, payments, and notifications stored in this browser will be permanently deleted.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmClearAllData} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Yes, Clear All Data
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <p className="text-xs text-muted-foreground mt-2">
+            This action only affects data stored in this browser. It does not affect any real backend database.
+          </p>
         </CardContent>
       </Card>
     </>
   );
 }
+
+    
