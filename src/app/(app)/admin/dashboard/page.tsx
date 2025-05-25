@@ -17,6 +17,7 @@ import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
 import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog';
+import { MonthlyRevenueDetailsDialog } from '@/components/admin/dashboard/monthly-revenue-details-dialog'; // Added import
 
 const KeyMetricCard = memo(({ 
   title, 
@@ -96,6 +97,8 @@ export default function AdminDashboardPage() {
   const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
   const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]);
 
+  const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false); // Added state for new dialog
+
 
   const loadDashboardData = useCallback(() => {
     const customers = getAllMockCustomers();
@@ -126,7 +129,7 @@ export default function AdminDashboardPage() {
     });
     setRecentNotifications(validNotifications.slice(0, 3)); 
 
-    // Prepare data for monthly supply dialog
+    // Prepare data for monthly supply & revenue dialogs
     const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
     customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
 
@@ -140,8 +143,8 @@ export default function AdminDashboardPage() {
     
     const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
       .map(([id, data]) => ({ id, ...data }))
-      .filter(item => item.usageHours > 0) 
-      .sort((a,b) => b.usageHours - a.usageHours); 
+      .filter(item => item.usageHours > 0 || item.cost > 0) // Keep if there's usage or cost for either dialog
+      .sort((a,b) => b.usageHours - a.usageHours); // Primary sort for supply dialog
     setCustomersWithMonthlyUsageData(processedDialogData);
 
   }, []);
@@ -167,7 +170,13 @@ export default function AdminDashboardPage() {
       description: 'Current month',
       onClick: () => setIsMonthlySupplyDialogOpen(true)
     },
-    { title: 'Monthly Revenue', value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, icon: CreditCard, description: 'Current month' },
+    { 
+      title: 'Monthly Revenue', 
+      value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, 
+      icon: CreditCard, 
+      description: 'Current month',
+      onClick: () => setIsMonthlyRevenueDialogOpen(true) // Changed to open new dialog
+    },
     { 
       title: 'Outstanding Bills', 
       value: `PKR ${outstandingBillsValue.toLocaleString('en-US')}`, 
@@ -176,6 +185,11 @@ export default function AdminDashboardPage() {
       onClick: () => setIsOutstandingBillsDialogOpen(true)
     },
   ];
+  
+  // Prepare data for the revenue dialog (customers who generated revenue this month)
+  const customersWithMonthlyRevenueData = customersWithMonthlyUsageData
+    .filter(c => c.cost > 0)
+    .sort((a, b) => b.cost - a.cost);
 
   return (
     <>
@@ -228,7 +242,12 @@ export default function AdminDashboardPage() {
       <MonthlySupplyDetailsDialog
         isOpen={isMonthlySupplyDialogOpen}
         onClose={() => setIsMonthlySupplyDialogOpen(false)}
-        data={customersWithMonthlyUsageData}
+        data={customersWithMonthlyUsageData.filter(c => c.usageHours > 0)}
+      />
+      <MonthlyRevenueDetailsDialog
+        isOpen={isMonthlyRevenueDialogOpen}
+        onClose={() => setIsMonthlyRevenueDialogOpen(false)}
+        data={customersWithMonthlyRevenueData}
       />
       <OutstandingBillsDialog 
         isOpen={isOutstandingBillsDialogOpen}
@@ -238,3 +257,5 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+
+    
