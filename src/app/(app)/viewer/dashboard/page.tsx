@@ -6,14 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, DollarSign, Clock, Loader2, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react'; // Added memo
 import { useAuth } from '@/contexts/auth-context';
 import { getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId, getMockNotificationsByUserId } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification } from '@/types';
 import { format } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 
-const SummaryCard = ({ title, value, icon: Icon, actionLink, actionLabel, className }: { title: string, value: string, icon: React.ElementType, actionLink?: string, actionLabel?: string, className?: string }) => (
+const SummaryCard = memo(({ // Wrapped with memo
+  title, 
+  value, 
+  icon: Icon, 
+  actionLink, 
+  actionLabel, 
+  className 
+}: { 
+  title: string, 
+  value: string, 
+  icon: React.ElementType, 
+  actionLink?: string, 
+  actionLabel?: string, 
+  className?: string 
+}) => (
   <Card className={cn("shadow-md glassmorphism-card", className)}>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -28,7 +42,9 @@ const SummaryCard = ({ title, value, icon: Icon, actionLink, actionLabel, classN
       )}
     </CardContent>
   </Card>
-);
+));
+SummaryCard.displayName = 'SummaryCard'; // Added display name for memoized component
+
 
 export default function ViewerDashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -38,24 +54,20 @@ export default function ViewerDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
 
-  // Correctly use user.id which is the authUID for viewers
   const viewerUserId = user?.id; 
 
   const loadDashboardData = useCallback(async () => {
-    if (!viewerUserId) { // If no viewerUserId, no data to load for a specific user
+    if (!viewerUserId) { 
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 100)); 
 
-    // For viewers, user.id is their authUID, which should be used to get customer data IF
-    // the customer ID (cust-xxxx) is stored on the user object as user.customerId.
-    // getMockCustomerById expects the 'cust-xxxx' ID.
     const profile = user?.customerId ? getMockCustomerById(user.customerId) : null;
     setCustomerProfile(profile);
 
-    const usageRecords = getMockUsageRecordsByCustomerId(user?.customerId || viewerUserId); // Prefer customerId if available
+    const usageRecords = getMockUsageRecordsByCustomerId(user?.customerId || viewerUserId); 
     const today = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(today.getDate() - 7);
@@ -65,7 +77,7 @@ export default function ViewerDashboardPage() {
       .reduce((sum, record) => sum + record.durationHours, 0);
     setRecentUsageHours(recentUsage);
 
-    const payments = getMockPaymentsByCustomerId(user?.customerId || viewerUserId); // Prefer customerId
+    const payments = getMockPaymentsByCustomerId(user?.customerId || viewerUserId); 
     if (payments.length > 0) {
       payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
       setLastPayment(payments[0]);
@@ -73,12 +85,11 @@ export default function ViewerDashboardPage() {
       setLastPayment(null);
     }
 
-    // Notifications are keyed to user.id (authUID)
     const notifications = getMockNotificationsByUserId(viewerUserId);
     setRecentNotifications(notifications.slice(0, 3)); 
 
     setIsLoading(false);
-  }, [viewerUserId, user?.customerId]); // Added user.customerId to dependencies
+  }, [viewerUserId, user?.customerId]); 
 
   useEffect(() => {
     if (!authLoading && viewerUserId) {
@@ -102,7 +113,7 @@ export default function ViewerDashboardPage() {
   if (!user) { 
       return <p>Not authenticated. Please log in.</p>
   }
-   if (!viewerUserId) { // Should be caught by !user check
+   if (!viewerUserId) { 
       return <p>Could not load dashboard data: User ID not found.</p>
   }
 
@@ -136,7 +147,7 @@ export default function ViewerDashboardPage() {
                     <BellRing className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-sm">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{format(activity.createdAt, 'PP p')}</p>
+                      <p className="text-xs text-muted-foreground">{!isNaN(new Date(activity.createdAt).getTime()) ? format(new Date(activity.createdAt), 'PP p') : 'Invalid date'}</p>
                        {activity.linkTo && (
                          <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary">
                            <Link href={activity.linkTo}>View</Link>

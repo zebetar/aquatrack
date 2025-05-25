@@ -1,4 +1,6 @@
+
 import type { ReactNode } from 'react';
+import { memo } from 'react'; // Added memo
 
 interface PageHeaderProps {
   title: string;
@@ -6,7 +8,7 @@ interface PageHeaderProps {
   actions?: ReactNode;
 }
 
-export function PageHeader({ title, description, actions }: PageHeaderProps) {
+export const PageHeader = memo(({ title, description, actions }: PageHeaderProps) => { // Wrapped with memo
   return (
     <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-6">
       <div>
@@ -16,4 +18,6 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
       {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
     </div>
   );
-}
+});
+
+PageHeader.displayName = 'PageHeader'; // Added display name for memoized component

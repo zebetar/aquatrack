@@ -4,7 +4,7 @@
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Droplets, CreditCard, BarChart3, BellRing } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react'; // Added memo
 import Link from 'next/link';
 import { 
   getAllMockCustomers, 
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
 import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog';
 
-const KeyMetricCard = ({ 
+const KeyMetricCard = memo(({ // Wrapped with memo
   title, 
   value, 
   icon: Icon, 
@@ -80,7 +80,9 @@ const KeyMetricCard = ({
       {cardInnerContent}
     </Card>
   );
-};
+});
+KeyMetricCard.displayName = 'KeyMetricCard'; // Added display name for memoized component
+
 
 export default function AdminDashboardPage() {
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -105,7 +107,7 @@ export default function AdminDashboardPage() {
     setTotalCustomers(customers.length);
 
     const currentMonthUsageRecords = usageRecords.filter(record => {
-      const recordDate = new Date(record.date); // record.date is already a Date object from the store
+      const recordDate = new Date(record.date); 
       return !isNaN(recordDate.getTime()) && isThisMonth(recordDate);
     });
     const currentSupply = currentMonthUsageRecords.reduce((sum, record) => sum + record.durationHours, 0);
@@ -120,7 +122,7 @@ export default function AdminDashboardPage() {
     setOutstandingBillsValue(totalDue);
     
     const validNotifications = notifications.filter(activity => {
-        const activityDate = new Date(activity.createdAt); // activity.createdAt is already a Date object
+        const activityDate = new Date(activity.createdAt); 
         return !isNaN(activityDate.getTime());
     });
     setRecentNotifications(validNotifications.slice(0, 3)); 
@@ -129,7 +131,7 @@ export default function AdminDashboardPage() {
     const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
     customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
 
-    currentMonthUsageRecords.forEach(record => { // currentMonthUsageRecords is already filtered for valid dates
+    currentMonthUsageRecords.forEach(record => { 
       const entry = customerUsageMap.get(record.customerId);
       if (entry) {
         entry.usageHours += record.durationHours;
@@ -208,7 +210,6 @@ export default function AdminDashboardPage() {
                     <BellRing className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
                     <div>
                       <p className="text-sm">{activity.message}</p>
-                      {/* Ensure activity.createdAt is a valid Date object before formatting */}
                       <p className="text-xs text-muted-foreground">{!isNaN(new Date(activity.createdAt).getTime()) ? format(new Date(activity.createdAt), 'PP p') : 'Invalid date'}</p>
                        {activity.linkTo && (
                          <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary">
