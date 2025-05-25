@@ -193,7 +193,7 @@ export default function DataExportPage() {
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="customer-select" className="text-sm font-medium">Select Customer</Label>
+              {/* Removed "Select Customer" Label */}
               <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                 <SelectTrigger id="customer-select" className="w-full" disabled={isLoadingCustomers}>
                   <SelectValue placeholder={isLoadingCustomers ? "Loading customers..." : "Select a customer"} />
