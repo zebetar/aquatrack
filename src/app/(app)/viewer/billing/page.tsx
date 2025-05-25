@@ -2,7 +2,7 @@
 "use client";
 
 import type { Payment, Customer } from '@/types'; 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -85,7 +85,7 @@ export default function ViewerBillingPage() {
       <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
-          <CardDescription>List of all payments you have made.</CardDescription>
+          {/* <CardDescription>List of all payments you have made.</CardDescription> */}
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] w-full">

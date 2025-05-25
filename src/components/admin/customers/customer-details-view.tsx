@@ -2,7 +2,7 @@
 "use client";
 
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Save, XCircle, Pencil } from 'lucide-react';
+import { Edit, Save, XCircle } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -152,7 +152,7 @@ export function CustomerDetailsView({
       <Card>
         <CardHeader>
           <CardTitle>Water Usage History</CardTitle>
-          <CardDescription>Core rate: PKR {CORE_WATER_RATE_PER_HOUR}/hour</CardDescription>
+          {/* <CardDescription>Core rate: PKR {CORE_WATER_RATE_PER_HOUR}/hour</CardDescription> */}
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[300px] w-full">

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { WaterUsageRecord } from '@/types';
@@ -42,7 +42,7 @@ export default function AdminUsagePage() {
     <Card className="shadow-md mt-6">
       <CardHeader>
         <CardTitle>All Usage Records</CardTitle>
-        <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription>
+        {/* <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription> */}
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[calc(100vh-12rem)] w-full"> {/* Adjusted height */}

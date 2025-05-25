@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -155,7 +155,7 @@ export default function ViewerProfilePage() {
       <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Account Information</CardTitle>
-          <CardDescription>Your personal and contact details.</CardDescription>
+          {/* <CardDescription>Your personal and contact details.</CardDescription> */}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -176,7 +176,7 @@ export default function ViewerProfilePage() {
       <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Change Avatar</CardTitle>
-          <CardDescription>Upload a new profile picture.</CardDescription>
+          {/* <CardDescription>Upload a new profile picture.</CardDescription> */}
         </CardHeader>
         <CardContent className="space-y-4">
           {avatarPreview && (
@@ -192,7 +192,7 @@ export default function ViewerProfilePage() {
             ref={fileInputRef}
             className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
           />
-          <p className="text-sm text-muted-foreground">Select a PNG, JPG, or GIF image (max 2MB).</p>
+           <p className="text-sm text-muted-foreground">Select a PNG, JPG, or GIF image (max 2MB).</p>
           <div className="flex gap-2">
               <Button onClick={handleAvatarChange} disabled={isAvatarSaving}>
                   {isAvatarSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -211,7 +211,7 @@ export default function ViewerProfilePage() {
       <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Change Email</CardTitle>
-          <CardDescription>Update the email address associated with your account.</CardDescription>
+          {/* <CardDescription>Update the email address associated with your account.</CardDescription> */}
         </CardHeader>
         <CardContent>
           <Form {...emailForm}>
@@ -241,7 +241,7 @@ export default function ViewerProfilePage() {
       <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Change Password</CardTitle>
-          <CardDescription>Update your login password.</CardDescription>
+          {/* <CardDescription>Update your login password.</CardDescription> */}
         </CardHeader>
         <CardContent>
           <Form {...passwordForm}>

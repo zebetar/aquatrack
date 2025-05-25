@@ -2,7 +2,7 @@
 "use client";
 
 import type { WaterUsageRecord } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
@@ -73,7 +73,7 @@ export default function ViewerUsagePage() {
       <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Usage Records</CardTitle>
-          <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription>
+          {/* <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription> */}
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] w-full">

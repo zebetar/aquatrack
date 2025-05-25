@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Payment } from '@/types';
@@ -40,7 +40,7 @@ export default function AdminPaymentsPage() {
     <Card className="shadow-md mt-6">
       <CardHeader>
         <CardTitle>All Payment Records</CardTitle>
-         <CardDescription>Review all payments recorded in the system.</CardDescription>
+         {/* <CardDescription>Review all payments recorded in the system.</CardDescription> */}
       </CardHeader>
       <CardContent>
          <ScrollArea className="h-[calc(100vh-12rem)] w-full"> {/* Adjusted height */}
@@ -77,3 +77,4 @@ export default function AdminPaymentsPage() {
     </Card>
   );
 }
+
