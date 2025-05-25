@@ -61,7 +61,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="you@example.com" {...field} />
+                <Input placeholder="you@example.com" {...field} suppressHydrationWarning={true} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -80,6 +80,7 @@ export function LoginForm() {
                     placeholder="••••••••"
                     {...field}
                     className="pr-10"
+                    suppressHydrationWarning={true}
                   />
                 </FormControl>
                 <Button
@@ -108,7 +109,7 @@ export function LoginForm() {
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex flex-col space-y-2" // Changed from "flex space-x-4"
+                  className="flex flex-col space-y-2"
                 >
                   <FormItem className="flex items-center space-x-2 space-y-0">
                     <FormControl>
