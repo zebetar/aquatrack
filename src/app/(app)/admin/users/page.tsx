@@ -103,8 +103,10 @@ export default function AdminUsersPage() {
       {/* PageHeader removed */}
       <Button variant="outline" asChild className="mb-6 mt-6"> {/* Added mt-6 for spacing */}
         <Link href="/admin/settings">
+          <>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Settings
+          </>
         </Link>
       </Button>
       {isLoading && customers.length > 0 && ( 
