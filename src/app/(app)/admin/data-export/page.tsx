@@ -188,7 +188,7 @@ export default function DataExportPage() {
 
       <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
-          <CardTitle>Filtered Customer Data Export (PDF)</CardTitle>
+          <CardTitle>Customer Data (PDF)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
