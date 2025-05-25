@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
+import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
@@ -19,16 +19,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 
 export default function DataExportPage() {
@@ -322,52 +317,61 @@ export default function DataExportPage() {
       </Card>
 
       <Card className="glassmorphism-card shadow-md mb-6">
-        <CardHeader>
-          <CardTitle>General Export Options</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
-            <div className="mb-2 sm:mb-0">
-              <h3 className="font-semibold text-lg flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
-              <p className="text-sm text-muted-foreground">Simulate exporting a list of all customers and their details.</p>
-            </div>
-            <Button onClick={() => handleMockExport("All Customer", "CSV")} variant="outline">
-              <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
-            </Button>
-          </div>
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="general-export" className="border-none">
+            <CardHeader className="p-4">
+                <AccordionTrigger className="p-0 hover:no-underline">
+                    <CardTitle>General Export Options</CardTitle>
+                </AccordionTrigger>
+            </CardHeader>
+            <AccordionContent>
+              <CardContent className="space-y-6 p-4 pt-0">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+                  <div className="mb-2 sm:mb-0">
+                    <h3 className="font-semibold text-lg flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
+                    <p className="text-sm text-muted-foreground">Simulate exporting a list of all customers and their details.</p>
+                  </div>
+                  <Button onClick={() => handleMockExport("All Customer", "CSV")} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
+                  </Button>
+                </div>
 
-          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
-            <div className="mb-2 sm:mb-0">
-              <h3 className="font-semibold text-lg flex items-center"><Droplets className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
-              <p className="text-sm text-muted-foreground">Simulate exporting all logged water usage records.</p>
-            </div>
-            <Button onClick={() => handleMockExport("All Water Usage", "CSV")} variant="outline">
-              <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
-            </Button>
-          </div>
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+                  <div className="mb-2 sm:mb-0">
+                    <h3 className="font-semibold text-lg flex items-center"><Droplets className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
+                    <p className="text-sm text-muted-foreground">Simulate exporting all logged water usage records.</p>
+                  </div>
+                  <Button onClick={() => handleMockExport("All Water Usage", "CSV")} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
+                  </Button>
+                </div>
 
-          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
-            <div className="mb-2 sm:mb-0">
-              <h3 className="font-semibold text-lg flex items-center"><CreditCard className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
-              <p className="text-sm text-muted-foreground">Simulate exporting all recorded payment transactions.</p>
-            </div>
-            <Button onClick={() => handleMockExport("All Payment Histories", "CSV")} variant="outline">
-               <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
-            </Button>
-          </div>
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+                  <div className="mb-2 sm:mb-0">
+                    <h3 className="font-semibold text-lg flex items-center"><CreditCard className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
+                    <p className="text-sm text-muted-foreground">Simulate exporting all recorded payment transactions.</p>
+                  </div>
+                  <Button onClick={() => handleMockExport("All Payment Histories", "CSV")} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
+                  </Button>
+                </div>
 
-          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
-            <div className="mb-2 sm:mb-0">
-              <h3 className="font-semibold text-lg flex items-center"><DatabaseZap className="mr-2 h-5 w-5 text-primary"/>Download Mock Data Backup</h3>
-              <p className="text-sm text-muted-foreground">Download all current data from localStorage as a single JSON file. This is useful for backup or migration.</p>
-            </div>
-            <Button onClick={handleDownloadAllMockData} variant="outline">
-              <FileDown className="mr-2 h-4 w-4" /> Download localStorage Data
-            </Button>
-          </div>
-        </CardContent>
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+                  <div className="mb-2 sm:mb-0">
+                    <h3 className="font-semibold text-lg flex items-center"><DatabaseZap className="mr-2 h-5 w-5 text-primary"/>Download Mock Data Backup</h3>
+                    <p className="text-sm text-muted-foreground">Download all current data from localStorage as a single JSON file. This is useful for backup or migration.</p>
+                  </div>
+                  <Button onClick={handleDownloadAllMockData} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Download localStorage Data
+                  </Button>
+                </div>
+              </CardContent>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Card>
     </>
   );
 }
 
+    
