@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, Combine, DatabaseZap, AlertTriangle } from 'lucide-react';
+import { FileDown, Users, Droplets, CreditCard, Combine, DatabaseZap, AlertTriangle, Trash2 } from 'lucide-react'; // Added Trash2
 import Link from 'next/link';
 import { exportMockDataAsJSON, clearAllMockData } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
@@ -176,5 +176,3 @@ export default function DataExportPage() {
     </>
   );
 }
-
-    
