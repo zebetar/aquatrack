@@ -146,3 +146,34 @@ body {
 .dark .btn-primary-dark-pulse:hover:not(:disabled) {
   box-shadow: 0 0 12px hsla(var(--primary), 0.8), 0 0 18px hsla(var(--primary), 0.6);
 }
+
+/* Enhance aesthetics with subtle shadows and transitions */
+.card { /* This is a NEW utility class, distinct from Shadcn's Card component default styling */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle card shadow */
+  transition: box-shadow 0.3s ease-in-out; /* Smooth shadow transition */
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
+}
+
+/* Base button styling - note that Shadcn buttons have their own variants and transitions */
+button {
+  transition: background-color 0.3s ease; /* Button background transition */
+}
+
+button:hover {
+  /* Using theme's accent color for a more consistent feel. */
+  /* This might be overridden by more specific Tailwind classes on Shadcn buttons. */
+  background-color: hsl(var(--accent)); 
+}
+
+/* Add a subtle animation to an element */
+.animated-element {
+  opacity: 0.9;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.animated-element:hover {
+  opacity: 1;
+}
