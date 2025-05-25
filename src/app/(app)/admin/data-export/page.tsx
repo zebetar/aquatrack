@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft } from 'lucide-react'; 
+import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
@@ -14,7 +14,7 @@ import type { Customer, WaterUsageRecord, Payment } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label"; // Added import
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
@@ -93,7 +93,7 @@ export default function DataExportPage() {
     }
 
     setIsPreviewing(true);
-    setShowPreview(false); 
+    setShowPreview(false);
 
     await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -105,7 +105,7 @@ export default function DataExportPage() {
         return recordDate >= startDate && recordDate <= endOfDayEndDate;
       })
       .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
+
     const payments = getMockPaymentsByCustomerId(selectedCustomerId)
       .filter(payment => {
         const paymentDate = new Date(payment.paymentDate);
@@ -143,10 +143,10 @@ export default function DataExportPage() {
     }
 
     setIsDownloading(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); 
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     try {
-      await generateCustomerPdf(customer, filteredUsage, filteredPayments); 
+      await generateCustomerPdf(customer, filteredUsage, filteredPayments);
       toast({
         title: "PDF Generated",
         description: `Statement for ${customer.name} (from ${format(startDate, 'PP')} to ${format(endDate, 'PP')}) is being downloaded.`,
@@ -181,9 +181,10 @@ export default function DataExportPage() {
             Select a customer and a date range to preview and download their usage and payment history.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 items-end">
-            <div className="space-y-1.5 md:col-span-2 lg:col-span-1">
+        <CardContent className="space-y-6"> {/* Outer spacing for sections within card content */}
+          {/* Filter Controls Group */}
+          <div className="space-y-4"> {/* Spacing between filter elements */}
+            <div className="space-y-1.5"> {/* Group label and select */}
               <Label htmlFor="customer-select" className="text-sm font-medium">Select Customer</Label>
               <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                 <SelectTrigger id="customer-select" className="w-full" disabled={isLoadingCustomers}>
@@ -196,73 +197,76 @@ export default function DataExportPage() {
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="space-y-1.5">
-              <Label htmlFor="start-date-picker" className="text-sm font-medium">Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="start-date-picker"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                    disabled={(date) => date > new Date() || (endDate && date > endDate)}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="end-date-picker" className="text-sm font-medium">End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="end-date-picker"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    disabled={(date) => date > new Date() || (startDate && date < startDate)}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-end">
+              <div className="space-y-1.5"> {/* Group label and start date */}
+                <Label htmlFor="start-date-picker" className="text-sm font-medium">Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="start-date-picker"
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      disabled={(date) => date > new Date() || (endDate && date > endDate)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-            <Button onClick={handlePreviewFilteredData} disabled={isPreviewing || !selectedCustomerId || !startDate || !endDate} className="w-full">
-              {isPreviewing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              <Search className="mr-2 h-4 w-4" /> Preview Data
-            </Button>
+              <div className="space-y-1.5"> {/* Group label and end date */}
+                <Label htmlFor="end-date-picker" className="text-sm font-medium">End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="end-date-picker"
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      disabled={(date) => date > new Date() || (startDate && date < startDate)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div> {/* Button container */}
+                <Button onClick={handlePreviewFilteredData} disabled={isPreviewing || !selectedCustomerId || !startDate || !endDate} className="w-full sm:w-auto">
+                    {isPreviewing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Search className="mr-2 h-4 w-4" /> Preview Data
+                </Button>
+            </div>
           </div>
 
           {showPreview && (selectedCustomerId && startDate && endDate) && (
             <div className="mt-6 space-y-6">
               <h3 className="text-lg font-semibold">Preview for {customers.find(c=>c.id === selectedCustomerId)?.name} (from {format(startDate, 'PP')} to {format(endDate, 'PP')})</h3>
-              
+
               <div>
                 <h4 className="text-md font-medium mb-2">Filtered Water Usage</h4>
                 {filteredUsage.length > 0 ? (
@@ -359,46 +363,8 @@ export default function DataExportPage() {
           </div>
         </CardContent>
       </Card>
-      
-      {/* System Reset Card - Removed as per previous request, kept commented for reference if needed later
-      <Card className="glassmorphism-card shadow-md">
-        <CardHeader>
-          <CardTitle>System Reset</CardTitle>
-          <CardDescription>
-            Clear all mock data from the application (customers, usage, payments, notifications).
-            This action cannot be undone.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" /> Clear All Application Data (Mock)
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action will permanently delete all mock data stored in your browser for this application.
-                  This includes all customers, water usage records, payment histories, and notifications.
-                  This cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleClearAllData}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Yes, delete all data
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </CardContent>
-      </Card>
-      */}
     </>
   );
 }
+
+    
