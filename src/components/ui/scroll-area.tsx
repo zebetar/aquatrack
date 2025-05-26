@@ -13,12 +13,15 @@ const ScrollArea = React.forwardRef<
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn("relative overflow-hidden", className)}
-    {...props} // thumbClassName is now destructured and won't be spread here
+    {...props} 
   >
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    <ScrollAreaPrimitive.Viewport
+      className="h-full w-full rounded-[inherit]"
+      style={{ overflow: 'auto' }} // Explicitly allow scrolling
+    >
       {children}
     </ScrollAreaPrimitive.Viewport>
-    <ScrollBar thumbClassName={thumbClassName} /> {/* Pass thumbClassName to ScrollBar */}
+    <ScrollBar thumbClassName={thumbClassName} />
     <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>
 ))
@@ -39,12 +42,12 @@ const ScrollBar = React.forwardRef<
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
       className
     )}
-    {...props} // thumbClassName is destructured and won't be spread here
+    {...props} 
   >
     <ScrollAreaPrimitive.ScrollAreaThumb
       className={cn(
         "relative flex-1 rounded-full bg-border",
-        thumbClassName // Apply thumbClassName here
+        thumbClassName 
       )}
     />
   </ScrollAreaPrimitive.ScrollAreaScrollbar>
@@ -52,3 +55,4 @@ const ScrollBar = React.forwardRef<
 ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName
 
 export { ScrollArea, ScrollBar }
+
