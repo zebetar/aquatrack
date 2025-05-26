@@ -73,7 +73,9 @@ body {
     --table-row-gradient-start-light: 213 67% 94%;  /* #e6f0fa */
     --table-row-gradient-end-light: 0 0% 100%;     /* #ffffff */
     --table-row-hover-bg-light: 216 100% 91%;     /* #d1e4ff */
-    --table-header-bg-light: 213 67% 94%; /* Light blueish for header */
+    --table-header-bg-light: 213 67% 94%; /* DEPRECATED - replaced by gradient */
+    --table-header-gradient-start-light: 210 70% 92%; /* Lighter blue for header gradient start */
+    --table-header-gradient-end-light: 200 65% 95%;   /* Even lighter blue for header gradient end */
 
 
     /* Dark Theme: Futuristic, Sleek, Cool */
@@ -115,7 +117,9 @@ body {
     --table-row-gradient-start-dark: var(--card-dark);
     --table-row-gradient-end-dark: var(--card-dark); /* No gradient for dark theme rows by default */
     --table-row-hover-bg-dark: var(--muted-dark);
-    --table-header-bg-dark: var(--muted-dark);
+    --table-header-bg-dark: var(--muted-dark); /* DEPRECATED - replaced by gradient */
+    --table-header-gradient-start-dark: 220 30% 18%; /* Darker muted for header gradient start */
+    --table-header-gradient-end-dark: 220 30% 22%;   /* Slightly lighter muted for header gradient end */
 
 
     /* Chart Colors */
@@ -184,7 +188,8 @@ body {
     --table-row-gradient-start: hsl(var(--table-row-gradient-start-light));
     --table-row-gradient-end: hsl(var(--table-row-gradient-end-light));
     --table-row-hover-bg: hsl(var(--table-row-hover-bg-light));
-    --table-header-bg: hsl(var(--table-header-bg-light));
+    --table-header-gradient-start: hsl(var(--table-header-gradient-start-light));
+    --table-header-gradient-end: hsl(var(--table-header-gradient-end-light));
   }
 
   .dark {
@@ -228,7 +233,8 @@ body {
     --table-row-gradient-start: hsl(var(--table-row-gradient-start-dark));
     --table-row-gradient-end: hsl(var(--table-row-gradient-end-dark));
     --table-row-hover-bg: hsl(var(--table-row-hover-bg-dark));
-    --table-header-bg: hsl(var(--table-header-bg-dark));
+    --table-header-gradient-start: hsl(var(--table-header-gradient-start-dark));
+    --table-header-gradient-end: hsl(var(--table-header-gradient-end-dark));
   }
 }
 

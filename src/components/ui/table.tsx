@@ -23,7 +23,8 @@ const TableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead ref={ref} className={cn(
     "[&_tr]:border-b",
-    "[&_tr]:bg-[hsl(var(--table-header-bg))]", // Apply header background to the row
+    // Apply gradient background to the row within the header
+    "[&_tr]:bg-gradient-to-r [&_tr]:from-[hsl(var(--table-header-gradient-start))] [&_tr]:to-[hsl(var(--table-header-gradient-end))]",
     className
   )} {...props} />
 ))
@@ -81,7 +82,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-2 text-left align-middle font-medium text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", // Adjusted padding
+      "h-10 px-1 text-left align-middle font-medium text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", // Reduced px to px-1
       className
     )}
     {...props}
@@ -95,7 +96,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("py-2 px-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", className)} // Adjusted padding
+    className={cn("py-2 px-1 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", className)} // Reduced px to px-1
     {...props}
   />
 ))
