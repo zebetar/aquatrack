@@ -46,7 +46,7 @@ body {
     --accent-foreground-light: 220 25% 20%;
     --destructive-light: 0 75% 55%;
     --destructive-foreground-light: 0 0% 98%;
-    --success-light: 140 65% 35%; /* Dark Green for success badge background */
+    --success-light: 140 70% 28%; /* Dark Green for success badge background */
     --success-foreground-light: 0 0% 100%; /* White text for success badge */
     --border-light: 210 20% 88%;
     --input-light: 210 20% 94%;
@@ -56,18 +56,23 @@ body {
     --aesthetic-gradient-start-light: 190 65% 88%; /* Soft aqua/teal for bottom right */
     --aesthetic-gradient-end-light: 210 55% 96%;  /* Very light cool blue for top left */
 
-
     /* Sidebar Light Theme - Aesthetic Blue */
     --sidebar-fg-light-rgb: 20, 40, 80; /* Darker aesthetic blue for text/icons */
     --sidebar-icon-fg-light-rgb: 20, 40, 80; /* Darker aesthetic blue for icons */
     --sidebar-active-bg-light: 205 75% 60%; /* Aesthetic Blue for active item background */
-    --sidebar-active-fg-light-rgb: 0, 0, 0; /* White text for active items */
+    --sidebar-active-fg-light-rgb: 48, 53, 77; /* Dark text for active items */
     --sidebar-hover-bg-light: 205 70% 75%; /* Lighter aesthetic blue for hover */
-    --sidebar-hover-fg-light-rgb: 0, 0, 0; /* White text for hover items */
+    --sidebar-hover-fg-light-rgb: 48, 53, 77; /* Dark text for hover items */
     --sidebar-border-light: 205 60% 75%; /* Border to complement the new sidebar bg */
     --sidebar-gradient-start-light: 205 75% 88% / 1; /* Aesthetic light blue gradient start */
     --sidebar-gradient-end-light: 210 70% 90% / 1;   /* Aesthetic light blue gradient end */
     --sidebar-background-light: linear-gradient(135deg, hsl(var(--sidebar-gradient-start-light)) 0%, hsl(var(--sidebar-gradient-end-light)) 100%);
+
+    /* Table Specific Styles - Light Theme */
+    --table-row-gradient-start-light: 213 67% 94%;  /* #e6f0fa */
+    --table-row-gradient-end-light: 0 0% 100%;     /* #ffffff */
+    --table-row-hover-bg-light: 216 100% 91%;     /* #d1e4ff */
+    --table-header-bg-light: 213 67% 94%; /* Top gradient color for header */
 
 
     /* Dark Theme: Futuristic, Sleek, Cool */
@@ -87,7 +92,7 @@ body {
     --accent-foreground-dark: 222 80% 8%;
     --destructive-dark: 0 65% 50%;
     --destructive-foreground-dark: 0 0% 98%;
-    --success-dark: 140 70% 30%; /* Darker Green for success badge background */
+    --success-dark: 140 70% 25%; /* Darker Green for success badge background */
     --success-foreground-dark: 0 0% 100%; /* White text for success badge */
     --border-dark: 210 25% 20%;
     --input-dark: 220 30% 15%;
@@ -104,6 +109,13 @@ body {
     --sidebar-gradient-start-dark: 220 60% 12% / 1; /* Rich dark blue gradient start */
     --sidebar-gradient-end-dark: 215 55% 18% / 1;   /* Rich dark blue gradient end */
     --sidebar-background-dark: linear-gradient(135deg, hsl(var(--sidebar-gradient-start-dark)) 0%, hsl(var(--sidebar-gradient-end-dark)) 100%);
+
+    /* Table Specific Styles - Dark Theme */
+    --table-row-gradient-start-dark: var(--card-dark);
+    --table-row-gradient-end-dark: var(--card-dark); /* No gradient for dark theme rows by default */
+    --table-row-hover-bg-dark: var(--muted-dark);
+    --table-header-bg-dark: var(--muted-dark);
+
 
     /* Chart Colors */
     --chart-1-light: 205 70% 48%; /* Professional Blue */
@@ -167,6 +179,11 @@ body {
     --chart-3: hsl(var(--chart-3-light));
     --chart-4: hsl(var(--chart-4-light));
     --chart-5: hsl(var(--chart-5-light));
+
+    --table-row-gradient-start: hsl(var(--table-row-gradient-start-light));
+    --table-row-gradient-end: hsl(var(--table-row-gradient-end-light));
+    --table-row-hover-bg: hsl(var(--table-row-hover-bg-light));
+    --table-header-bg: hsl(var(--table-header-bg-light));
   }
 
   .dark {
@@ -206,6 +223,11 @@ body {
     --chart-3: hsl(var(--chart-3-dark));
     --chart-4: hsl(var(--chart-4-dark));
     --chart-5: hsl(var(--chart-5-dark));
+
+    --table-row-gradient-start: hsl(var(--table-row-gradient-start-dark));
+    --table-row-gradient-end: hsl(var(--table-row-gradient-end-dark));
+    --table-row-hover-bg: hsl(var(--table-row-hover-bg-dark));
+    --table-header-bg: hsl(var(--table-header-bg-dark));
   }
 }
 
@@ -263,7 +285,7 @@ body {
   width: var(--sidebar-collapsed-width);
   transition: width var(--sidebar-transition-duration) ease-in-out;
   background: var(--sidebar-actual-bg); /* Uses CSS variable for dynamic theme */
-  @apply border-r rounded-r-lg border-[var(--sidebar-border-color)] overflow-hidden;
+  @apply border-r rounded-r-lg border-[hsl(var(--sidebar-border-color))] overflow-hidden;
 }
 .sidebar-main-container:hover {
   width: var(--sidebar-expanded-width);
@@ -298,7 +320,7 @@ body {
 }
 
 .sidebar-footer {
-    @apply mt-auto p-2 opacity-0 transition-opacity duration-200 ease-in-out border-[var(--sidebar-border-color)]; /* Removed border-t */
+    @apply mt-auto p-2 opacity-0 transition-opacity duration-200 ease-in-out border-[hsl(var(--sidebar-border-color))]; /* Removed border-t */
 }
 .sidebar-main-container:hover .sidebar-footer {
     @apply opacity-100;
