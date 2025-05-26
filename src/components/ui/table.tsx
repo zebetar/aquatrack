@@ -81,7 +81,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-1 text-left align-middle font-medium text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0", // Added whitespace-nowrap
+      "h-10 px-2 text-left align-middle font-medium text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", // Adjusted padding
       className
     )}
     {...props}
@@ -95,7 +95,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0", className)} // Added whitespace-nowrap, changed py-2
+    className={cn("py-2 px-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", className)} // Adjusted padding
     {...props}
   />
 ))
