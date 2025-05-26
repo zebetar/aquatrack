@@ -15,9 +15,10 @@ import {
 
 interface SidebarNavProps {
   items: NavItem[];
+  onItemClick?: () => void; // Callback for mobile sidebar to close
 }
 
-export function SidebarNav({ items }: SidebarNavProps) {
+export function SidebarNav({ items, onItemClick }: SidebarNavProps) {
   const pathname = usePathname();
 
   if (!items?.length) {
@@ -35,12 +36,12 @@ export function SidebarNav({ items }: SidebarNavProps) {
             <>
               <Icon className={cn(
                 "h-5 w-5 shrink-0", 
-                isActive ? "text-sidebar-active-fg" : "text-sidebar-icon-fg group-hover:text-sidebar-hover-fg"
+                isActive ? "text-[rgb(var(--sidebar-active-fg-rgb))]" : "text-[rgb(var(--sidebar-icon-fg-rgb))] group-hover:text-[rgb(var(--sidebar-hover-fg-rgb))]"
               )} />
               <span
                 className={cn(
                   "sidebar-nav-item-text text-sm",
-                  isActive ? "font-semibold text-sidebar-active-fg" : "text-sidebar-fg group-hover:text-sidebar-hover-fg"
+                  isActive ? "font-semibold text-[rgb(var(--sidebar-active-fg-rgb))]" : "text-[rgb(var(--sidebar-fg-rgb))] group-hover:text-[rgb(var(--sidebar-hover-fg-rgb))]"
                 )}
               >
                 {item.title}
@@ -58,8 +59,8 @@ export function SidebarNav({ items }: SidebarNavProps) {
 
           const linkClasses = cn(
             "flex items-center rounded-md px-3 py-2.5 transition-colors duration-150 ease-in-out",
-            "hover:bg-sidebar-hover-bg",
-            isActive ? "bg-sidebar-active-bg" : "",
+            "hover:bg-[var(--sidebar-hover-bg-color)]", // Use CSS variable for hover background
+            isActive ? "bg-[var(--sidebar-active-bg-color)]" : "", // Use CSS variable for active background
             item.disabled && "cursor-not-allowed opacity-60 hover:bg-transparent"
           );
 
@@ -71,6 +72,11 @@ export function SidebarNav({ items }: SidebarNavProps) {
                   className={linkClasses}
                   aria-disabled={item.disabled}
                   tabIndex={item.disabled ? -1 : undefined}
+                  onClick={() => {
+                    if (onItemClick) {
+                      onItemClick();
+                    }
+                  }}
                 >
                   {linkContent}
                 </Link>
@@ -86,7 +92,6 @@ export function SidebarNav({ items }: SidebarNavProps) {
                 {item.label && (
                     <Badge variant="secondary" className="ml-2">{item.label}</Badge>
                   )}
-                {/* <TooltipArrow className="fill-popover" /> Removed this line */}
               </TooltipContent>
             </Tooltip>
           );

@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
+  const [openMobile, setOpenMobile] = React.useState(false); // For mobile sidebar
 
   if (loading) {
     return (
@@ -27,6 +28,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
+    // This should ideally redirect to login if not handled by AuthProvider already
+    // For now, returning null or a redirect component might be appropriate
     return null;
   }
 
@@ -34,11 +37,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const sidebarHeaderContent = (
      <div className="sidebar-header">
-      <Link href="/" className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-hover-fg">
+      <Link href="/" className="flex items-center gap-2 text-[rgb(var(--sidebar-fg-rgb))] hover:text-[rgb(var(--sidebar-hover-fg-rgb))]">
         <Droplets className="h-7 w-7 text-primary shrink-0" />
         <span className={cn(
           "sidebar-app-name-text font-bold",
-          "group-[.sidebar-main-container]:group-hover:opacity-100"
+          "group-[.sidebar-main-container]:group-hover:opacity-100" // Desktop hover
+          // For mobile sheet, text is always visible so no special class needed here
           )}>
             AquaTrack
         </span>
@@ -49,21 +53,24 @@ export function AppShell({ children }: { children: ReactNode }) {
   const sidebarDesktopFooterContent = (
     <div className={cn(
         "sidebar-footer",
-        "group-[.sidebar-main-container]:group-hover:opacity-100"
+        "group-[.sidebar-main-container]:group-hover:opacity-100" // Desktop hover
         )}>
         <UserNav />
     </div>
   );
   
   const sidebarMobileFooterContent = (
-    <div className="mt-auto border-t border-sidebar-border-color p-2">
+    <div className="mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2">
       <UserNav />
     </div>
   );
 
   const sidebarNavContent = (
     <ScrollArea className="flex-1 sidebar-scroll-area" thumbClassName="sidebar-scroll-area-thumb">
-      <SidebarNav items={navItems} />
+      <SidebarNav 
+        items={navItems} 
+        onItemClick={isMobile ? () => setOpenMobile(false) : undefined} 
+      />
     </ScrollArea>
   );
 
@@ -85,33 +92,33 @@ export function AppShell({ children }: { children: ReactNode }) {
           "overflow-x-hidden" 
         )}
       >
-        {/* Mobile Menu Trigger and Desktop UserNav Placeholder */}
-        <div className="sticky top-0 z-30 flex h-16 items-center justify-between px-4 backdrop-blur-sm sm:px-6 md:justify-start">
-          {isMobile && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0 text-foreground md:hidden">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="left"
-                className={cn(
-                  "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r border-[hsl(var(--sidebar-border-color))] rounded-r-lg",
-                  "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-rgb))]"
-                )}
-              >
-                <SheetHeader className="sr-only">
-                  <SheetTitle>Navigation Menu</SheetTitle>
-                </SheetHeader>
-                {sidebarHeaderContent}
-                {sidebarNavContent}
-                {sidebarMobileFooterContent}
-              </SheetContent>
-            </Sheet>
+        {/* Mobile Menu Trigger */}
+        {isMobile && (
+            <div className="fixed top-4 left-4 z-50">
+              <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="shrink-0 text-foreground md:hidden">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Toggle navigation menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="left"
+                  className={cn(
+                    "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r border-[hsl(var(--sidebar-border-color))] rounded-r-lg",
+                    "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-rgb))]"
+                  )}
+                >
+                  <SheetHeader className="sr-only"> 
+                    <SheetTitle>Navigation Menu</SheetTitle>
+                  </SheetHeader>
+                  {sidebarHeaderContent}
+                  {sidebarNavContent}
+                  {sidebarMobileFooterContent}
+                </SheetContent>
+              </Sheet>
+            </div>
           )}
-        </div>
         
         {/* Fixed UserNav for Desktop */}
         {!isMobile && (
@@ -120,18 +127,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 md:pt-6">
+        <main className="main-content-area flex-1 p-4 pt-20 sm:p-6 md:pt-6">
           {children}
         </main>
       </div>
-       {/* Fixed UserNav for Mobile (if needed separately, currently in mobile sidebar footer) */}
-       {/*
-        isMobile && (
-          <div className="fixed bottom-4 right-4 z-50 md:hidden">
-            <UserNav />
-          </div>
-        )
-      */}
     </div>
   );
 }
