@@ -2,6 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
+import * as React from 'react'; // Added import for React
 import { UserNav } from '@/components/layout/user-nav';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { adminNavItems, viewerNavItems } from '@/config/nav-config';
