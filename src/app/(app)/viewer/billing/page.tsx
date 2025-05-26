@@ -27,7 +27,7 @@ export default function ViewerBillingPage() {
     const paymentData = getMockPaymentsByCustomerId(user.customerId);
     const profileData = getMockCustomerById(user.customerId);
     
-    setPayments(paymentData || []);
+    setPayments(paymentData.sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())); // Sort here
     setCustomerProfile(profileData || null);
     setIsLoading(false);
   }, [user]);
@@ -85,7 +85,6 @@ export default function ViewerBillingPage() {
       <Card className="shadow-md glassmorphism-card">
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
-          {/* <CardDescription>List of all payments you have made.</CardDescription> */}
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] w-full">
@@ -94,18 +93,18 @@ export default function ViewerBillingPage() {
                 <TableRow>
                   <TableHead>Payment Date</TableHead>
                   <TableHead className="text-right">Amount Paid (PKR)</TableHead>
-                  <TableHead>Status</TableHead>
+                  {/* <TableHead>Status</TableHead> Removed "Status" as it's implied "Recorded" */ }
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payments.length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="text-center h-24">No payment records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={2} className="text-center h-24">No payment records found.</TableCell></TableRow> {/* Adjusted colSpan */}
                 ) : (
                   payments.map(payment => (
                     <TableRow key={payment.id}>
                       <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
                       <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                      <TableCell className="text-green-600">Recorded</TableCell> 
+                      {/* <TableCell className="text-green-600">Recorded</TableCell> Removed */}
                     </TableRow>
                   ))
                 )}

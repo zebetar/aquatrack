@@ -50,13 +50,13 @@ export default function AdminPaymentsPage() {
                 <TableHead>Customer Name</TableHead>
                 <TableHead>Payment Date</TableHead>
                 <TableHead className="text-right">Amount Paid (PKR)</TableHead>
-                <TableHead>Recorded By</TableHead>
+                {/* <TableHead>Recorded By</TableHead> Removed */}
               </TableRow>
             </TableHeader>
             <TableBody>
               {payments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={3} className="h-24 text-center"> {/* Adjusted colSpan */}
                     No payment records found.
                   </TableCell>
                 </TableRow>
@@ -66,7 +66,7 @@ export default function AdminPaymentsPage() {
                     <TableCell className="font-medium">{payment.customerName}</TableCell>
                     <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
                     <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                    <TableCell>{payment.recordedBy === 'admin001' ? 'Admin' : payment.recordedBy}</TableCell>
+                    {/* <TableCell>{payment.recordedBy === 'admin001' ? 'Admin' : payment.recordedBy}</TableCell> Removed */}
                   </TableRow>
                 ))
               )}

@@ -77,7 +77,7 @@ export function CustomerDetailsView({
   return (
     <div className="space-y-6">
       <Card>
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible>
           <AccordionItem value="customer-info">
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <AccordionTrigger className="flex-1 py-0 hover:no-underline">
@@ -166,7 +166,7 @@ export function CustomerDetailsView({
               </TableHeader>
               <TableBody>
                 {usageRecords.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center h-24">No usage records found.</TableCell></TableRow> {/* Adjusted colSpan */}
+                  <TableRow><TableCell colSpan={5} className="text-center h-24">No usage records found.</TableCell></TableRow>
                 )}
                 {usageRecords.map(record => (
                   <TableRow key={record.id}>
@@ -199,19 +199,19 @@ export function CustomerDetailsView({
                 <TableRow>
                   <TableHead>Payment Date</TableHead>
                   <TableHead className="text-right">Amount Paid (PKR)</TableHead>
-                  <TableHead>Recorded By</TableHead>
+                  {/* <TableHead>Recorded By</TableHead> Removed */}
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payments.length === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-center h-24">No payment records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center h-24">No payment records found.</TableCell></TableRow> {/* Adjusted colSpan */}
                 )}
                 {payments.map(payment => (
                   <TableRow key={payment.id}>
                     <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
                     <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                    <TableCell>{payment.recordedBy === 'admin001' ? "Admin" : payment.recordedBy}</TableCell>
+                    {/* <TableCell>{payment.recordedBy === 'admin001' ? "Admin" : payment.recordedBy}</TableCell> Removed */}
                     <TableCell className="text-center">
                       <EditPaymentRecordDialog 
                         paymentRecord={payment} 
