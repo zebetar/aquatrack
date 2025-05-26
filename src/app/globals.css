@@ -9,6 +9,7 @@ body {
   background: linear-gradient(to bottom right, hsl(var(--sky-100)), hsl(var(--white)), hsl(var(--cyan-50)));
   width: 100%; /* Ensure body takes full width */
   max-width: 100vw; /* Prevent exceeding viewport width */
+  /* overflow-x: hidden; REMOVED to allow ScrollArea to manage its own overflow */
 }
 
 /* Ensure dark mode body has a solid background if the gradient is light-theme specific */
@@ -220,6 +221,8 @@ body {
   .main-content-area { /* Applied to <main> tag in AppShell */
     flex-grow: 1; /* Allow main content to take available space */
      /* Removed overflow-x: hidden */
+    width: 100%;
+    max-width: 100vw;
   }
 }
 
@@ -342,4 +345,10 @@ body {
 }
 .animated-element:hover {
   opacity: 1;
+}
+
+/* Force horizontal scroll for ScrollArea viewports */
+[data-radix-scroll-area-viewport] {
+  overflow-x: auto !important;
+  overflow-y: auto !important; /* Also ensure vertical scroll if needed */
 }
