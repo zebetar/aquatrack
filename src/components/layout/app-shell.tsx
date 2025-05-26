@@ -3,8 +3,7 @@
 
 import type { ReactNode } from 'react';
 import * as React from 'react';
-// UserNav import removed as it's no longer used
-// import { UserNav } from '@/components/layout/user-nav';
+import { UserNav } from '@/components/layout/user-nav';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { adminNavItems, viewerNavItems } from '@/config/nav-config';
 import { useAuth } from '@/contexts/auth-context';
@@ -30,8 +29,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    // This typically shouldn't happen if AuthProvider correctly redirects
-    // to login, but it's a safe fallback.
     return null;
   }
 
@@ -59,22 +56,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
     </ScrollArea>
   );
-
-  // UserNav related footer elements removed
-  // const desktopSidebarFooter = (
-  //   <div className={cn(
-  //       "sidebar-footer",
-  //       "group-[.sidebar-main-container]:group-hover:opacity-100"
-  //       )}>
-  //       {/* <UserNav /> */}
-  //   </div>
-  // );
   
-  // const mobileSidebarFooter = (
-  //   <div className="mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2">
-  //     {/* <UserNav /> */}
-  //   </div>
-  // );
+  const desktopSidebarFooter = (
+    <div className={cn(
+        "sidebar-footer",
+        "group-[.sidebar-main-container]:group-hover:opacity-100"
+        )}>
+        {/* Intentionally empty or add desktop-specific footer items here if needed */}
+    </div>
+  );
+  
+  const mobileSidebarFooter = (
+    <div className="mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2">
+      <UserNav />
+    </div>
+  );
 
 
   return (
@@ -84,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <aside className="sidebar-main-container group fixed inset-y-0 left-0 z-40 hidden flex-col md:flex">
           {sidebarHeaderContent}
           {sidebarNavContent}
-          {/* desktopSidebarFooter removed */}
+          {desktopSidebarFooter}
         </aside>
       )}
 
@@ -117,21 +113,23 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </SheetHeader>
                   {sidebarHeaderContent}
                   {sidebarNavContent}
-                  {/* mobileSidebarFooter removed */}
+                  {mobileSidebarFooter}
                 </SheetContent>
               </Sheet>
             </div>
           )}
         
-        {/* Fixed UserNav for Desktop - REMOVED */}
-        {/* {!isMobile && (
+        {/* Fixed UserNav for Desktop - REMOVED from here */}
+        {/* 
+        {!isMobile && (
           <div className="fixed top-4 right-4 z-50">
-            <UserNav />
+             UserNav was here 
           </div>
-        )} */}
+        )} 
+        */}
 
-        {/* Main content area with adjusted padding if UserNav was present */}
-        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 md:pt-6"> {/* Reduced top padding as UserNav is removed */}
+        {/* Main content area: Reduced top padding as UserNav is no longer fixed top-right globally */}
+        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 md:pt-6">
           {children}
         </main>
       </div>
