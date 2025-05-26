@@ -6,7 +6,7 @@
 body {
   font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
   /* Light theme body gradient - Updated */
-  background: linear-gradient(to top left, hsl(var(--aesthetic-gradient-start-light)), hsl(var(--aesthetic-gradient-end-light)));
+  background: linear-gradient(to bottom right, hsl(var(--aesthetic-gradient-start-light)), hsl(var(--aesthetic-gradient-end-light)));
   width: 100%;
   max-width: 100vw;
   /* overflow-x: hidden; */ /* Global overflow hiding can interfere with ScrollArea */
@@ -46,15 +46,15 @@ body {
     --accent-foreground-light: 220 25% 20%;
     --destructive-light: 0 75% 55%;
     --destructive-foreground-light: 0 0% 98%;
-    --success-light: 140 70% 28%; /* Dark Green for success badge background */
+    --success-light: 100 60% 30%; /* Dark Green for success badge background */
     --success-foreground-light: 0 0% 100%; /* White text for success badge */
     --border-light: 210 20% 88%;
     --input-light: 210 20% 94%;
     --ring-light: 205 70% 50%;
 
-    /* New variables for aesthetic body gradient (bottom-right to top-left) */
-    --aesthetic-gradient-start-light: 190 65% 88%; /* Soft aqua/teal for bottom right */
-    --aesthetic-gradient-end-light: 210 55% 96%;  /* Very light cool blue for top left */
+    /* New variables for aesthetic body gradient (top-left to bottom-right) */
+    --aesthetic-gradient-start-light: 200 100% 95%; /* Very pale blue for top left */
+    --aesthetic-gradient-end-light: 210 100% 90%;  /* Light blue for bottom right */
 
     /* Sidebar Light Theme - Aesthetic Blue */
     --sidebar-fg-light-rgb: 20, 40, 80; /* Darker aesthetic blue for text/icons */
@@ -92,7 +92,7 @@ body {
     --accent-foreground-dark: 222 80% 8%;
     --destructive-dark: 0 65% 50%;
     --destructive-foreground-dark: 0 0% 98%;
-    --success-dark: 140 70% 25%; /* Darker Green for success badge background */
+    --success-dark: 100 50% 25%; /* Darker Green for success badge background */
     --success-foreground-dark: 0 0% 100%; /* White text for success badge */
     --border-dark: 210 25% 20%;
     --input-dark: 220 30% 15%;
@@ -295,7 +295,7 @@ body {
 
 .sidebar-header {
   height: var(--sidebar-header-height);
-  @apply flex items-center px-4 border-[var(--sidebar-border-color)]; /* Removed border-b */
+  @apply flex items-center px-4;
 }
 
 .sidebar-app-name-text { /* Text for "AquaTrack" in sidebar */
@@ -320,7 +320,7 @@ body {
 }
 
 .sidebar-footer {
-    @apply mt-auto p-2 opacity-0 transition-opacity duration-200 ease-in-out border-[hsl(var(--sidebar-border-color))]; /* Removed border-t */
+    @apply mt-auto p-2 opacity-0 transition-opacity duration-200 ease-in-out;
 }
 .sidebar-main-container:hover .sidebar-footer {
     @apply opacity-100;
@@ -365,3 +365,4 @@ body {
   overflow-x: auto !important;
   overflow-y: auto !important;
 }
+
