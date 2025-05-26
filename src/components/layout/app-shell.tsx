@@ -2,7 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import * as React from 'react'; // Added import for React
+import * as React from 'react';
 import { UserNav } from '@/components/layout/user-nav';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { adminNavItems, viewerNavItems } from '@/config/nav-config';
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
-  const [openMobile, setOpenMobile] = React.useState(false); // For mobile sidebar
+  const [openMobile, setOpenMobile] = React.useState(false); 
 
   if (loading) {
     return (
@@ -29,8 +29,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    // This should ideally redirect to login if not handled by AuthProvider already
-    // For now, returning null or a redirect component might be appropriate
     return null;
   }
 
@@ -42,38 +40,38 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Droplets className="h-7 w-7 text-primary shrink-0" />
         <span className={cn(
           "sidebar-app-name-text font-bold",
-          "group-[.sidebar-main-container]:group-hover:opacity-100" // Desktop hover
-          // For mobile sheet, text is always visible so no special class needed here
+          "group-[.sidebar-main-container]:group-hover:opacity-100" 
           )}>
             AquaTrack
         </span>
       </Link>
     </div>
   );
-
-  const sidebarDesktopFooterContent = (
-    <div className={cn(
-        "sidebar-footer",
-        "group-[.sidebar-main-container]:group-hover:opacity-100" // Desktop hover
-        )}>
-        <UserNav />
-    </div>
-  );
   
-  const sidebarMobileFooterContent = (
-    <div className="mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2">
-      <UserNav />
-    </div>
-  );
-
   const sidebarNavContent = (
-    <ScrollArea className="flex-1 sidebar-scroll-area" thumbClassName="sidebar-scroll-area-thumb">
+    <ScrollArea className="flex-1 sidebar-scroll-area" thumbClassName="sidebar-scroll-area-thumb" hideScrollbar={true}>
       <SidebarNav 
         items={navItems} 
         onItemClick={isMobile ? () => setOpenMobile(false) : undefined} 
       />
     </ScrollArea>
   );
+
+  const desktopSidebarFooter = (
+    <div className={cn(
+        "sidebar-footer",
+        "group-[.sidebar-main-container]:group-hover:opacity-100"
+        )}>
+        <UserNav />
+    </div>
+  );
+  
+  const mobileSidebarFooter = (
+    <div className="mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2">
+      <UserNav />
+    </div>
+  );
+
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -82,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <aside className="sidebar-main-container group fixed inset-y-0 left-0 z-40 hidden flex-col md:flex">
           {sidebarHeaderContent}
           {sidebarNavContent}
-          {sidebarDesktopFooterContent}
+          {desktopSidebarFooter}
         </aside>
       )}
 
@@ -115,7 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </SheetHeader>
                   {sidebarHeaderContent}
                   {sidebarNavContent}
-                  {sidebarMobileFooterContent}
+                  {mobileSidebarFooter}
                 </SheetContent>
               </Sheet>
             </div>
