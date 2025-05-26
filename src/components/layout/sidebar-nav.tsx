@@ -59,8 +59,8 @@ export function SidebarNav({ items, onItemClick }: SidebarNavProps) {
 
           const linkClasses = cn(
             "flex items-center rounded-md px-3 py-2.5 transition-colors duration-150 ease-in-out",
-            "hover:bg-[var(--sidebar-hover-bg-color)]", // Use CSS variable for hover background
-            isActive ? "bg-[var(--sidebar-active-bg-color)]" : "", // Use CSS variable for active background
+            "hover:bg-[var(--sidebar-hover-bg-color)]", 
+            isActive ? "bg-[var(--sidebar-active-bg-color)]" : "", 
             item.disabled && "cursor-not-allowed opacity-60 hover:bg-transparent"
           );
 
@@ -81,7 +81,6 @@ export function SidebarNav({ items, onItemClick }: SidebarNavProps) {
                   {linkContent}
                 </Link>
               </TooltipTrigger>
-              {/* Tooltip only shows when sidebar is collapsed (achieved via CSS on parent) */}
               <TooltipContent 
                 side="right" 
                 align="center" 
