@@ -33,12 +33,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navItems = user.role === 'admin' ? adminNavItems : viewerNavItems;
 
   const sidebarHeaderContent = (
-     <div className="sidebar-header"> {/* group was for gradient-text, not strictly needed now but harmless */}
+     <div className="sidebar-header">
       <Link href="/" className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-hover-fg">
         <Droplets className="h-7 w-7 text-primary shrink-0" />
         <span className={cn(
-          "sidebar-app-name-text font-bold text-xl", // Removed gradient-text, added font-bold and text-xl for consistent styling
-          "group-[.sidebar-main-container]:group-hover:opacity-100" // Opacity handled by parent group hover
+          "sidebar-app-name-text font-bold",
+          "group-[.sidebar-main-container]:group-hover:opacity-100"
           )}>
             AquaTrack
         </span>
@@ -49,14 +49,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const sidebarDesktopFooterContent = (
     <div className={cn(
         "sidebar-footer",
-        "group-[.sidebar-main-container]:group-hover:opacity-100" // Visible when desktop sidebar is hovered
+        "group-[.sidebar-main-container]:group-hover:opacity-100"
         )}>
         <UserNav />
     </div>
   );
   
   const sidebarMobileFooterContent = (
-    <div className="mt-auto border-t border-sidebar-border-color p-2"> {/* Always visible in mobile sheet */}
+    <div className="mt-auto border-t border-sidebar-border-color p-2">
       <UserNav />
     </div>
   );
@@ -82,11 +82,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className={cn(
           "flex flex-1 flex-col",
           !isMobile && "md:ml-[var(--sidebar-collapsed-width)]",
-          "overflow-x-hidden" // Crucial to prevent content from causing full page scroll
+          "overflow-x-hidden" 
         )}
       >
-        {/* Top bar for mobile menu trigger and desktop UserNav */}
-        <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 md:justify-end">
+        {/* Mobile Menu Trigger and Desktop UserNav Placeholder */}
+        <div className="sticky top-0 z-30 flex h-16 items-center justify-between px-4 backdrop-blur-sm sm:px-6 md:justify-start">
           {isMobile && (
             <Sheet>
               <SheetTrigger asChild>
@@ -98,11 +98,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <SheetContent
                 side="left"
                 className={cn(
-                  "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r border-sidebar-border-color",
-                  "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-sidebar-fg"
+                  "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r border-[hsl(var(--sidebar-border-color))] rounded-r-lg",
+                  "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-rgb))]"
                 )}
               >
-                {/* Visually hidden title for accessibility for the Sheet (Dialog) */}
                 <SheetHeader className="sr-only">
                   <SheetTitle>Navigation Menu</SheetTitle>
                 </SheetHeader>
@@ -112,22 +111,27 @@ export function AppShell({ children }: { children: ReactNode }) {
               </SheetContent>
             </Sheet>
           )}
-          {!isMobile && (
-            <div className="fixed top-4 right-4 z-50">
-              <UserNav />
-            </div>
-          )}
         </div>
+        
+        {/* Fixed UserNav for Desktop */}
+        {!isMobile && (
+          <div className="fixed top-4 right-4 z-50">
+            <UserNav />
+          </div>
+        )}
 
-        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 sm:pt-8 md:pt-6">
+        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 md:pt-6">
           {children}
         </main>
       </div>
-       {isMobile && ( /* UserNav for mobile, fixed bottom right for example */
-        <div className="fixed bottom-4 right-4 z-50 md:hidden">
-          <UserNav />
-        </div>
-      )}
+       {/* Fixed UserNav for Mobile (if needed separately, currently in mobile sidebar footer) */}
+       {/*
+        isMobile && (
+          <div className="fixed bottom-4 right-4 z-50 md:hidden">
+            <UserNav />
+          </div>
+        )
+      */}
     </div>
   );
 }
