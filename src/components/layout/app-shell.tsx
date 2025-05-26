@@ -28,6 +28,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
+    // This typically shouldn't be reached if AuthContext redirects correctly,
+    // but it's a good fallback.
     return null;
   }
 
@@ -35,11 +37,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const sidebarHeaderContent = (
      <div className="sidebar-header">
-      <Link href={user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard'} className="flex items-center gap-2 text-[rgb(var(--sidebar-fg-rgb))] hover:text-[rgb(var(--sidebar-hover-fg-rgb))]">
+      <Link href={user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard'} className="flex items-center gap-2 text-[rgb(var(--sidebar-icon-fg-light-rgb))] dark:text-[rgb(var(--sidebar-icon-fg-dark-rgb))] hover:text-[rgb(var(--sidebar-hover-fg-light-rgb))] dark:hover:text-[rgb(var(--sidebar-hover-fg-dark-rgb))]">
         <Droplets className="h-7 w-7 text-primary shrink-0" />
         <span className={cn(
-          "sidebar-app-name-text font-bold text-foreground", // Changed to text-foreground for simpler styling
-          "group-[.sidebar-main-container]:group-hover:opacity-100" 
+          "sidebar-app-name-text font-bold text-foreground",
+          "group-[.sidebar-main-container]:group-hover:opacity-100"
           )}>
             AquaTrack
         </span>
@@ -58,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   
   const desktopSidebarFooter = (
     <div className={cn(
-        "sidebar-footer p-2", 
+        "sidebar-footer p-2",
         "group-[.sidebar-main-container]:group-hover:opacity-100"
         )}>
         <UserNav />
@@ -76,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <aside className="sidebar-main-container group fixed inset-y-0 left-0 z-40 hidden flex-col md:flex">
+        <aside className="sidebar-main-container group fixed inset-y-0 left-0 z-30 hidden flex-col md:flex">
           {sidebarHeaderContent}
           {sidebarNavContent}
           {desktopSidebarFooter}
@@ -90,8 +92,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           "overflow-x-hidden" 
         )}
       >
-        {/* Mobile Menu Trigger & UserNav (Desktop) */}
-        <div className="fixed top-4 left-4 z-50 md:hidden"> {/* Only show menu on mobile */}
+        {/* Mobile Menu Trigger */}
+        <div className="fixed top-4 left-4 z-50 md:hidden">
           <Sheet open={openMobile} onOpenChange={setOpenMobile}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="shrink-0 text-foreground">
@@ -103,7 +105,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               side="left"
               className={cn(
                 "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r border-[hsl(var(--sidebar-border-color))] rounded-r-lg",
-                "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-rgb))]" 
+                "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-light-rgb))] dark:text-[rgb(var(--sidebar-fg-dark-rgb))]" 
               )}
             >
               <SheetHeader className="sr-only">
@@ -115,15 +117,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
         </div>
-
-        {/* UserNav for Desktop Top Right */}
+        
+        {/* UserNav for Desktop Top Right - REMOVED */}
+        {/* 
         {!isMobile && (
           <div className="fixed top-4 right-4 z-50">
             <UserNav />
           </div>
         )}
+        */}
         
-        <main className="main-content-area flex-1 p-4 pt-20 sm:p-6 md:pt-6"> {/* Increased top padding */}
+        <main className="main-content-area flex-1 p-4 pt-16 sm:p-6 md:pt-6"> {/* Adjusted top padding */}
           {children}
         </main>
       </div>
