@@ -73,7 +73,7 @@ export function CustomerListTable({
     router.push(`/admin/customers/${customerId}`);
   };
 
-  const numberOfColumns = enableActions ? 7 : 6;
+  const numberOfColumns = enableActions ? 6 : 5; // Adjusted due to removal of "Contact Info"
 
   return (
     <ScrollArea
@@ -86,7 +86,7 @@ export function CustomerListTable({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Contact Info</TableHead>
+            {/* <TableHead>Contact Info</TableHead> Removed */}
             <TableHead className="text-right">Total Usage</TableHead>
             <TableHead className="text-right">Balance (PKR)</TableHead>
             <TableHead className="text-center">Status</TableHead>
@@ -109,7 +109,7 @@ export function CustomerListTable({
                 className="cursor-pointer hover:bg-muted/60"
               >
                 <TableCell className="font-medium">{customer.name}</TableCell>
-                <TableCell>{customer.contactInfo || '-'}</TableCell>
+                {/* <TableCell>{customer.contactInfo || '-'}</TableCell> Removed */}
                 <TableCell className="text-right">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</TableCell>
                 <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
                 <TableCell className="text-center">
