@@ -1,7 +1,6 @@
 
 "use client";
 
-import type { ReactNode } from 'react';
 import * as React from 'react';
 import { UserNav } from '@/components/layout/user-nav';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
@@ -15,10 +14,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
-  const [openMobile, setOpenMobile] = React.useState(false); 
+  const [openMobile, setOpenMobile] = React.useState(false);
 
   if (loading) {
     return (
@@ -29,6 +28,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
+    // This case should ideally be handled by the AuthContext redirecting to login
+    // but as a fallback, return null or a redirect component.
     return null;
   }
 
@@ -36,36 +37,36 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const sidebarHeaderContent = (
      <div className="sidebar-header">
-      <Link href="/" className="flex items-center gap-2 text-[rgb(var(--sidebar-fg-rgb))] hover:text-[rgb(var(--sidebar-hover-fg-rgb))]">
+      <Link href={user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard'} className="flex items-center gap-2 text-[rgb(var(--sidebar-fg-rgb))] hover:text-[rgb(var(--sidebar-hover-fg-rgb))]">
         <Droplets className="h-7 w-7 text-primary shrink-0" />
         <span className={cn(
           "sidebar-app-name-text font-bold",
-          "group-[.sidebar-main-container]:group-hover:opacity-100" 
+          "group-[.sidebar-main-container]:group-hover:opacity-100"
           )}>
             AquaTrack
         </span>
       </Link>
     </div>
   );
-  
+
   const sidebarNavContent = (
-    <ScrollArea className="flex-1 sidebar-scroll-area" hideScrollbar={true}>
-      <SidebarNav 
-        items={navItems} 
-        onItemClick={isMobile ? () => setOpenMobile(false) : undefined} 
+    <ScrollArea className="flex-1 sidebar-scroll-area" hideScrollbar={true} thumbClassName="sidebar-scroll-area-thumb">
+      <SidebarNav
+        items={navItems}
+        onItemClick={isMobile ? () => setOpenMobile(false) : undefined}
       />
     </ScrollArea>
   );
-  
+
   const desktopSidebarFooter = (
     <div className={cn(
-        "sidebar-footer",
+        "sidebar-footer p-2", // Added padding for UserNav
         "group-[.sidebar-main-container]:group-hover:opacity-100"
         )}>
-        {/* Intentionally empty or add desktop-specific footer items here if needed */}
+        <UserNav />
     </div>
   );
-  
+
   const mobileSidebarFooter = (
     <div className="mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2">
       <UserNav />
@@ -87,8 +88,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Main Content Area & Mobile Integration */}
       <div className={cn(
           "flex flex-1 flex-col",
-          !isMobile && "md:ml-[var(--sidebar-collapsed-width)]",
-          "overflow-x-hidden" 
+          !isMobile && "md:ml-[var(--sidebar-collapsed-width)]", // Adjust left margin for collapsed sidebar
+          "overflow-x-hidden"
         )}
       >
         {/* Mobile Menu Trigger */}
@@ -108,7 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-rgb))]"
                   )}
                 >
-                  <SheetHeader className="sr-only"> 
+                  <SheetHeader className="sr-only"> {/* Visually hidden for accessibility */}
                     <SheetTitle>Navigation Menu</SheetTitle>
                   </SheetHeader>
                   {sidebarHeaderContent}
@@ -118,18 +119,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Sheet>
             </div>
           )}
-        
-        {/* Fixed UserNav for Desktop - REMOVED from here */}
-        {/* 
-        {!isMobile && (
-          <div className="fixed top-4 right-4 z-50">
-             UserNav was here 
-          </div>
-        )} 
-        */}
 
-        {/* Main content area: Reduced top padding as UserNav is no longer fixed top-right globally */}
-        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 md:pt-6">
+        {/* UserNav for Desktop - REMOVED FROM FIXED TOP RIGHT */}
+
+        <main className="main-content-area flex-1 p-4 pt-6 sm:p-6 md:pt-6"> {/* Adjusted top padding */}
           {children}
         </main>
       </div>

@@ -9,7 +9,6 @@ body {
   background: linear-gradient(to bottom right, hsl(var(--sky-100)), hsl(var(--white)), hsl(var(--cyan-50)));
   width: 100%; /* Ensure body takes full width */
   max-width: 100vw; /* Prevent exceeding viewport width */
-  /* overflow-x: hidden; REMOVED to allow ScrollArea to manage its own overflow */
 }
 
 /* Ensure dark mode body has a solid background if the gradient is light-theme specific */
@@ -25,7 +24,6 @@ body {
   }
   html {
     scroll-behavior: smooth;
-     /* Removed overflow-x: hidden from html to allow ScrollArea to manage its own overflow */
   }
 
   :root {
@@ -55,7 +53,6 @@ body {
     --cyan-50: 185 70% 96%;
 
     /* Sidebar Light Theme */
-    --sidebar-bg-light: 215 35% 92%; /* Light greyish blue for solid bg */
     --sidebar-fg-light-rgb: 37, 47, 62; /* For rgb() - Dark blue-grey for text */
     --sidebar-icon-fg-light-rgb: 30, 40, 55; /* For rgb() - Slightly darker for icons */
     --sidebar-active-bg-light: 205 70% 48%; /* Primary blue */
@@ -90,7 +87,6 @@ body {
     --ring-dark: 185 90% 55%;
 
     /* Sidebar Dark Theme */
-    --sidebar-bg-dark: 222 75% 8%; /* Matches main dark bg or slightly different for solid bg */
     --sidebar-fg-dark-rgb: 191, 204, 217; /* For rgb() - Light cool grey for text */
     --sidebar-icon-fg-dark-rgb: 26, 196, 209; /* For rgb() - Primary cyan for icons */
     --sidebar-active-bg-dark: 185 90% 50%; /* Primary cyan */
@@ -114,7 +110,7 @@ body {
     --chart-3-dark: 230 60% 70%; /* Lighter Desaturated Blue/Purple */
     --chart-4-dark: 30 90% 55%;  /* Gold/Orange */
     --chart-5-dark: 170 70% 50%; /* Seafoam Green */
-    
+
     --radius: 0.75rem; /* 12px */
 
     /* Sidebar specific variables */
@@ -192,7 +188,7 @@ body {
     --sidebar-active-fg-rgb: var(--sidebar-active-fg-dark-rgb);
     --sidebar-hover-bg-color: hsl(var(--sidebar-hover-bg-dark));
     --sidebar-hover-fg-rgb: var(--sidebar-hover-fg-dark-rgb);
-    
+
     --chart-1: var(--chart-1-dark);
     --chart-2: var(--chart-2-dark);
     --chart-3: var(--chart-3-dark);
@@ -209,7 +205,6 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* Removed overflow-x: hidden from body to allow ScrollArea to manage its own overflow */
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold;
@@ -220,7 +215,6 @@ body {
 
   .main-content-area { /* Applied to <main> tag in AppShell */
     flex-grow: 1; /* Allow main content to take available space */
-     /* Removed overflow-x: hidden */
     width: 100%;
     max-width: 100vw;
   }
@@ -257,8 +251,8 @@ body {
   background-clip: text;
   color: transparent;
   font-weight: 700;
-  display: inline-block; 
-  line-height: 1.2; 
+  display: inline-block;
+  line-height: 1.2;
 }
 
 /* Styles for the hover-to-expand sidebar */
@@ -299,15 +293,9 @@ body {
 .sidebar-scroll-area {
   /* Base styling for the scroll area in the sidebar */
 }
-.sidebar-scroll-area-thumb {
-  @apply bg-muted rounded-full;
-}
-.dark .sidebar-scroll-area-thumb {
-  @apply bg-[hsl(var(--muted-dark))] rounded-full;
-}
 
 .sidebar-footer {
-    @apply mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2 opacity-0 transition-opacity duration-200 ease-in-out;
+    @apply mt-auto border-t border-[hsl(var(--sidebar-border-color))] opacity-0 transition-opacity duration-200 ease-in-out;
 }
 .sidebar-main-container:hover .sidebar-footer {
     @apply opacity-100;
@@ -352,4 +340,3 @@ body {
   overflow-x: auto !important;
   overflow-y: auto !important; /* Also ensure vertical scroll if needed */
 }
-
