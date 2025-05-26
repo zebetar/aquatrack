@@ -7,11 +7,9 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  // The div wrapper was removed. The table itself will be the direct child of ScrollArea.
-  // The table should not have w-full here; its width will be determined by its content.
   <table
     ref={ref}
-    className={cn("caption-bottom text-sm", className)} // Removed min-w-[700px] to let content dictate
+    className={cn("caption-bottom text-sm", className)}
     {...props}
   />
 ))
@@ -23,7 +21,6 @@ const TableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead ref={ref} className={cn(
     "[&_tr]:border-b",
-    // Apply gradient background to the row within the header
     "[&_tr]:bg-gradient-to-r [&_tr]:from-[hsl(var(--table-header-gradient-start))] [&_tr]:to-[hsl(var(--table-header-gradient-end))]",
     className
   )} {...props} />
@@ -67,7 +64,7 @@ const TableRow = React.forwardRef<
       "border-b transition-colors duration-300",
       "bg-gradient-to-b from-[hsl(var(--table-row-gradient-start))] to-[hsl(var(--table-row-gradient-end))]",
       "hover:bg-[hsl(var(--table-row-hover-bg))]",
-      "data-[state=selected]:bg-muted", // This uses a themed variable, should adapt.
+      "data-[state=selected]:bg-muted",
       className
     )}
     {...props}
@@ -82,7 +79,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-1 text-left align-middle font-medium text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", // Reduced px to px-1
+      "h-10 px-1 text-left align-middle font-medium text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&&:first-child]:pl-4 [&&:last-child]:pr-4", // Increased first-child pl, kept last-child pr, internal px-1
       className
     )}
     {...props}
@@ -96,7 +93,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("py-2 px-1 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&:first-child]:pl-4 [&:last-child]:pr-4", className)} // Reduced px to px-1
+    className={cn("py-2 px-1 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&&:first-child]:pl-4 [&&:last-child]:pr-4", className)} // Increased first-child pl, kept last-child pr, internal px-1
     {...props}
   />
 ))

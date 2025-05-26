@@ -4,12 +4,11 @@
 @tailwind utilities;
 
 body {
-  font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
-  /* Light theme body gradient - Updated */
+  font-family: var(--font-roboto), Arial, Helvetica, sans-serif;
+  /* Light theme body gradient */
   background: linear-gradient(to top left, hsl(var(--aesthetic-gradient-start-light)), hsl(var(--aesthetic-gradient-end-light)));
   width: 100%;
   max-width: 100vw;
-  /* overflow-x: hidden; */ /* Global overflow hiding can interfere with ScrollArea */
 }
 
 .dark body {
@@ -24,11 +23,10 @@ body {
   }
   html {
     scroll-behavior: smooth;
-    /* overflow-x: hidden; */ /* Global overflow hiding can interfere with ScrollArea */
   }
 
   :root {
-    /* Light Theme: Clean, Realistic, Aesthetic */
+    /* Light Theme: Clean, Realistic, Aesthetic with Blue & Gold Accents */
     --background-light: 210 40% 98%; /* Very light cool grey - main content area background */
     --foreground-light: 220 25% 25%; /* Dark, desaturated blue-grey */
     --foreground-light-rgb: 48, 53, 77; /* RGB for --foreground-light */
@@ -36,28 +34,27 @@ body {
     --card-foreground-light: 220 25% 25%;
     --popover-light: 0 0% 100%;
     --popover-foreground-light: 220 25% 25%;
-    --primary-light: 205 70% 48%; /* Clear, professional blue */
+    --primary-light: 210 70% 48%; /* Refined, professional blue */
     --primary-foreground-light: 0 0% 100%;
     --secondary-light: 210 50% 93%; /* Light, soft cool grey-blue */
-    --secondary-foreground-light: 205 70% 30%;
+    --secondary-foreground-light: 210 70% 30%;
     --muted-light: 210 40% 95%;
     --muted-foreground-light: 220 20% 50%;
-    --accent-light: 180 60% 55%; /* Soft teal/aqua */
+    --accent-light: 45 80% 60%; /* Subtle Gold accent */
     --accent-foreground-light: 220 25% 20%;
     --destructive-light: 0 75% 55%;
     --destructive-foreground-light: 0 0% 98%;
-    --success-light: 120 40% 25%; /* Dark Green for success badge background */
+    --success-light: 140 60% 30%; /* Dark Green for success badge background */
     --success-foreground-light: 0 0% 100%; /* White text for success badge */
     --border-light: 210 20% 88%;
     --input-light: 210 20% 94%;
-    --ring-light: 205 70% 50%;
+    --ring-light: 210 70% 50%;
 
-    /* New variables for aesthetic body gradient (top-left to bottom-right) */
+    /* Aesthetic body gradient (top-left to bottom-right) */
     --aesthetic-gradient-start-light: 190 65% 88%; /* soft aqua/teal for bottom-right - actually top-left due to "to top left" */
     --aesthetic-gradient-end-light: 210 55% 96%;  /* very light cool blue for top-left - actually bottom-right */
 
-
-    /* Sidebar Light Theme - Aesthetic Blue */
+    /* Sidebar Light Theme - Light Aesthetic Blue */
     --sidebar-fg-light-rgb: 20, 40, 80; /* Darker aesthetic blue for text/icons */
     --sidebar-icon-fg-light-rgb: 20, 40, 80; /* Darker aesthetic blue for icons */
     --sidebar-active-bg-light: 205 75% 60%; /* Aesthetic Blue for active item background */
@@ -73,12 +70,11 @@ body {
     --table-row-gradient-start-light: 213 67% 94%;  /* #e6f0fa */
     --table-row-gradient-end-light: 0 0% 100%;     /* #ffffff */
     --table-row-hover-bg-light: 216 100% 91%;     /* #d1e4ff */
-    --table-header-bg-light: 213 67% 94%; /* DEPRECATED - replaced by gradient */
     --table-header-gradient-start-light: 210 70% 92%; /* Lighter blue for header gradient start */
     --table-header-gradient-end-light: 200 65% 95%;   /* Even lighter blue for header gradient end */
 
 
-    /* Dark Theme: Futuristic, Sleek, Cool */
+    /* Dark Theme: Futuristic, Sleek, Cool with Gold Accents */
     --background-dark: 222 80% 6%; /* Deep, rich navy/charcoal */
     --foreground-dark: 210 30% 85%; /* Light, cool grey for text */
     --card-dark: 222 70% 9%;
@@ -91,11 +87,11 @@ body {
     --secondary-foreground-dark: 200 15% 80%;
     --muted-dark: 220 30% 20%;
     --muted-foreground-dark: 200 15% 65%;
-    --accent-dark: 280 75% 65%; /* Vivid Magenta/Purple */
+    --accent-dark: 40 90% 55%; /* Bright Gold/Orange accent */
     --accent-foreground-dark: 222 80% 8%;
     --destructive-dark: 0 65% 50%;
     --destructive-foreground-dark: 0 0% 98%;
-    --success-dark: 120 40% 25%; /* Darker Green for success badge background */
+    --success-dark: 140 70% 25%; /* Dark Green for success badge background */
     --success-foreground-dark: 0 0% 100%; /* White text for success badge */
     --border-dark: 210 25% 20%;
     --input-dark: 220 30% 15%;
@@ -117,7 +113,6 @@ body {
     --table-row-gradient-start-dark: var(--card-dark);
     --table-row-gradient-end-dark: var(--card-dark); /* No gradient for dark theme rows by default */
     --table-row-hover-bg-dark: var(--muted-dark);
-    --table-header-bg-dark: var(--muted-dark); /* DEPRECATED - replaced by gradient */
     --table-header-gradient-start-dark: 220 30% 18%; /* Darker muted for header gradient start */
     --table-header-gradient-end-dark: 220 30% 22%;   /* Slightly lighter muted for header gradient end */
 
@@ -125,21 +120,21 @@ body {
     /* Chart Colors */
     --chart-1-light: 205 70% 48%; /* Professional Blue */
     --chart-2-light: 180 60% 55%; /* Soft Teal/Aqua */
-    --chart-3-light: 220 50% 65%; /* Soft Cool Blue */
-    --chart-4-light: 45 70% 65%;  /* Soft Gold/Yellow */
+    --chart-3-light: 45 80% 60%;  /* Gold Accent */
+    --chart-4-light: 220 50% 65%; /* Soft Cool Blue */
     --chart-5-light: 330 65% 70%; /* Soft Pink/Rose */
 
     --chart-1-dark: 185 90% 50%; /* Vibrant Cyan/Teal */
-    --chart-2-dark: 280 75% 65%; /* Vivid Magenta/Purple */
-    --chart-3-dark: 230 60% 70%; /* Bright Cool Blue */
-    --chart-4-dark: 30 90% 55%;  /* Bright Orange */
+    --chart-2-dark: 40 90% 55%;  /* Bright Gold/Orange */
+    --chart-3-dark: 280 75% 65%; /* Vivid Magenta/Purple */
+    --chart-4-dark: 230 60% 70%; /* Bright Cool Blue */
     --chart-5-dark: 170 70% 50%; /* Bright Green */
 
     --radius: 0.75rem;
 
     /* Sidebar specific variables */
     --sidebar-collapsed-width: 60px;
-    --sidebar-expanded-width: 256px; /* Increased for more space */
+    --sidebar-expanded-width: 256px;
     --sidebar-header-height: 64px;
     --sidebar-footer-height: 64px;
     --sidebar-transition-duration: 0.3s;
@@ -250,9 +245,6 @@ body {
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold;
   }
-  .card-title-class { /* Not directly used by ShadCN CardTitle, but kept if used elsewhere */
-    @apply text-2xl font-bold;
-  }
 
   .main-content-area {
     flex-grow: 1;
@@ -291,28 +283,28 @@ body {
 .sidebar-main-container {
   width: var(--sidebar-collapsed-width);
   transition: width var(--sidebar-transition-duration) ease-in-out;
-  background: var(--sidebar-actual-bg); /* Uses CSS variable for dynamic theme */
+  background: var(--sidebar-actual-bg);
   @apply border-r rounded-r-lg border-[hsl(var(--sidebar-border-color))] overflow-hidden;
 }
 .sidebar-main-container:hover {
   width: var(--sidebar-expanded-width);
-  background: var(--sidebar-actual-bg); /* Ensure background stays on hover */
+  background: var(--sidebar-actual-bg);
 }
 
 
 .sidebar-header {
   height: var(--sidebar-header-height);
-  @apply flex items-center px-4;
+  @apply flex items-center px-4; /* Removed border-b */
 }
 
-.sidebar-app-name-text { /* Text for "AquaTrack" in sidebar */
+.sidebar-app-name-text {
   @apply font-semibold transition-opacity duration-200 ease-in-out ml-2;
 }
 .sidebar-main-container:not(:hover) .sidebar-app-name-text {
   @apply opacity-0 pointer-events-none;
 }
 
-.sidebar-nav-item-text { /* Text for individual nav items like "Dashboard" */
+.sidebar-nav-item-text {
   @apply truncate transition-opacity duration-200 ease-in-out ml-3;
 }
 .sidebar-main-container:not(:hover) .sidebar-nav-item-text {
@@ -327,7 +319,7 @@ body {
 }
 
 .sidebar-footer {
-    @apply mt-auto p-2 opacity-0 transition-opacity duration-200 ease-in-out;
+    @apply mt-auto p-2 opacity-0 transition-opacity duration-200 ease-in-out; /* Removed border-t */
 }
 .sidebar-main-container:hover .sidebar-footer {
     @apply opacity-100;
@@ -337,14 +329,14 @@ body {
 /* Mobile specific sidebar styles */
 @layer components {
   .bg-mobile-sidebar-light {
-    background: var(--sidebar-background-light); /* Uses light theme sidebar gradient */
+    background: var(--sidebar-background-light);
   }
   .dark .bg-mobile-sidebar-dark {
-     background: var(--sidebar-background-dark); /* Uses dark theme sidebar gradient */
+     background: var(--sidebar-background-dark);
   }
 }
 
-/* Custom card utility from user for specific hover - RENAMED to avoid confusion */
+/* Custom card utility from user - RENAMED */
 .card-utility-lift {
   background: linear-gradient(to bottom right, #eff6ff, #ffffff);
   border: 1px solid #dbeafe;
