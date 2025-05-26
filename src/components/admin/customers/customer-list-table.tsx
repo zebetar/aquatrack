@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
 import { formatDurationFromHours } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Expect an optional totalUsageHours property
 interface CustomerWithUsage extends Customer {
@@ -71,83 +72,87 @@ export function CustomerListTable({
   };
 
   return (
+    // Removed padding from the card div to allow ScrollArea to manage it, or apply padding INSIDE ScrollArea if needed
     <div className="rounded-lg border bg-card shadow-sm glassmorphism-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Contact Info</TableHead>
-            <TableHead className="text-right">Total Usage</TableHead>
-            <TableHead className="text-right">Balance (PKR)</TableHead>
-            <TableHead className="text-center">Status</TableHead>
-            <TableHead className="text-center">PDF</TableHead>
-            {enableActions && <TableHead className="text-center">Actions</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {customers.length === 0 && (
+      <ScrollArea className="w-full"> 
+        {/* Apply a min-width to the table itself to force overflow detection on smaller screens */}
+        <Table className="min-w-[700px]"> 
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={enableActions ? 7 : 6} className="h-24 text-center">
-                No customers found.
-              </TableCell>
+              <TableHead>Name</TableHead>
+              <TableHead>Contact Info</TableHead>
+              <TableHead className="text-right">Total Usage</TableHead>
+              <TableHead className="text-right">Balance (PKR)</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-center">PDF</TableHead>
+              {enableActions && <TableHead className="text-center">Actions</TableHead>}
             </TableRow>
-          )}
-          {customers.map((customer) => (
-            <TableRow 
-              key={customer.id} 
-              onClick={() => handleRowClick(customer.id)}
-              className="cursor-pointer hover:bg-muted/60"
-            >
-              <TableCell className="font-medium">{customer.name}</TableCell>
-              <TableCell>{customer.contactInfo || '-'}</TableCell>
-              <TableCell className="text-right">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</TableCell>
-              <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
-              <TableCell className="text-center">
-                <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
-                  {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Download Statement PDF"
-                  onClick={(e) => handleDownloadPdf(e, customer)}
-                  disabled={generatingPdfId === customer.id}
-                  className="hover:bg-primary/20"
-                >
-                  {generatingPdfId === customer.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 text-primary" />
-                  )}
-                </Button>
-              </TableCell>
-              {enableActions && (
-                <TableCell className="text-center">
-                  <DeleteCustomerDialog 
-                    customer={customer}
-                    onDeleteConfirm={() => onCustomerDeleted(customer.id)}
-                    isDeleting={deletingCustomerId === customer.id}
-                    triggerButton={
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        title="Delete Customer" 
-                        disabled={deletingCustomerId === customer.id}
-                        onClick={(e) => e.stopPropagation()} // Prevent row click
-                        className="hover:bg-destructive/20"
-                      >
-                        {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                      </Button>
-                    }
-                  />
+          </TableHeader>
+          <TableBody>
+            {customers.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={enableActions ? 7 : 6} className="h-24 text-center">
+                  No customers found.
                 </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              </TableRow>
+            )}
+            {customers.map((customer) => (
+              <TableRow 
+                key={customer.id} 
+                onClick={() => handleRowClick(customer.id)}
+                className="cursor-pointer hover:bg-muted/60"
+              >
+                <TableCell className="font-medium">{customer.name}</TableCell>
+                <TableCell>{customer.contactInfo || '-'}</TableCell>
+                <TableCell className="text-right">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</TableCell>
+                <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
+                <TableCell className="text-center">
+                  <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
+                    {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Download Statement PDF"
+                    onClick={(e) => handleDownloadPdf(e, customer)}
+                    disabled={generatingPdfId === customer.id}
+                    className="hover:bg-primary/20"
+                  >
+                    {generatingPdfId === customer.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 text-primary" />
+                    )}
+                  </Button>
+                </TableCell>
+                {enableActions && (
+                  <TableCell className="text-center">
+                    <DeleteCustomerDialog 
+                      customer={customer}
+                      onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                      isDeleting={deletingCustomerId === customer.id}
+                      triggerButton={
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          title="Delete Customer" 
+                          disabled={deletingCustomerId === customer.id}
+                          onClick={(e) => e.stopPropagation()} // Prevent row click
+                          className="hover:bg-destructive/20"
+                        >
+                          {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                        </Button>
+                      }
+                    />
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
     </div>
   );
 }
