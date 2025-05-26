@@ -32,7 +32,7 @@ interface CustomerListTableProps {
   onCustomerDeleted: (customerId: string) => void;
   deletingCustomerId: string | null;
   enableActions?: boolean;
-  className?: string; // Allow passing additional classes for the ScrollArea container
+  className?: string;
 }
 
 export function CustomerListTable({
@@ -76,14 +76,13 @@ export function CustomerListTable({
   const numberOfColumns = enableActions ? 7 : 6;
 
   return (
-    // ScrollArea now acts as the main container with card styling
     <ScrollArea
       className={cn(
         "w-full rounded-lg border bg-card shadow-sm glassmorphism-card",
-        className // Allow additional classes to be passed
+        className
       )}
     >
-      <Table className="min-w-[700px]"> {/* Table content will overflow the ScrollArea's viewport */}
+      <Table className="min-w-[700px]">
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
@@ -96,67 +95,68 @@ export function CustomerListTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {customers.length === 0 && (
+          {customers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={numberOfColumns} className="h-24 text-center">
                 No customers found.
               </TableCell>
             </TableRow>
-          )}
-          {customers.map((customer) => (
-            <TableRow
-              key={customer.id}
-              onClick={() => handleRowClick(customer.id)}
-              className="cursor-pointer hover:bg-muted/60"
-            >
-              <TableCell className="font-medium">{customer.name}</TableCell>
-              <TableCell>{customer.contactInfo || '-'}</TableCell>
-              <TableCell className="text-right">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</TableCell>
-              <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
-              <TableCell className="text-center">
-                <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
-                  {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Download Statement PDF"
-                  onClick={(e) => handleDownloadPdf(e, customer)}
-                  disabled={generatingPdfId === customer.id}
-                  className="hover:bg-primary/20"
-                >
-                  {generatingPdfId === customer.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 text-primary" />
-                  )}
-                </Button>
-              </TableCell>
-              {enableActions && (
+          ) : (
+            customers.map((customer) => (
+              <TableRow
+                key={customer.id}
+                onClick={() => handleRowClick(customer.id)}
+                className="cursor-pointer hover:bg-muted/60"
+              >
+                <TableCell className="font-medium">{customer.name}</TableCell>
+                <TableCell>{customer.contactInfo || '-'}</TableCell>
+                <TableCell className="text-right">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</TableCell>
+                <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
                 <TableCell className="text-center">
-                  <DeleteCustomerDialog
-                    customer={customer}
-                    onDeleteConfirm={() => onCustomerDeleted(customer.id)}
-                    isDeleting={deletingCustomerId === customer.id}
-                    triggerButton={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Delete Customer"
-                        disabled={deletingCustomerId === customer.id}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hover:bg-destructive/20"
-                      >
-                        {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                      </Button>
-                    }
-                  />
+                  <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
+                    {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
+                  </Badge>
                 </TableCell>
-              )}
-            </TableRow>
-          ))}
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Download Statement PDF"
+                    onClick={(e) => handleDownloadPdf(e, customer)}
+                    disabled={generatingPdfId === customer.id}
+                    className="hover:bg-primary/20"
+                  >
+                    {generatingPdfId === customer.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 text-primary" />
+                    )}
+                  </Button>
+                </TableCell>
+                {enableActions && (
+                  <TableCell className="text-center">
+                    <DeleteCustomerDialog
+                      customer={customer}
+                      onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                      isDeleting={deletingCustomerId === customer.id}
+                      triggerButton={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Delete Customer"
+                          disabled={deletingCustomerId === customer.id}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:bg-destructive/20"
+                        >
+                          {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                        </Button>
+                      }
+                    />
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </ScrollArea>
