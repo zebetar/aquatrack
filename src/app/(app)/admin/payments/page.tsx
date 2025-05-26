@@ -40,23 +40,21 @@ export default function AdminPaymentsPage() {
     <Card className="shadow-md mt-6">
       <CardHeader>
         <CardTitle>All Payment Records</CardTitle>
-         {/* <CardDescription>Review all payments recorded in the system.</CardDescription> */}
       </CardHeader>
       <CardContent>
          <ScrollArea className="h-[calc(100vh-12rem)] w-full"> {/* Adjusted height */}
-          <Table>
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Customer Name</TableHead>
                 <TableHead>Payment Date</TableHead>
                 <TableHead className="text-right">Amount Paid (PKR)</TableHead>
-                {/* <TableHead>Recorded By</TableHead> Removed */}
               </TableRow>
             </TableHeader>
             <TableBody>
               {payments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center"> {/* Adjusted colSpan */}
+                  <TableCell colSpan={3} className="h-24 text-center">
                     No payment records found.
                   </TableCell>
                 </TableRow>
@@ -66,7 +64,6 @@ export default function AdminPaymentsPage() {
                     <TableCell className="font-medium">{payment.customerName}</TableCell>
                     <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
                     <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                    {/* <TableCell>{payment.recordedBy === 'admin001' ? 'Admin' : payment.recordedBy}</TableCell> Removed */}
                   </TableRow>
                 ))
               )}

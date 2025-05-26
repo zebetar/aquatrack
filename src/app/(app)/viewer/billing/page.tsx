@@ -87,24 +87,22 @@ export default function ViewerBillingPage() {
           <CardTitle>Payment History</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px] w-full">
-            <Table>
+          <ScrollArea className="h-[calc(100vh-24rem)] w-full">
+            <Table className="min-w-[500px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Payment Date</TableHead>
                   <TableHead className="text-right">Amount Paid (PKR)</TableHead>
-                  {/* <TableHead>Status</TableHead> Removed "Status" as it's implied "Recorded" */ }
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payments.length === 0 ? (
-                  <TableRow><TableCell colSpan={2} className="text-center h-24">No payment records found.</TableCell></TableRow> {/* Adjusted colSpan */}
+                  <TableRow><TableCell colSpan={2} className="text-center h-24">No payment records found.</TableCell></TableRow>
                 ) : (
                   payments.map(payment => (
                     <TableRow key={payment.id}>
                       <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
                       <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                      {/* <TableCell className="text-green-600">Recorded</TableCell> Removed */}
                     </TableRow>
                   ))
                 )}

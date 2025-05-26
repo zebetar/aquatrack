@@ -44,7 +44,7 @@ export default function AdminUsagePage() {
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[calc(100vh-12rem)] w-full"> {/* Adjusted height */}
-          <Table>
+          <Table className="min-w-[700px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Customer Name</TableHead>
@@ -57,7 +57,7 @@ export default function AdminUsagePage() {
             <TableBody>
               {usageRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center"> {/* Adjusted colSpan */}
+                  <TableCell colSpan={5} className="h-24 text-center">
                     No water usage records found.
                   </TableCell>
                 </TableRow>
@@ -79,3 +79,4 @@ export default function AdminUsagePage() {
     </Card>
   );
 }
+

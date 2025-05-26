@@ -171,8 +171,7 @@ export default function DataExportPage() {
 
   return (
     <>
-      {/* "Back to Settings" button removed */}
-      <Card className="glassmorphism-card shadow-md mb-6 mt-6"> {/* Added mt-6 for spacing */}
+      <Card className="glassmorphism-card shadow-md mb-6 mt-6">
         <CardHeader>
           <CardTitle>Customer Data (PDF)</CardTitle>
         </CardHeader>
@@ -263,8 +262,8 @@ export default function DataExportPage() {
               <div>
                 <h4 className="text-md font-medium mb-2">Filtered Water Usage</h4>
                 {filteredUsage.length > 0 ? (
-                  <ScrollArea className="h-[200px] border rounded-md">
-                    <Table>
+                  <ScrollArea className="h-[200px] border rounded-md w-full">
+                    <Table className="min-w-[600px]">
                       <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Duration</TableHead><TableHead className="text-right">Cost (PKR)</TableHead></TableRow></TableHeader>
                       <TableBody>
                         {filteredUsage.map(r => (
@@ -283,8 +282,8 @@ export default function DataExportPage() {
               <div>
                 <h4 className="text-md font-medium mb-2">Filtered Payments</h4>
                  {filteredPayments.length > 0 ? (
-                  <ScrollArea className="h-[200px] border rounded-md">
-                    <Table>
+                  <ScrollArea className="h-[200px] border rounded-md w-full">
+                    <Table className="min-w-[500px]">
                       <TableHeader><TableRow><TableHead>Date</TableHead><TableHead className="text-right">Amount (PKR)</TableHead></TableRow></TableHeader>
                       <TableBody>
                         {filteredPayments.map(p => (
