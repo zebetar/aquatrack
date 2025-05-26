@@ -71,11 +71,11 @@ export function CustomerListTable({
     router.push(`/admin/customers/${customerId}`);
   };
 
+  const numberOfColumns = enableActions ? 6 : 5; // Adjusted based on visible columns
+
   return (
-    // Removed padding from the card div to allow ScrollArea to manage it, or apply padding INSIDE ScrollArea if needed
     <div className="rounded-lg border bg-card shadow-sm glassmorphism-card">
       <ScrollArea className="w-full"> 
-        {/* Apply a min-width to the table itself to force overflow detection on smaller screens */}
         <Table className="min-w-[700px]"> 
           <TableHeader>
             <TableRow>
@@ -91,7 +91,7 @@ export function CustomerListTable({
           <TableBody>
             {customers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={enableActions ? 7 : 6} className="h-24 text-center">
+                <TableCell colSpan={numberOfColumns} className="h-24 text-center">
                   No customers found.
                 </TableCell>
               </TableRow>
