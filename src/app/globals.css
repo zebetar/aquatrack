@@ -12,8 +12,9 @@ body {
   /* max-width: 100vw; */
 }
 
+/* Ensure dark mode body has a solid background if the gradient is light-theme specific */
 .dark body {
-  background: hsl(var(--background)); /* Solid dark background for dark theme */
+  background: hsl(var(--background-dark)); /* Solid dark background for dark theme */
 }
 
 
@@ -41,20 +42,23 @@ body {
     --input-light: 210 20% 94%;
     --ring-light: 205 70% 50%;
 
-    --sidebar-background-light: 215 35% 92%; /* Light greyish blue */
-    --sidebar-text-light: 220, 25%, 30%; /* Dark blue-grey for text */
-    --sidebar-icon-light: 220, 25%, 35%; /* Slightly darker for icons */
-    --sidebar-active-bg-light: 205 70% 48%; /* Primary blue */
-    --sidebar-active-text-light: 0, 0%, 100%; /* White */
-    --sidebar-hover-bg-light: 205 70% 88%; /* Lighter primary blue */
-    --sidebar-hover-text-light: 205 70% 28%; /* Darker blue for hover text */
-    --sidebar-border-light: 210 20% 85%;
-
-
-    /* Sky & Cyan for light body gradient */
     --sky-100: 200 80% 95%;
     --white: 0 0% 100%;
     --cyan-50: 185 70% 96%;
+
+    /* Sidebar Light Theme */
+    --sidebar-bg-light: 215 35% 92%; /* Light greyish blue for solid bg */
+    --sidebar-fg-light-rgb: 37, 47, 62; /* For rgb() - Dark blue-grey for text */
+    --sidebar-icon-fg-light-rgb: 30, 40, 55; /* For rgb() - Slightly darker for icons */
+    --sidebar-active-bg-light: 205 70% 48%; /* Primary blue */
+    --sidebar-active-fg-light-rgb: 255, 255, 255; /* White */
+    --sidebar-hover-bg-light: 205 70% 88%; /* Lighter primary blue */
+    --sidebar-hover-fg-light-rgb: 17, 65, 94; /* Darker blue for hover text */
+    --sidebar-border-light: 210 20% 85%;
+    --sidebar-gradient-start-light: 205 75% 90% / 1; /* Lighter blue for gradient, explicit alpha */
+    --sidebar-gradient-end-light: 200 80% 95% / 1;   /* Even lighter blue for gradient, explicit alpha */
+    --sidebar-background-light: linear-gradient(135deg, hsl(var(--sidebar-gradient-start-light)) 0%, hsl(var(--sidebar-gradient-end-light)) 100%);
+
 
     /* Dark Theme: Futuristic, Sleek, Cool */
     --background-dark: 222 80% 6%; /* Deep, rich navy/charcoal */
@@ -77,15 +81,19 @@ body {
     --input-dark: 220 30% 15%;
     --ring-dark: 185 90% 55%;
 
-    --sidebar-background-dark: 222 75% 8%; /* Matches main dark bg or slightly different */
-    --sidebar-text-dark: 210, 30%, 80%;
-    --sidebar-icon-dark: 185, 85%, 60%; /* Primary cyan for icons */
+    /* Sidebar Dark Theme */
+    --sidebar-bg-dark: 222 75% 8%; /* Matches main dark bg or slightly different for solid bg */
+    --sidebar-fg-dark-rgb: 191, 204, 217; /* For rgb() - Light cool grey for text */
+    --sidebar-icon-fg-dark-rgb: 26, 196, 209; /* For rgb() - Primary cyan for icons */
     --sidebar-active-bg-dark: 185 90% 50%; /* Primary cyan */
-    --sidebar-active-text-dark: 222, 80%, 8%; /* Dark contrast */
+    --sidebar-active-fg-dark-rgb: 15, 23, 42; /* Dark contrast */
     --sidebar-hover-bg-dark: 220 30% 15%; /* Slightly lighter dark */
-    --sidebar-hover-text-dark: 185, 90%, 60%; /* Primary cyan for hover text */
+    --sidebar-hover-fg-dark-rgb: 26, 196, 209; /* Primary cyan for hover text */
     --sidebar-border-dark: 210 25% 15%;
-    
+    --sidebar-gradient-start-dark: 222 80% 10% / 1; /* Deep dark blue for gradient, explicit alpha */
+    --sidebar-gradient-end-dark: 220 70% 15% / 1;   /* Slightly lighter deep dark blue, explicit alpha */
+    --sidebar-background-dark: linear-gradient(135deg, hsl(var(--sidebar-gradient-start-dark)) 0%, hsl(var(--sidebar-gradient-end-dark)) 100%);
+
 
     /* Chart Colors */
     --chart-1-light: 205 70% 48%; /* Primary Blue */
@@ -132,13 +140,14 @@ body {
     --input: var(--input-light);
     --ring: var(--ring-light);
 
-    --sidebar-bg: var(--sidebar-background-light);
-    --sidebar-fg: rgb(var(--sidebar-text-light));
-    --sidebar-icon-fg: rgb(var(--sidebar-icon-light));
+    --sidebar-bg: var(--sidebar-bg-light); /* Use this for solid sidebar bg if needed */
+    --sidebar-actual-bg: var(--sidebar-background-light); /* For gradient */
+    --sidebar-fg: rgb(var(--sidebar-fg-light-rgb));
+    --sidebar-icon-fg: rgb(var(--sidebar-icon-fg-light-rgb));
     --sidebar-active-bg: var(--sidebar-active-bg-light);
-    --sidebar-active-fg: rgb(var(--sidebar-active-text-light));
-    --sidebar-hover-bg: var(--sidebar-hover-bg-light);
-    --sidebar-hover-fg: rgb(var(--sidebar-hover-text-light));
+    --sidebar-active-fg: rgb(var(--sidebar-active-fg-light-rgb));
+    --sidebar-hover-bg: hsl(var(--sidebar-hover-bg-light));
+    --sidebar-hover-fg: rgb(var(--sidebar-hover-fg-light-rgb));
     --sidebar-border-color: var(--sidebar-border-light);
 
     --chart-1: var(--chart-1-light);
@@ -169,13 +178,14 @@ body {
     --input: var(--input-dark);
     --ring: var(--ring-dark);
 
-    --sidebar-bg: var(--sidebar-background-dark);
-    --sidebar-fg: rgb(var(--sidebar-text-dark));
-    --sidebar-icon-fg: rgb(var(--sidebar-icon-dark));
+    --sidebar-bg: var(--sidebar-bg-dark); /* Use this for solid sidebar bg if needed */
+    --sidebar-actual-bg: var(--sidebar-background-dark); /* For gradient */
+    --sidebar-fg: rgb(var(--sidebar-fg-dark-rgb));
+    --sidebar-icon-fg: rgb(var(--sidebar-icon-fg-dark-rgb));
     --sidebar-active-bg: var(--sidebar-active-bg-dark);
-    --sidebar-active-fg: rgb(var(--sidebar-active-text-dark));
-    --sidebar-hover-bg: var(--sidebar-hover-bg-dark);
-    --sidebar-hover-fg: rgb(var(--sidebar-hover-text-dark));
+    --sidebar-active-fg: rgb(var(--sidebar-active-fg-dark-rgb));
+    --sidebar-hover-bg: hsl(var(--sidebar-hover-bg-dark));
+    --sidebar-hover-fg: rgb(var(--sidebar-hover-fg-dark-rgb));
     --sidebar-border-color: var(--sidebar-border-dark);
     
     --chart-1: var(--chart-1-dark);
@@ -193,10 +203,8 @@ body {
     box-sizing: border-box;
   }
   html {
-    /* overflow-x: hidden; Removed to let ScrollArea manage its own overflow */
-    /* width: 100%; */
-    /* max-width: 100vw; */
     scroll-behavior: smooth;
+    /* overflow-x: hidden; /* Removed */
   }
   body {
     @apply text-foreground;
@@ -204,6 +212,8 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+     /* width: 100%; */
+    /* max-width: 100vw; */
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold;
@@ -215,20 +225,25 @@ body {
   /* Ensure ScrollArea can work by not overly restricting its parents */
   .main-content-area { /* Applied to <main> tag in AppShell */
     flex-grow: 1; /* Allow main content to take available space */
-    /* overflow-x: hidden; Let specific containers manage this */
+    /* overflow-x: hidden; /* Removed */
     /* max-width: 100vw; */
   }
 }
 
-/* Glassmorphism for Dark Mode - Opt-in utility class */
+/* Styles for glassmorphism - applied to elements with .glassmorphism-card */
+.glassmorphism-card {
+  @apply bg-card/60 border-card/30 backdrop-blur-md;
+  /* For light mode to have a less pronounced glass effect if card itself is already light */
+}
 .dark .glassmorphism-card {
   background-color: hsla(var(--card-foreground-dark), 0.08); /* More subtle dark background */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid hsla(var(--primary-dark), 0.3); /* Subtle border with primary color tint */
-  box-shadow: 0 0 20px hsla(var(--primary-dark), 0.1), /* Softer, more diffused glow */
-              0 6px 12px rgba(0, 0, 0, 0.25); /* Standard subtle shadow for depth */
+  box-shadow: 0 0 10px hsla(var(--primary-dark), 0.1), /* Softer, more diffused glow */
+              0 4px 8px rgba(0, 0, 0, 0.20); /* Standard subtle shadow for depth */
 }
+
 
 /* Card hover effect - Opt-in utility class */
 .interactive-card-hover {
@@ -238,34 +253,39 @@ body {
   @apply shadow-xl transform -translate-y-1 scale-[1.02];
 }
 
+
 /* Gradient text utility */
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
-  font-weight: 700; /* Ensure it's bold */
-  display: inline-block; /* Helps with clipping and layout */
-  line-height: 1.2; /* Adjust for full character visibility */
+  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  display: inline-block; 
+  line-height: 1.2; 
 }
 
 /* Styles for the hover-to-expand sidebar */
 .sidebar-main-container {
   width: var(--sidebar-collapsed-width);
   transition: width var(--sidebar-transition-duration) ease-in-out;
-  @apply bg-sidebar border-r border-[hsl(var(--sidebar-border-color))];
+  background: var(--sidebar-actual-bg); /* Use the gradient variable */
+  @apply border-r border-[hsl(var(--sidebar-border-color))];
 }
-
 .sidebar-main-container:hover {
   width: var(--sidebar-expanded-width);
+  background: var(--sidebar-actual-bg); /* Ensure background persists */
 }
+
 
 .sidebar-header {
   height: var(--sidebar-header-height);
-  @apply flex items-center px-4 border-b border-[hsl(var(--sidebar-border-color))];
+  @apply flex items-baseline px-4 border-b border-[hsl(var(--sidebar-border-color))];
 }
 
 .sidebar-app-name-text {
-  @apply font-semibold transition-opacity duration-200 ease-in-out text-xl ml-2;
+  @apply font-semibold transition-opacity duration-200 ease-in-out ml-2;
 }
-
 .sidebar-main-container:not(:hover) .sidebar-app-name-text {
   @apply opacity-0 pointer-events-none;
 }
@@ -273,7 +293,6 @@ body {
 .sidebar-nav-item-text {
   @apply truncate transition-opacity duration-200 ease-in-out ml-3;
 }
-
 .sidebar-main-container:not(:hover) .sidebar-nav-item-text {
   @apply opacity-0 pointer-events-none ml-0;
 }
@@ -294,7 +313,6 @@ body {
 .sidebar-footer {
     @apply mt-auto border-t border-[hsl(var(--sidebar-border-color))] p-2 opacity-0 transition-opacity duration-200 ease-in-out;
 }
-
 .sidebar-main-container:hover .sidebar-footer {
     @apply opacity-100;
 }
@@ -303,9 +321,9 @@ body {
 /* Mobile specific sidebar styles */
 @layer components {
   .bg-mobile-sidebar-light {
-    background: hsl(var(--sidebar-bg)); /* Uses HSL variable for solid color */
+    background: var(--sidebar-actual-bg); /* Uses HSL variable for gradient */
   }
-  .bg-mobile-sidebar-dark {
-     background: hsl(var(--sidebar-bg)); /* Uses HSL variable for solid color */
+  .dark .bg-mobile-sidebar-dark {
+     background: var(--sidebar-actual-bg); /* Uses HSL variable for gradient */
   }
 }
