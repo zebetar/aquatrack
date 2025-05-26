@@ -8,7 +8,6 @@ import type { WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import { getAllMockUsageRecords } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
-import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
 import { Loader2 } from 'lucide-react';
 import { formatDurationFromHours } from '@/lib/utils';
 
@@ -42,7 +41,6 @@ export default function AdminUsagePage() {
     <Card className="shadow-md mt-6">
       <CardHeader>
         <CardTitle>All Usage Records</CardTitle>
-        {/* <CardDescription>Water is charged at PKR {CORE_WATER_RATE_PER_HOUR} per hour.</CardDescription> */}
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[calc(100vh-12rem)] w-full"> {/* Adjusted height */}
@@ -51,17 +49,15 @@ export default function AdminUsagePage() {
               <TableRow>
                 <TableHead>Customer Name</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Start Time</TableHead>
-                <TableHead>End Time</TableHead>
+                <TableHead>Time Range</TableHead>
                 <TableHead className="text-right">Duration</TableHead>
                 <TableHead className="text-right">Cost (PKR)</TableHead>
-                <TableHead>Recorded By</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {usageRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center"> {/* Adjusted colSpan */}
                     No water usage records found.
                   </TableCell>
                 </TableRow>
@@ -70,11 +66,9 @@ export default function AdminUsagePage() {
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">{record.customerName}</TableCell>
                     <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
-                    <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
-                    <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
+                    <TableCell>{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</TableCell>
                     <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
                     <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
-                    <TableCell>{record.recordedBy === 'admin001' ? 'Admin' : record.recordedBy}</TableCell>
                   </TableRow>
                 ))
               )}

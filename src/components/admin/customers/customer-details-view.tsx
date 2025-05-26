@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
-import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Edit, Save, XCircle } from 'lucide-react';
 import {
@@ -152,7 +151,6 @@ export function CustomerDetailsView({
       <Card>
         <CardHeader>
           <CardTitle>Water Usage History</CardTitle>
-          {/* <CardDescription>Core rate: PKR {CORE_WATER_RATE_PER_HOUR}/hour</CardDescription> */}
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[300px] w-full">
@@ -160,8 +158,7 @@ export function CustomerDetailsView({
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Start Time</TableHead>
-                  <TableHead>End Time</TableHead>
+                  <TableHead>Time Range</TableHead>
                   <TableHead className="text-right">Duration</TableHead>
                   <TableHead className="text-right">Cost (PKR)</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
@@ -169,13 +166,12 @@ export function CustomerDetailsView({
               </TableHeader>
               <TableBody>
                 {usageRecords.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center h-24">No usage records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center h-24">No usage records found.</TableCell></TableRow> {/* Adjusted colSpan */}
                 )}
                 {usageRecords.map(record => (
                   <TableRow key={record.id}>
                     <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
-                    <TableCell>{format(new Date(record.startTime), 'p')}</TableCell>
-                    <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
+                    <TableCell>{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</TableCell>
                     <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
                     <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
                     <TableCell className="text-center">
