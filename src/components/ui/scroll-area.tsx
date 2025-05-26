@@ -17,7 +17,7 @@ const ScrollArea = React.forwardRef<
   >
     <ScrollAreaPrimitive.Viewport
       className="h-full w-full rounded-[inherit]"
-      style={{ overflow: 'auto' }} // Explicitly allow scrolling
+      // Removed style={{ overflow: 'auto' }} to prevent conflict
     >
       {children}
     </ScrollAreaPrimitive.Viewport>
@@ -55,4 +55,3 @@ const ScrollBar = React.forwardRef<
 ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName
 
 export { ScrollArea, ScrollBar }
-
