@@ -18,7 +18,6 @@ export default function AdminUsagePage() {
   const loadUsageData = useCallback(() => {
     setIsLoading(true);
     const records = getAllMockUsageRecords();
-    // Sort by most recent first
     records.sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     setUsageRecords(records);
     setIsLoading(false);
@@ -38,45 +37,46 @@ export default function AdminUsagePage() {
   }
 
   return (
-    <Card className="shadow-md mt-6">
-      <CardHeader>
-        <CardTitle>All Usage Records</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[calc(100vh-12rem)] w-full"> {/* Adjusted height */}
-          <Table className="min-w-[700px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer Name</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time Range</TableHead>
-                <TableHead className="text-right">Duration</TableHead>
-                <TableHead className="text-right">Cost (PKR)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {usageRecords.length === 0 ? (
+    <div className="flex justify-center">
+      <Card className="shadow-md mt-6 w-full max-w-6xl">
+        <CardHeader>
+          <CardTitle>All Usage Records</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[calc(100vh-12rem)] w-full"> 
+            <Table className="min-w-[700px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    No water usage records found.
-                  </TableCell>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time Range</TableHead>
+                  <TableHead className="text-right">Duration</TableHead>
+                  <TableHead className="text-right">Cost (PKR)</TableHead>
                 </TableRow>
-              ) : (
-                usageRecords.map(record => (
-                  <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.customerName}</TableCell>
-                    <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
-                    <TableCell>{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</TableCell>
-                    <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
-                    <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
+              </TableHeader>
+              <TableBody>
+                {usageRecords.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No water usage records found.
+                    </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+                ) : (
+                  usageRecords.map(record => (
+                    <TableRow key={record.id}>
+                      <TableCell className="font-medium">{record.customerName}</TableCell>
+                      <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
+                      <TableCell>{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</TableCell>
+                      <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
+                      <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
-

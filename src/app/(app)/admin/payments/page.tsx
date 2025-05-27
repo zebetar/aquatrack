@@ -17,7 +17,6 @@ export default function AdminPaymentsPage() {
   const loadPaymentData = useCallback(() => {
     setIsLoading(true);
     const records = getAllMockPayments();
-    // Sort by most recent first
     records.sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
     setPayments(records);
     setIsLoading(false);
@@ -37,41 +36,44 @@ export default function AdminPaymentsPage() {
   }
 
   return (
-    <Card className="shadow-md mt-6">
-      <CardHeader>
-        <CardTitle>All Payment Records</CardTitle>
-      </CardHeader>
-      <CardContent>
-         <ScrollArea className="h-[calc(100vh-12rem)] w-full"> {/* Adjusted height */}
-          <Table className="min-w-[600px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer Name</TableHead>
-                <TableHead>Payment Date</TableHead>
-                <TableHead className="text-right">Amount Paid (PKR)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payments.length === 0 ? (
+    <div className="flex justify-center">
+      <Card className="shadow-md mt-6 w-full max-w-6xl">
+        <CardHeader>
+          <CardTitle>All Payment Records</CardTitle>
+        </CardHeader>
+        <CardContent>
+           <ScrollArea className="h-[calc(100vh-12rem)] w-full"> 
+            <Table className="min-w-[600px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
-                    No payment records found.
-                  </TableCell>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead className="text-right">Amount Paid (PKR)</TableHead>
                 </TableRow>
-              ) : (
-                payments.map(payment => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.customerName}</TableCell>
-                    <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
-                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
+              </TableHeader>
+              <TableBody>
+                {payments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      No payment records found.
+                    </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+                ) : (
+                  payments.map(payment => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-medium">{payment.customerName}</TableCell>
+                      <TableCell>{format(new Date(payment.paymentDate), 'PP')}</TableCell>
+                      <TableCell>{format(new Date(payment.paymentDate), 'p')}</TableCell>
+                      <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
-

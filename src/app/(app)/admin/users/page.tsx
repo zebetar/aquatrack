@@ -2,7 +2,7 @@
 "use client";
 
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, WaterUsageRecord } from '@/types'; // Added WaterUsageRecord
+import type { Customer, WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import {
   getAllMockCustomers,
@@ -10,13 +10,14 @@ import {
   getMockCustomerById,
   getMockUsageRecordsByCustomerId,
   getMockPaymentsByCustomerId,
-  getAllMockUsageRecords // Added
+  getAllMockUsageRecords
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
-// Augment Customer type for display purposes
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function AdminUsersPage() {
@@ -29,9 +30,8 @@ export default function AdminUsersPage() {
     setIsLoading(true);
     setTimeout(() => {
       const storedCustomers = getAllMockCustomers();
-      const usageRecords = getAllMockUsageRecords(); // Fetch all usage records
+      const usageRecords = getAllMockUsageRecords(); 
 
-      // Augment customers with total usage hours
       const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
         const customerUsage = usageRecords
           .filter(record => record.customerId === customer.id)
@@ -97,20 +97,22 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <>
-      {/* "Back to Settings" button removed */}
+    <div className="mt-6">
       {isLoading && customers.length > 0 && (
         <div className="my-4 flex items-center justify-center text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           <span>Refreshing user list...</span>
         </div>
       )}
-      <CustomerListTable
-        customers={customers}
-        onCustomerDeleted={handleCustomerDeleted}
-        deletingCustomerId={deletingCustomerId}
-        enableActions={true} // Show actions column on this page
-      />
-    </>
+      <div className="flex justify-center">
+        <CustomerListTable
+          customers={customers}
+          onCustomerDeleted={handleCustomerDeleted}
+          deletingCustomerId={deletingCustomerId}
+          enableActions={true}
+          className="w-full max-w-6xl"
+        />
+      </div>
+    </div>
   );
 }

@@ -54,7 +54,7 @@ export default function OutstandingBillsPage() {
       <Button variant="outline" asChild className="mb-6">
         <Link href="/admin/reports">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Reports
+          <span>Back to Reports</span>
         </Link>
       </Button>
 
@@ -66,17 +66,20 @@ export default function OutstandingBillsPage() {
       )}
 
       {outstandingCustomers.length > 0 ? (
-        <CustomerListTable
-          customers={outstandingCustomers}
-          onCustomerDeleted={() => {
-            fetchOutstandingCustomers(); 
-          }}
-          deletingCustomerId={null}
-          enableActions={false} 
-        />
+        <div className="flex justify-center">
+          <CustomerListTable
+            customers={outstandingCustomers}
+            onCustomerDeleted={() => {
+              fetchOutstandingCustomers(); 
+            }}
+            deletingCustomerId={null}
+            enableActions={false} 
+            className="w-full max-w-6xl"
+          />
+        </div>
       ) : (
         !isLoading && (
-          <div className="rounded-lg border bg-card p-6 text-center shadow-sm glassmorphism-card">
+          <div className="rounded-lg border bg-card p-6 text-center shadow-sm glassmorphism-card max-w-md mx-auto">
             <p className="text-muted-foreground">
               No customers currently have outstanding bills.
             </p>
