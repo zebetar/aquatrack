@@ -9,22 +9,20 @@
     box-sizing: border-box;
   }
   html {
-    /* overflow-y: scroll; /* Ensures scrollbar track is always present */
     overflow-x: hidden; /* Prevent horizontal page scroll globally on html */
   }
 
   body {
-    font-family: var(--font-montserrat), Arial, Helvetica, sans-serif; /* Ensure Montserrat is primary */
+    font-family: var(--font-roboto), Arial, Helvetica, sans-serif; /* Ensure Roboto is primary */
     width: 100%;
     max-width: 100vw;
-    /* overflow-x: hidden; /* Prevent horizontal scroll on body */
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* Light theme specific body background */
   body {
-    background: linear-gradient(to top left, hsl(var(--body-gradient-start-light)), hsl(var(--body-gradient-end-light)));
+    background: linear-gradient(to bottom right, hsl(var(--sky-100)), hsl(var(--white)), hsl(var(--cyan-50)));
   }
 
   /* Dark theme specific body background */
@@ -37,12 +35,11 @@
     /* Light Theme: Clean, Realistic, Aesthetic with Blue & Gold Accents */
     --background-light: 210 40% 98%; /* Very light cool grey - main content area background */
     --foreground-light: 220 25% 25%; /* Dark, desaturated blue-grey */
-    --foreground-light-rgb: 48, 53, 77; /* RGB for --foreground-light */
     --card-light: 0 0% 100%; /* White */
     --card-foreground-light: 220 25% 25%;
     --popover-light: 0 0% 100%;
     --popover-foreground-light: 220 25% 25%;
-    --primary-light: 205 70% 25%; /* Darker professional blue */
+    --primary-light: 205 70% 48%; /* Professional Blue */
     --primary-foreground-light: 0 0% 100%;
     --secondary-light: 210 50% 93%; /* Light, soft cool grey-blue */
     --secondary-foreground-light: 210 70% 30%;
@@ -58,22 +55,22 @@
     --input-light: 210 20% 94%;
     --ring-light: 210 70% 50%;
 
-    /* Aesthetic body gradient (bottom-right to top-left) */
-    --body-gradient-start-light: 200 100% 90%; /* light blue for bottom-right */
-    --body-gradient-end-light: 210 100% 97%;   /* very light, almost white blue for top-left */
+    /* Body gradient colors for light theme */
+    --sky-100: 199 89% 92%;   /* A very light sky blue */
+    --white: 0 0% 100%;       /* Pure white */
+    --cyan-50: 180 81% 95%;   /* A very light cyan */
 
-
-    /* Sidebar Light Theme - Light Aesthetic Blue */
+    /* Sidebar Light Theme - Aesthetic Blue */
     --sidebar-gradient-start-light: 205 75% 88% / 1; /* Aesthetic light blue - right side of "to left" gradient */
     --sidebar-gradient-end-light: 210 70% 90% / 1;   /* Slightly softer aesthetic light blue - left side */
     --sidebar-background-light: linear-gradient(to left, hsl(var(--sidebar-gradient-start-light)), hsl(var(--sidebar-gradient-end-light)));
-    --sidebar-fg-light-rgb: 30, 58, 135; /* Darker blue for text */
-    --sidebar-icon-fg-light-rgb: 30, 58, 135; /* Darker blue for icons */
-    --sidebar-active-bg-light: 205 75% 60%; /* Aesthetic Blue for active item background */
-    --sidebar-active-fg-light-rgb: 48, 53, 77; /* Dark text for active items */
-    --sidebar-hover-bg-light: 205 70% 75%; /* Lighter aesthetic blue for hover */
-    --sidebar-hover-fg-light-rgb: 48, 53, 77; /* Dark text for hover items */
-    --sidebar-border-light: 205 75% 88% / 1; /* Matches sidebar-gradient-start-light */
+    --sidebar-fg-light-rgb: 0, 0, 128; /* Navy Blue */
+    --sidebar-icon-fg-light-rgb: 0, 0, 128; /* Navy Blue */
+    --sidebar-active-bg-light: 190 80% 70%; /* Light Aesthetic Cyan-Blue for active item background */
+    --sidebar-active-fg-light-rgb: 25, 55, 100; /* Darker blue text for active items */
+    --sidebar-hover-bg-light: 200 70% 80%; /* Lighter aesthetic blue for hover */
+    --sidebar-hover-fg-light-rgb: 25, 55, 100; /* Darker blue text for hover items */
+    --sidebar-border-light: 205 75% 88% / 1; /* Matches sidebar-gradient-start-light for seamless look */
 
 
     /* Table Specific Styles - Light Theme */
@@ -89,55 +86,56 @@
     --dialog-gradient-bottom-light: 210 40% 98%;
 
 
-    /* Dark Theme: Lighter, more contrasted */
-    --background-dark: 220 15% 25%; /* Dark cool grey, higher lightness */
-    --foreground-dark: 210 30% 90%; /* Very light cool grey for text */
-    --card-dark: 220 15% 32%; /* Slightly lighter dark cool grey for cards */
-    --card-foreground-dark: 210 30% 90%;
-    --popover-dark: 220 15% 22%; /* Even darker for popovers for depth */
-    --popover-foreground-dark: 210 30% 90%;
-    --primary-dark: 185 90% 35%; /* Vibrant cyan - more visible */
-    --primary-foreground-dark: 220 15% 10%; /* Very dark for text on bright primary */
-    --secondary-dark: 210 20% 40%; /* Muted blue-grey */
-    --secondary-foreground-dark: 210 30% 85%;
-    --muted-dark: 210 15% 35%; /* Slightly lighter muted */
-    --muted-foreground-dark: 210 20% 70%;
-    --accent-dark: 270 70% 65%; /* Vibrant purple - eye-catching */
-    --accent-foreground-dark: 210 30% 90%; /* Light text on accent */
-    --destructive-dark: 0 65% 50%;
+    /* Dark Theme: Deep, Desaturated Navy/Charcoal with Vibrant Accents */
+    --background-dark: 222 40% 12%; /* Deep, desaturated navy/charcoal */
+    --foreground-dark: 210 30% 85%; /* Light cool grey */
+    --card-dark: 222 40% 15%; /* Slightly lighter than background */
+    --card-foreground-dark: 210 30% 85%;
+    --popover-dark: 222 40% 10%;
+    --popover-foreground-dark: 210 30% 85%;
+    --primary-dark: 185 90% 55%; /* Vibrant Cyan/Light Blue */
+    --primary-foreground-dark: 222 40% 5%; /* Very dark for contrast */
+    --secondary-dark: 210 30% 25%; /* Muted dark blue-grey */
+    --secondary-foreground-dark: 210 30% 75%;
+    --muted-dark: 210 25% 22%;
+    --muted-foreground-dark: 210 20% 65%;
+    --accent-dark: 40 90% 60%;  /* Bright Gold/Orange for futuristic accent */
+    --accent-foreground-dark: 222 40% 10%;
+    --destructive-dark: 0 70% 50%;
     --destructive-foreground-dark: 0 0% 98%;
-    --success-dark: 120 50% 30%; /* Dark Green for success badge background */
-    --success-foreground-dark: 0 0% 100%; /* White text for success badge */
-    --border-dark: 210 15% 40%; /* More visible border */
-    --input-dark: 210 15% 38%; /* Distinct input background */
-    --ring-dark: 190 80% 65%; /* Ring color matching primary */
+    --success-dark: 120 50% 30%;
+    --success-foreground-dark: 0 0% 100%;
+    --border-dark: 210 20% 30%; /* Slightly more visible border */
+    --input-dark: 210 25% 20%; /* Distinct input background */
+    --ring-dark: 185 80% 65%; /* Ring color matching primary */
 
     /* Auth Page Gradient Dark */
-    --auth-gradient-start-dark: 220 25% 22%;
-    --auth-gradient-end-dark: 230 30% 26%;
+    --auth-gradient-start-dark: 220 25% 18%;
+    --auth-gradient-end-dark: 230 30% 22%;
 
-    /* Sidebar Dark Theme - Lighter, more distinct */
-    --sidebar-gradient-start-dark: 220 60% 12% / 1; /* Darker rich blue for the right side */
-    --sidebar-gradient-end-dark: 215 55% 18% / 1;   /* Dark rich blue for the left side */
+    /* Sidebar Dark Theme - Richer, Contrasting */
+    --sidebar-gradient-start-dark: 220 50% 8% / 1; /* Very dark rich blue for the right side */
+    --sidebar-gradient-end-dark: 215 45% 12% / 1;   /* Dark rich blue for the left side */
     --sidebar-background-dark: linear-gradient(to left, hsl(var(--sidebar-gradient-start-dark)), hsl(var(--sidebar-gradient-end-dark)));
-    --sidebar-fg-dark-rgb: 80, 120, 170; /* Darker blue for inactive text */
-    --sidebar-icon-fg-dark-rgb: 80, 120, 170; /* Darker blue for inactive icons */
-    --sidebar-active-bg-dark: 195 85% 45%; /* Active background - bright cyan, distinct */
-    --sidebar-active-fg-dark-rgb: 230, 245, 255; /* Very light text for active items for contrast */
-    --sidebar-hover-bg-dark: 220 40% 30%; /* Hover background - slightly lighter than sidebar bg */
-    --sidebar-hover-fg-dark-rgb: 200, 220, 240; /* Brighter text on hover */
-    --sidebar-border-dark: 220 60% 12% / 1; /* Matches sidebar-gradient-start-dark */
+    --sidebar-fg-dark-rgb: 100, 160, 220; /* Contrasting light blue */
+    --sidebar-icon-fg-dark-rgb: 100, 160, 220; /* Contrasting light blue */
+    --sidebar-active-bg-dark: 185 90% 50%; /* Vibrant Cyan/Teal from main theme */
+    --sidebar-active-fg-dark-rgb: 230, 245, 255; /* Very light text for active items */
+    --sidebar-hover-bg-dark: 220 40% 20%; /* Hover background - distinct from sidebar bg */
+    --sidebar-hover-fg-dark-rgb: 170, 210, 240; /* Brighter text on hover */
+    --sidebar-border-dark: 220 50% 8% / 1; /* Matches sidebar-gradient-start-dark for seamless look */
+
 
     /* Table Specific Styles - Dark Theme */
-    --table-header-gradient-start-dark: 220 15% 35%;
-    --table-header-gradient-end-dark: 220 15% 38%;
+    --table-header-gradient-start-dark: 222 40% 18%;
+    --table-header-gradient-end-dark: 222 40% 20%;
     --table-row-gradient-start-dark: hsl(var(--card-dark));
     --table-row-gradient-end-dark: hsl(var(--card-dark));
-    --table-row-hover-bg-dark: 220 15% 40%; /* Slightly lighter for hover */
+    --table-row-hover-bg-dark: 222 40% 22%; /* Slightly lighter for hover */
 
     /* Dialog background gradient dark */
-    --dialog-gradient-top-dark: 220 15% 35%;
-    --dialog-gradient-bottom-dark: 220 15% 38%;
+    --dialog-gradient-top-dark: 222 40% 18%;
+    --dialog-gradient-bottom-dark: 222 40% 20%;
 
 
     /* Chart Colors */
@@ -147,11 +145,11 @@
     --chart-4-light: 220 50% 65%; /* Soft Cool Blue */
     --chart-5-light: 330 65% 70%; /* Soft Pink/Rose */
 
-    --chart-1-dark: 190 75% 60%; /* Bright Cyan */
-    --chart-2-dark: 270 65% 70%;  /* Vivid Purple */
-    --chart-3-dark: 40 85% 60%; /* Bright Gold/Orange */
-    --chart-4-dark: 230 70% 75%; /* Bright Cool Blue */
-    --chart-5-dark: 170 65% 55%; /* Bright Green */
+    --chart-1-dark: 185 85% 60%; /* Bright Cyan */
+    --chart-2-dark: 270 70% 70%;  /* Vivid Purple/Magenta */
+    --chart-3-dark: 40 90% 65%; /* Bright Gold/Orange */
+    --chart-4-dark: 230 75% 75%; /* Bright Cool Blue */
+    --chart-5-dark: 170 70% 60%; /* Bright Green */
 
     --radius: 0.75rem;
 
@@ -293,6 +291,8 @@
 }
 .glassmorphism-card:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: hsl(var(--primary-light)); /* Primary color border on hover for light mode */
+  /* transform: translateY(-3px) scale(1.02); Removed transform to prevent dialog jitter */
 }
 
 .dark .glassmorphism-card {
@@ -306,6 +306,8 @@
 .dark .glassmorphism-card:hover {
   box-shadow: 0 0 20px hsla(var(--primary-dark), 0.25), /* Enhanced glow */
               0 6px 12px rgba(0, 0, 0, 0.3);
+  border-color: hsl(var(--primary-dark)); /* Primary color border on hover for dark mode */
+  /* transform: translateY(-3px) scale(1.02); Removed transform */
 }
 
 

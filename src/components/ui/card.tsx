@@ -31,10 +31,10 @@ const CardHeader = React.forwardRef<
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLHeadingElement, // Changed from HTMLParagraphElement for semantic correctness with h-tags
+  HTMLHeadingElement, 
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, children, ...props }, ref) => (
-  <h3 // Changed from div to h3 for semantic heading
+  <h3 
     ref={ref}
     className={cn(
       "text-xl md:text-2xl font-bold leading-none tracking-tight", // Responsive font size
@@ -80,4 +80,3 @@ const CardFooter = React.forwardRef<
 CardFooter.displayName = "CardFooter"
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
-

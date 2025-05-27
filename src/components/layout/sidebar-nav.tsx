@@ -15,7 +15,7 @@ import {
 
 interface SidebarNavProps {
   items: NavItem[];
-  onItemClick?: () => void; // Callback for mobile sidebar to close
+  onItemClick?: () => void; 
 }
 
 export function SidebarNav({ items, onItemClick }: SidebarNavProps) {
@@ -36,12 +36,16 @@ export function SidebarNav({ items, onItemClick }: SidebarNavProps) {
             <>
               <Icon className={cn(
                 "h-5 w-5 shrink-0", 
-                isActive ? "text-[rgb(var(--sidebar-active-fg-rgb))]" : "text-[rgb(var(--sidebar-icon-fg-rgb))] group-hover:text-[rgb(var(--sidebar-hover-fg-rgb))]"
+                isActive 
+                  ? "text-[rgb(var(--sidebar-active-fg-rgb))]" 
+                  : "text-[rgb(var(--sidebar-icon-fg-rgb))] group-hover:text-[rgb(var(--sidebar-hover-fg-rgb))]"
               )} />
               <span
                 className={cn(
                   "sidebar-nav-item-text text-sm",
-                  isActive ? "font-semibold text-[rgb(var(--sidebar-active-fg-rgb))]" : "text-[rgb(var(--sidebar-fg-rgb))] group-hover:text-[rgb(var(--sidebar-hover-fg-rgb))]"
+                  isActive 
+                    ? "font-semibold text-[rgb(var(--sidebar-active-fg-rgb))]" 
+                    : "text-[rgb(var(--sidebar-fg-rgb))] group-hover:text-[rgb(var(--sidebar-hover-fg-rgb))]"
                 )}
               >
                 {item.title}
@@ -59,8 +63,9 @@ export function SidebarNav({ items, onItemClick }: SidebarNavProps) {
 
           const linkClasses = cn(
             "flex items-center rounded-md px-3 py-2.5 transition-colors duration-150 ease-in-out",
-            "hover:bg-[var(--sidebar-hover-bg-color)]", 
-            isActive ? "bg-[var(--sidebar-active-bg-color)]" : "", 
+            isActive 
+              ? "bg-[var(--sidebar-active-bg-color)]"
+              : "hover:bg-[var(--sidebar-hover-bg-color)]", 
             item.disabled && "cursor-not-allowed opacity-60 hover:bg-transparent"
           );
 

@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
-  const [openMobile, setOpenMobile] = React.useState(false); // For mobile sidebar
+  const [openMobile, setOpenMobile] = React.useState(false);
 
   if (loading) {
     return (
@@ -28,8 +28,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    // This typically shouldn't be reached if AuthContext redirects correctly,
-    // but it's a good fallback.
     return null;
   }
 
@@ -39,10 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
      <div className="sidebar-header">
       <Link href={user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard'} className="flex items-center gap-2 text-[rgb(var(--sidebar-icon-fg-light-rgb))] dark:text-[rgb(var(--sidebar-icon-fg-dark-rgb))] hover:text-[rgb(var(--sidebar-hover-fg-light-rgb))] dark:hover:text-[rgb(var(--sidebar-hover-fg-dark-rgb))]">
         <Droplets className="h-7 w-7 text-primary shrink-0" />
-        <span className={cn(
-          "sidebar-app-name-text font-bold text-foreground",
-          "group-[.sidebar-main-container]:group-hover:opacity-100"
-          )}>
+        <span className="sidebar-app-name-text text-2xl text-blue-700 dark:text-blue-400">
             AquaTrack
         </span>
       </Link>
@@ -59,10 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
   
   const desktopSidebarFooter = (
-    <div className={cn(
-        "sidebar-footer p-2",
-        "group-[.sidebar-main-container]:group-hover:opacity-100"
-        )}>
+    <div className="sidebar-footer p-2">
         <UserNav />
     </div>
   );
@@ -93,41 +85,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         {/* Mobile Menu Trigger */}
-        <div className="fixed top-4 left-4 z-50 md:hidden">
-          <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="shrink-0 text-foreground">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className={cn(
-                "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r border-[hsl(var(--sidebar-border-color))] rounded-r-lg",
-                "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-light-rgb))] dark:text-[rgb(var(--sidebar-fg-dark-rgb))]" 
-              )}
-            >
-              <SheetHeader className="sr-only">
-                <SheetTitle>Navigation Menu</SheetTitle>
-              </SheetHeader>
-              {sidebarHeaderContent}
-              {sidebarNavContent}
-              {mobileSidebarFooter}
-            </SheetContent>
-          </Sheet>
-        </div>
-        
-        {/* UserNav for Desktop Top Right - REMOVED */}
-        {/* 
-        {!isMobile && (
-          <div className="fixed top-4 right-4 z-50">
-            <UserNav />
+        {isMobile && (
+          <div className="fixed top-4 left-4 z-50 md:hidden">
+            <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="shrink-0 text-foreground bg-card/80 dark:bg-card/80 backdrop-blur-sm border border-border/50 dark:border-border/50">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle navigation menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side="left"
+                className={cn(
+                  "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r rounded-r-lg",
+                  "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-light-rgb))] dark:text-[rgb(var(--sidebar-fg-dark-rgb))]" 
+                )}
+              >
+                <SheetHeader className="sr-only"> {/* Visually hidden title for accessibility */}
+                  <SheetTitle>Navigation Menu</SheetTitle>
+                </SheetHeader>
+                {sidebarHeaderContent}
+                {sidebarNavContent}
+                {mobileSidebarFooter}
+              </SheetContent>
+            </Sheet>
           </div>
         )}
-        */}
         
-        <main className="main-content-area flex-1 p-4 pt-16 sm:p-6 md:pt-6"> {/* Adjusted top padding */}
+        <main className="main-content-area flex-1 p-4 pt-16 sm:p-6 md:pt-6">
           {children}
         </main>
       </div>
