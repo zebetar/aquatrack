@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,12 +26,10 @@ export function MonthlySupplyDetailsDialog({ isOpen, onClose, data }: MonthlySup
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg glassmorphism-card">
-        <DialogHeader>
-          <DialogTitle>Monthly Water Supply Details - {currentMonthYear}</DialogTitle>
-          <DialogDescription>
-            Breakdown of water usage by customer for the current month.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-lg dialog-gradient-background"> {/* Applied gradient */}
+        <DialogHeader className="pt-2"> {/* Added padding top */}
+          <DialogTitle>Monthly Water Supply - {currentMonthYear}</DialogTitle>
+          {/* Description removed as per previous request */}
         </DialogHeader>
         
         <ScrollArea className="h-[400px] w-full pr-4 mt-4">

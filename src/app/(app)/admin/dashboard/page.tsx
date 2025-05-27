@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, BellRing } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, BellRing, Sparkles, Briefcase } from 'lucide-react';
 import { useState, useEffect, useCallback, memo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -17,7 +17,7 @@ import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
 import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog';
-import { MonthlyRevenueDetailsDialog } from '@/components/admin/dashboard/monthly-revenue-details-dialog'; // Added import
+import { MonthlyRevenueDetailsDialog } from '@/components/admin/dashboard/monthly-revenue-details-dialog';
 
 const KeyMetricCard = memo(({ 
   title, 
@@ -39,8 +39,10 @@ const KeyMetricCard = memo(({
   const cardInnerContent = (
     <>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-5 w-5 text-muted-foreground" />
+        <CardTitle className="text-base font-semibold">{title}</CardTitle> {/* Updated title style */}
+        <div className="p-2 bg-accent/10 dark:bg-accent/20 rounded-full group-hover:bg-accent/20 dark:group-hover:bg-accent/30 transition-colors">
+          <Icon className="h-5 w-5 text-primary dark:text-accent" /> {/* Icon styling */}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
@@ -50,14 +52,14 @@ const KeyMetricCard = memo(({
   );
 
   const cardClasses = cn(
-    "shadow-md glassmorphism-card", 
+    "glassmorphism-card transition-all duration-300 ease-out", // Base class for all cards
     className,
-    href || onClick ? "hover:shadow-lg transition-all duration-150 ease-in-out hover:border-primary" : ""
+    (href || onClick) && "hover:shadow-lg hover:border-primary/50 dark:hover:border-accent/70 hover:-translate-y-1" // Interactive hover
   );
 
   if (href && !onClick) {
     return (
-      <Link href={href} className="block h-full group">
+      <Link href={href} className="block h-full group"> {/* Added group class */}
         <Card className={cardClasses}>
           {cardInnerContent}
         </Card>
@@ -67,7 +69,7 @@ const KeyMetricCard = memo(({
   
   if (onClick) {
     return (
-       <div onClick={onClick} className="cursor-pointer h-full group">
+       <div onClick={onClick} className="cursor-pointer h-full group"> {/* Added group class */}
         <Card className={cn(cardClasses, "h-full")}>
           {cardInnerContent}
         </Card>
@@ -97,13 +99,13 @@ export default function AdminDashboardPage() {
   const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
   const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]);
 
-  const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false); // Added state for new dialog
+  const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false);
 
 
   const loadDashboardData = useCallback(() => {
     const customers = getAllMockCustomers();
     const usageRecords = getAllMockUsageRecords();
-    const payments = getAllMockPayments();
+    // const payments = getAllMockPayments(); // Not directly used for main metrics, but for dialogs if needed
     const notifications = getAllAdminNotifications();
 
     setTotalCustomers(customers.length);
@@ -129,7 +131,6 @@ export default function AdminDashboardPage() {
     });
     setRecentNotifications(validNotifications.slice(0, 3)); 
 
-    // Prepare data for monthly supply & revenue dialogs
     const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
     customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
 
@@ -143,8 +144,8 @@ export default function AdminDashboardPage() {
     
     const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
       .map(([id, data]) => ({ id, ...data }))
-      .filter(item => item.usageHours > 0 || item.cost > 0) // Keep if there's usage or cost for either dialog
-      .sort((a,b) => b.usageHours - a.usageHours); // Primary sort for supply dialog
+      .filter(item => item.usageHours > 0 || item.cost > 0) 
+      .sort((a,b) => b.usageHours - a.usageHours);
     setCustomersWithMonthlyUsageData(processedDialogData);
 
   }, []);
@@ -164,7 +165,7 @@ export default function AdminDashboardPage() {
       href: '/admin/customers'
     },
     { 
-      title: 'Monthly Supply (Hours)', 
+      title: 'Monthly Supply', 
       value: formatDurationFromHours(monthlySupply), 
       icon: Droplets, 
       description: 'Current month',
@@ -175,7 +176,7 @@ export default function AdminDashboardPage() {
       value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, 
       icon: CreditCard, 
       description: 'Current month',
-      onClick: () => setIsMonthlyRevenueDialogOpen(true) // Changed to open new dialog
+      onClick: () => setIsMonthlyRevenueDialogOpen(true)
     },
     { 
       title: 'Outstanding Bills', 
@@ -186,14 +187,13 @@ export default function AdminDashboardPage() {
     },
   ];
   
-  // Prepare data for the revenue dialog (customers who generated revenue this month)
   const customersWithMonthlyRevenueData = customersWithMonthlyUsageData
     .filter(c => c.cost > 0)
     .sort((a, b) => b.cost - a.cost);
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6"> {/* Increased gap */}
         {metrics.map(metric => (
           <KeyMetricCard 
             key={metric.title} 
@@ -203,12 +203,11 @@ export default function AdminDashboardPage() {
             description={metric.description}
             href={metric.href}
             onClick={metric.onClick}
-            className={metric.href || metric.onClick ? "hover:ring-2 hover:ring-primary/50" : ""}
           />
         ))}
       </div>
-      <div className="mt-6">
-        <Card className="shadow-md glassmorphism-card"> 
+      <div className="mt-8"> {/* Increased margin */}
+        <Card className="glassmorphism-card"> 
           <CardHeader>
             <CardTitle>Recent Notifications</CardTitle>
           </CardHeader>
@@ -218,13 +217,15 @@ export default function AdminDashboardPage() {
             ) : (
               <ul className="space-y-3">
                 {recentNotifications.map(activity => (
-                  <li key={activity.id} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/30">
-                    <BellRing className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
+                  <li key={activity.id} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors"> {/* Added padding and transition */}
+                    <div className="p-1.5 bg-primary/10 dark:bg-primary/20 rounded-full">
+                       <BellRing className="h-5 w-5 text-primary flex-shrink-0" />
+                    </div>
                     <div>
                       <p className="text-sm">{activity.message}</p>
                       <p className="text-xs text-muted-foreground">{!isNaN(new Date(activity.createdAt).getTime()) ? format(new Date(activity.createdAt), 'PP p') : 'Invalid date'}</p>
                        {activity.linkTo && (
-                         <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary">
+                         <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary dark:text-accent">
                            <Link href={activity.linkTo}>View</Link>
                          </Button>
                       )}
@@ -233,7 +234,7 @@ export default function AdminDashboardPage() {
                 ))}
               </ul>
             )}
-            <Button variant="outline" asChild className="mt-4">
+            <Button variant="outline" asChild className="mt-6"> {/* Increased margin */}
               <Link href="/admin/notifications">View All Notifications</Link>
             </Button>
           </CardContent>
@@ -257,5 +258,4 @@ export default function AdminDashboardPage() {
     </>
   );
 }
-
     

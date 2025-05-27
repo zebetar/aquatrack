@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -24,12 +23,10 @@ interface OutstandingBillsDialogProps {
 export function OutstandingBillsDialog({ isOpen, onClose, data }: OutstandingBillsDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg glassmorphism-card">
-        <DialogHeader>
-          <DialogTitle>Customers with Outstanding Bills</DialogTitle>
-          <DialogDescription>
-            List of customers who have a pending balance.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-lg dialog-gradient-background"> {/* Applied gradient */}
+        <DialogHeader className="pt-2"> {/* Added padding top */}
+          <DialogTitle>Outstanding Bills</DialogTitle>
+           {/* Description removed as per previous request */}
         </DialogHeader>
         
         <ScrollArea className="h-[400px] w-full pr-4 mt-4">
@@ -38,7 +35,7 @@ export function OutstandingBillsDialog({ isOpen, onClose, data }: OutstandingBil
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer Name</TableHead>
-                  <TableHead className="text-right">Outstanding Balance (PKR)</TableHead>
+                  <TableHead className="text-right">Balance (PKR)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
