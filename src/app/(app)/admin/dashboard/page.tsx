@@ -54,12 +54,12 @@ const KeyMetricCard = memo(({
   const cardClasses = cn(
     "glassmorphism-card transition-all duration-300 ease-out", // Base class for all cards
     className,
-    (href || onClick) && "hover:shadow-lg hover:border-primary/50 dark:hover:border-accent/70 hover:-translate-y-1" // Interactive hover
+    (href || onClick) && "hover:shadow-lg hover:border-primary/50 dark:hover:border-accent/70 hover:-translate-y-1 cursor-pointer group" 
   );
 
   if (href && !onClick) {
     return (
-      <Link href={href} className="block h-full group"> {/* Added group class */}
+      <Link href={href} className="block h-full group">
         <Card className={cardClasses}>
           {cardInnerContent}
         </Card>
@@ -69,7 +69,7 @@ const KeyMetricCard = memo(({
   
   if (onClick) {
     return (
-       <div onClick={onClick} className="cursor-pointer h-full group"> {/* Added group class */}
+       <div onClick={onClick} className="cursor-pointer h-full group">
         <Card className={cn(cardClasses, "h-full")}>
           {cardInnerContent}
         </Card>
@@ -193,7 +193,7 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6"> {/* Increased gap */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
         {metrics.map(metric => (
           <KeyMetricCard 
             key={metric.title} 
@@ -206,7 +206,7 @@ export default function AdminDashboardPage() {
           />
         ))}
       </div>
-      <div className="mt-8"> {/* Increased margin */}
+      <div className="mt-8">
         <Card className="glassmorphism-card"> 
           <CardHeader>
             <CardTitle>Recent Notifications</CardTitle>
@@ -217,7 +217,7 @@ export default function AdminDashboardPage() {
             ) : (
               <ul className="space-y-3">
                 {recentNotifications.map(activity => (
-                  <li key={activity.id} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors"> {/* Added padding and transition */}
+                  <li key={activity.id} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors">
                     <div className="p-1.5 bg-primary/10 dark:bg-primary/20 rounded-full">
                        <BellRing className="h-5 w-5 text-primary flex-shrink-0" />
                     </div>
@@ -234,8 +234,10 @@ export default function AdminDashboardPage() {
                 ))}
               </ul>
             )}
-            <Button variant="outline" asChild className="mt-6"> {/* Increased margin */}
-              <Link href="/admin/notifications">View All Notifications</Link>
+            <Button variant="outline" asChild className="mt-6">
+              <Link href="/admin/notifications">
+                <span>View All Notifications</span>
+              </Link>
             </Button>
           </CardContent>
         </Card>
