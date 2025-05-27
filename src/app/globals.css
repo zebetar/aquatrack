@@ -10,16 +10,15 @@
   }
   html {
     scroll-behavior: smooth;
-    /* overflow-x: hidden; Removed to let ScrollArea handle its own internal overflow */
-    /* overflow-y: scroll; /* Always show scrollbar to prevent layout shifts */
+    /* overflow-y: scroll; /* Ensures scrollbar track is always present, preventing layout shifts */
+    /* overflow-x: hidden; /* Prevent horizontal page scroll globally on html */
   }
 
   body {
-    font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
+    font-family: var(--font-montserrat), Arial, Helvetica, sans-serif; /* Ensure Montserrat is primary */
     width: 100%;
     max-width: 100vw;
     /* overflow-x: hidden; /* Prevent horizontal scroll on body */
-    /* overflow-y will be default 'auto' or 'scroll' if content exceeds viewport */
   }
 
   /* Light theme specific body background */
@@ -59,15 +58,16 @@
     --ring-light: 210 70% 50%;
 
     /* Aesthetic body gradient (bottom-right to top-left) */
-    --body-gradient-start-light: 190 65% 88%; /* Soft aqua/teal for bottom-right */
-    --body-gradient-end-light: 210 55% 96%;   /* Very light cool blue for top-left */
+    --body-gradient-start-light: 200 100% 90%; /* light blue for bottom-right */
+    --body-gradient-end-light: 210 100% 97%;   /* very light, almost white blue for top-left */
+
 
     /* Sidebar Light Theme - Light Aesthetic Blue */
-    --sidebar-gradient-start-light: 205 75% 88% / 1; /* Aesthetic light blue */
-    --sidebar-gradient-end-light: 210 70% 90% / 1;   /* Slightly softer aesthetic light blue */
+    --sidebar-gradient-start-light: 205 75% 88% / 1; /* Aesthetic light blue - right side of "to left" gradient */
+    --sidebar-gradient-end-light: 210 70% 90% / 1;   /* Slightly softer aesthetic light blue - left side */
     --sidebar-background-light: linear-gradient(to left, hsl(var(--sidebar-gradient-start-light)), hsl(var(--sidebar-gradient-end-light)));
-    --sidebar-fg-light-rgb: 20, 40, 80; /* Very dark, almost navy blue */
-    --sidebar-icon-fg-light-rgb: 20, 40, 80; /* Very dark, almost navy blue */
+    --sidebar-fg-light-rgb: 30, 58, 135; /* Darker blue for text */
+    --sidebar-icon-fg-light-rgb: 30, 58, 135; /* Darker blue for icons */
     --sidebar-active-bg-light: 205 75% 60%; /* Aesthetic Blue for active item background */
     --sidebar-active-fg-light-rgb: 48, 53, 77; /* Dark text for active items */
     --sidebar-hover-bg-light: 205 70% 75%; /* Lighter aesthetic blue for hover */
@@ -89,54 +89,54 @@
 
 
     /* Dark Theme: Lighter, more contrasted */
-    --background-dark: 220 15% 15%; /* Dark cool grey, not black */
+    --background-dark: 220 15% 25%; /* Dark cool grey, higher lightness (was 15%) */
     --foreground-dark: 210 30% 90%; /* Very light cool grey for text */
-    --card-dark: 220 15% 20%; /* Slightly lighter dark cool grey for cards */
+    --card-dark: 220 15% 32%; /* Slightly lighter dark cool grey for cards (was 20%, then 28%) */
     --card-foreground-dark: 210 30% 90%;
-    --popover-dark: 220 15% 12%; /* Even darker for popovers for depth */
+    --popover-dark: 220 15% 22%; /* Even darker for popovers for depth (was 12%) */
     --popover-foreground-dark: 210 30% 90%;
-    --primary-dark: 190 80% 55%; /* Bright cyan - more visible */
+    --primary-dark: 185 90% 35%; /* Vibrant cyan - more visible */
     --primary-foreground-dark: 220 15% 10%; /* Very dark for text on bright primary */
-    --secondary-dark: 210 20% 30%; /* Muted blue-grey */
-    --secondary-foreground-dark: 210 30% 80%;
-    --muted-dark: 210 15% 25%; /* Slightly lighter muted */
-    --muted-foreground-dark: 210 20% 65%;
+    --secondary-dark: 210 20% 40%; /* Muted blue-grey (was 30%) */
+    --secondary-foreground-dark: 210 30% 85%; /* (was 80%) */
+    --muted-dark: 210 15% 35%; /* Slightly lighter muted (was 25%, then 28%) */
+    --muted-foreground-dark: 210 20% 70%; /* (was 65%) */
     --accent-dark: 270 70% 65%; /* Vibrant purple - eye-catching */
     --accent-foreground-dark: 210 30% 90%; /* Light text on accent */
     --destructive-dark: 0 65% 50%;
     --destructive-foreground-dark: 0 0% 98%;
     --success-dark: 120 50% 30%;
     --success-foreground-dark: 0 0% 100%;
-    --border-dark: 210 15% 28%; /* More visible border */
-    --input-dark: 210 15% 22%; /* Distinct input background */
+    --border-dark: 210 15% 40%; /* More visible border (was 28%, then 35%) */
+    --input-dark: 210 15% 38%; /* Distinct input background (was 22%, then 30%) */
     --ring-dark: 190 80% 65%; /* Ring color matching primary */
 
     /* Auth Page Gradient Dark */
-    --auth-gradient-start-dark: 220 25% 18%;
-    --auth-gradient-end-dark: 230 30% 22%;
+    --auth-gradient-start-dark: 220 25% 22%; /* (was 18%) */
+    --auth-gradient-end-dark: 230 30% 26%; /* (was 22%) */
 
     /* Sidebar Dark Theme - Lighter, more distinct */
-    --sidebar-gradient-start-dark: 220 20% 18% / 1;   /* Right side of "to left" gradient */
-    --sidebar-gradient-end-dark: 215 20% 22% / 1;     /* Left side */
+    --sidebar-gradient-start-dark: 220 20% 28% / 1;   /* Right side of "to left" gradient (was 22%) */
+    --sidebar-gradient-end-dark: 215 20% 32% / 1;     /* Left side (was 25%) */
     --sidebar-background-dark: linear-gradient(to left, hsl(var(--sidebar-gradient-start-dark)), hsl(var(--sidebar-gradient-end-dark)));
-    --sidebar-fg-dark-rgb: 190, 210, 230; /* Light blueish grey text */
-    --sidebar-icon-fg-dark-rgb: 190, 210, 230;
-    --sidebar-active-bg-dark: 190 80% 50%; /* Active background - bright cyan, distinct */
+    --sidebar-fg-dark-rgb: 210, 30%, 85%; /* Light blueish grey text */
+    --sidebar-icon-fg-dark-rgb: 210, 30%, 85%;
+    --sidebar-active-bg-dark: 195 85% 45%; /* Active background - bright cyan, distinct */
     --sidebar-active-fg-dark-rgb: 20, 30, 40; /* Dark text for active items for contrast */
-    --sidebar-hover-bg-dark: 220 20% 25%; /* Hover background - slightly lighter than sidebar bg */
+    --sidebar-hover-bg-dark: 220 20% 35%; /* Hover background - slightly lighter than sidebar bg (was 30%) */
     --sidebar-hover-fg-dark-rgb: 200, 220, 240; /* Brighter text on hover */
-    --sidebar-border-dark: 220 20% 18%; /* Matches sidebar-gradient-start-dark */
+    --sidebar-border-dark: 220 20% 28%; /* Matches sidebar-gradient-start-dark */
 
     /* Table Specific Styles - Dark Theme */
-    --table-header-gradient-start-dark: 220 15% 22%;
-    --table-header-gradient-end-dark: 220 15% 25%;
+    --table-header-gradient-start-dark: 220 15% 35%; /* (was 30%) */
+    --table-header-gradient-end-dark: 220 15% 38%;   /* (was 32%) */
     --table-row-gradient-start-dark: hsl(var(--card-dark));
     --table-row-gradient-end-dark: hsl(var(--card-dark));
-    --table-row-hover-bg-dark: 220 15% 28%; /* Slightly lighter for hover */
+    --table-row-hover-bg-dark: 220 15% 40%; /* Slightly lighter for hover (was 33%) */
 
     /* Dialog background gradient dark */
-    --dialog-gradient-top-dark: 220 15% 18%;
-    --dialog-gradient-bottom-dark: 220 15% 20%;
+    --dialog-gradient-top-dark: 220 15% 30%; /* (was 26%) */
+    --dialog-gradient-bottom-dark: 220 15% 33%; /* (was 29%) */
 
 
     /* Chart Colors */
@@ -285,9 +285,11 @@
 
 /* Styles for glassmorphism - applied to elements with .glassmorphism-card */
 .glassmorphism-card {
-  background: hsl(var(--card-light)); /* Opaque white for light mode */
+  background: hsla(0 0% 100% / 0.2); /* Semi-transparent white for light mode */
   border: 1px solid hsla(var(--border-light), 0.5); /* Subtle border for light mode */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Softer shadow for light mode */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .dark .glassmorphism-card {
   background-color: hsla(var(--primary-dark), 0.08); /* Subtle primary tint */
@@ -421,3 +423,26 @@
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
+
+/* Table padding adjustments */
+@layer components {
+  .table-compact th, .table-compact td {
+    @apply px-2 py-2; /* Reduced padding for all cells */
+  }
+  .table-compact th:first-child, .table-compact td:first-child {
+    @apply pl-3; /* Slightly more padding for the first column */
+  }
+  .table-compact th:last-child, .table-compact td:last-child {
+    @apply pr-3; /* Slightly more padding for the last column */
+  }
+}
+
+/* Ensure main content area has consistent top padding */
+.main-content-area {
+  @apply pt-6; /* Base top padding */
+}
+/* Adjust for fixed UserNav on desktop if it's still present */
+.main-content-area-with-fixed-header {
+  @apply pt-20; /* Increased padding if there's a fixed header/UserNav */
+}
+    
