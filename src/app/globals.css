@@ -9,7 +9,6 @@
     box-sizing: border-box;
   }
   html {
-    scroll-behavior: smooth;
     /* overflow-y: scroll; /* Ensures scrollbar track is always present */
     overflow-x: hidden; /* Prevent horizontal page scroll globally on html */
   }
@@ -74,7 +73,7 @@
     --sidebar-active-fg-light-rgb: 48, 53, 77; /* Dark text for active items */
     --sidebar-hover-bg-light: 205 70% 75%; /* Lighter aesthetic blue for hover */
     --sidebar-hover-fg-light-rgb: 48, 53, 77; /* Dark text for hover items */
-    --sidebar-border-light: 205 75% 88%; /* Matches sidebar-gradient-start-light */
+    --sidebar-border-light: 205 75% 88% / 1; /* Matches sidebar-gradient-start-light */
 
 
     /* Table Specific Styles - Light Theme */
@@ -107,8 +106,8 @@
     --accent-foreground-dark: 210 30% 90%; /* Light text on accent */
     --destructive-dark: 0 65% 50%;
     --destructive-foreground-dark: 0 0% 98%;
-    --success-dark: 120 50% 30%;
-    --success-foreground-dark: 0 0% 100%;
+    --success-dark: 120 50% 30%; /* Dark Green for success badge background */
+    --success-foreground-dark: 0 0% 100%; /* White text for success badge */
     --border-dark: 210 15% 40%; /* More visible border */
     --input-dark: 210 15% 38%; /* Distinct input background */
     --ring-dark: 190 80% 65%; /* Ring color matching primary */
@@ -127,7 +126,7 @@
     --sidebar-active-fg-dark-rgb: 230, 245, 255; /* Very light text for active items for contrast */
     --sidebar-hover-bg-dark: 220 40% 30%; /* Hover background - slightly lighter than sidebar bg */
     --sidebar-hover-fg-dark-rgb: 200, 220, 240; /* Brighter text on hover */
-    --sidebar-border-dark: 220 60% 12%; /* Matches sidebar-gradient-start-dark */
+    --sidebar-border-dark: 220 60% 12% / 1; /* Matches sidebar-gradient-start-dark */
 
     /* Table Specific Styles - Dark Theme */
     --table-header-gradient-start-dark: 220 15% 35%;
@@ -290,11 +289,10 @@
   background: hsl(var(--card-light)); /* Opaque white for light mode */
   border: 1px solid hsla(var(--border-light), 0.5);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease-in-out, transform 0.2s ease-out, box-shadow 0.2s ease-out; /* Keep transform for general cards */
+  transition: all 0.3s ease-in-out, box-shadow 0.2s ease-out;
 }
 .glassmorphism-card:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Slightly more pronounced shadow */
-  /* transform: translateY(-3px); Removed to prevent dialog instability */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .dark .glassmorphism-card {
@@ -308,7 +306,6 @@
 .dark .glassmorphism-card:hover {
   box-shadow: 0 0 20px hsla(var(--primary-dark), 0.25), /* Enhanced glow */
               0 6px 12px rgba(0, 0, 0, 0.3);
-  /* transform: translateY(-3px); Removed */
 }
 
 
@@ -448,10 +445,10 @@
   @apply pt-20; /* Increased padding if there's a fixed header/UserNav */
 }
 
-/*
+
+/* Force scrollbars for Radix ScrollArea Viewport */
 [data-radix-scroll-area-viewport] {
   overflow-x: auto !important;
   overflow-y: auto !important;
 }
-*/
     

@@ -76,7 +76,7 @@ export function CustomerDetailsView({
 }: CustomerDetailsViewProps) {
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="glassmorphism-card">
         <Accordion type="single" collapsible>
           <AccordionItem value="customer-info" className="border-none">
             <CardHeader className="flex flex-row items-center justify-between p-4">
@@ -148,13 +148,13 @@ export function CustomerDetailsView({
         </Accordion>
       </Card>
 
-      <Card>
+      <Card className="glassmorphism-card">
         <CardHeader>
           <CardTitle>Water Usage History</CardTitle>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[300px] w-full">
-            <Table className="min-w-[600px]">
+            <Table className="min-w-[600px]"> {/* Added min-width */}
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -188,27 +188,29 @@ export function CustomerDetailsView({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glassmorphism-card">
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[300px] w-full">
-            <Table className="min-w-[500px]">
+            <Table className="min-w-[550px]"> {/* Updated min-width */}
               <TableHeader>
                 <TableRow>
-                  <TableHead>Payment Date</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
                   <TableHead className="text-right">Amount Paid (PKR)</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payments.length === 0 && (
-                  <TableRow><TableCell colSpan={3} className="text-center h-24">No payment records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center h-24">No payment records found.</TableCell></TableRow>
                 )}
                 {payments.map(payment => (
                   <TableRow key={payment.id}>
-                    <TableCell>{format(new Date(payment.paymentDate), 'PP p')}</TableCell>
+                    <TableCell>{format(new Date(payment.paymentDate), 'PP')}</TableCell>
+                    <TableCell>{format(new Date(payment.paymentDate), 'p')}</TableCell>
                     <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
                     <TableCell className="text-center">
                       <EditPaymentRecordDialog 

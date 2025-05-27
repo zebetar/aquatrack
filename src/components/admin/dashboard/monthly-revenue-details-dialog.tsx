@@ -25,15 +25,14 @@ export function MonthlyRevenueDetailsDialog({ isOpen, onClose, data }: MonthlyRe
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg dialog-gradient-background"> {/* Applied gradient */}
-        <DialogHeader className="pt-2"> {/* Added padding top */}
+      <DialogContent className="sm:max-w-lg dialog-gradient-background">
+        <DialogHeader className="pt-2">
           <DialogTitle>Monthly Revenue - {currentMonthYear}</DialogTitle>
-           {/* Description removed as per previous request */}
         </DialogHeader>
         
         <ScrollArea className="h-[400px] w-full pr-4 mt-4">
           {data.length > 0 ? (
-            <Table>
+            <Table className="min-w-[400px]"> {/* Added min-width */}
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer Name</TableHead>
