@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, Users, Droplets, CreditCard, DatabaseZap, CalendarIcon, Search, Download, Loader2 } from 'lucide-react';
+import { FileDown, CalendarIcon, Search, Download, Loader2 } from 'lucide-react'; // Removed unused icons
 import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
@@ -68,7 +68,7 @@ export default function DataExportPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `aquatrack_mock_data_export_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
+      a.download = `AquaTrack_mock_data_export_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -170,8 +170,8 @@ export default function DataExportPage() {
 
 
   return (
-    <>
-      <Card className="glassmorphism-card shadow-md mb-6 mt-6">
+    <div className="mt-6">
+      <Card className="glassmorphism-card shadow-md mb-6">
         <CardHeader>
           <CardTitle>Customer Data (PDF)</CardTitle>
         </CardHeader>
@@ -264,11 +264,12 @@ export default function DataExportPage() {
                 {filteredUsage.length > 0 ? (
                   <ScrollArea className="h-[200px] border rounded-md w-full">
                     <Table className="min-w-[600px]">
-                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Duration</TableHead><TableHead className="text-right">Cost (PKR)</TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Time Range</TableHead><TableHead>Duration</TableHead><TableHead className="text-right">Cost (PKR)</TableHead></TableRow></TableHeader>
                       <TableBody>
                         {filteredUsage.map(r => (
                           <TableRow key={r.id}>
                             <TableCell>{format(new Date(r.date), 'PP')}</TableCell>
+                            <TableCell>{`${format(new Date(r.startTime), 'p')} - ${format(new Date(r.endTime), 'p')}`}</TableCell>
                             <TableCell>{formatDurationFromHours(r.durationHours)}</TableCell>
                             <TableCell className="text-right">{r.cost.toLocaleString()}</TableCell>
                           </TableRow>
@@ -284,11 +285,12 @@ export default function DataExportPage() {
                  {filteredPayments.length > 0 ? (
                   <ScrollArea className="h-[200px] border rounded-md w-full">
                     <Table className="min-w-[500px]">
-                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead className="text-right">Amount (PKR)</TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Time</TableHead><TableHead className="text-right">Amount (PKR)</TableHead></TableRow></TableHeader>
                       <TableBody>
                         {filteredPayments.map(p => (
                           <TableRow key={p.id}>
-                            <TableCell>{format(new Date(p.paymentDate), 'PP p')}</TableCell>
+                            <TableCell>{format(new Date(p.paymentDate), 'PP')}</TableCell>
+                            <TableCell>{format(new Date(p.paymentDate), 'p')}</TableCell>
                             <TableCell className="text-right">{p.amountPaid.toLocaleString()}</TableCell>
                           </TableRow>
                         ))}
@@ -318,7 +320,7 @@ export default function DataExportPage() {
               <CardContent className="space-y-6 p-4 pt-0">
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
-                    <h3 className="font-semibold text-lg flex items-center"><Users className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
+                    <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
                     <p className="text-sm text-muted-foreground">Simulate exporting a list of all customers and their details.</p>
                   </div>
                   <Button onClick={() => handleMockExport("All Customer", "CSV")} variant="outline">
@@ -328,7 +330,7 @@ export default function DataExportPage() {
 
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
-                    <h3 className="font-semibold text-lg flex items-center"><Droplets className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
+                    <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
                     <p className="text-sm text-muted-foreground">Simulate exporting all logged water usage records.</p>
                   </div>
                   <Button onClick={() => handleMockExport("All Water Usage", "CSV")} variant="outline">
@@ -338,7 +340,7 @@ export default function DataExportPage() {
 
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
-                    <h3 className="font-semibold text-lg flex items-center"><CreditCard className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
+                    <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
                     <p className="text-sm text-muted-foreground">Simulate exporting all recorded payment transactions.</p>
                   </div>
                   <Button onClick={() => handleMockExport("All Payment Histories", "CSV")} variant="outline">
@@ -348,7 +350,7 @@ export default function DataExportPage() {
 
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
-                    <h3 className="font-semibold text-lg flex items-center"><DatabaseZap className="mr-2 h-5 w-5 text-primary"/>Download Mock Data Backup</h3>
+                    <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Download Mock Data Backup</h3>
                     <p className="text-sm text-muted-foreground">Download all current data from localStorage as a single JSON file. This is useful for backup or migration.</p>
                   </div>
                   <Button onClick={handleDownloadAllMockData} variant="outline">
@@ -360,6 +362,6 @@ export default function DataExportPage() {
           </AccordionItem>
         </Accordion>
       </Card>
-    </>
+    </div>
   );
 }

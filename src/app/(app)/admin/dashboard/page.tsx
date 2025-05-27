@@ -2,16 +2,15 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, BellRing, Sparkles, Briefcase } from 'lucide-react';
-import { useState, useEffect, useCallback, memo } from 'react'; 
+import { Users, Droplets, CreditCard, BarChart3, BellRing } from 'lucide-react'; // Removed Sparkles, Briefcase
+import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
   getAllMockCustomers, 
   getAllMockUsageRecords,
-  getAllMockPayments,
   getAllAdminNotifications
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
+import type { Customer, WaterUsageRecord, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
 import { format, isThisMonth } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -39,9 +38,9 @@ const KeyMetricCard = memo(({
   const cardInnerContent = (
     <>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-base font-semibold">{title}</CardTitle> {/* Updated title style */}
+        <CardTitle className="text-base font-semibold">{title}</CardTitle>
         <div className="p-2 bg-accent/10 dark:bg-accent/20 rounded-full group-hover:bg-accent/20 dark:group-hover:bg-accent/30 transition-colors">
-          <Icon className="h-5 w-5 text-primary dark:text-accent" /> {/* Icon styling */}
+          <Icon className="h-5 w-5 text-primary dark:text-accent" />
         </div>
       </CardHeader>
       <CardContent>
@@ -52,7 +51,7 @@ const KeyMetricCard = memo(({
   );
 
   const cardClasses = cn(
-    "glassmorphism-card transition-all duration-300 ease-out", // Base class for all cards
+    "glassmorphism-card transition-all duration-300 ease-out",
     className,
     (href || onClick) && "hover:shadow-lg hover:border-primary/50 dark:hover:border-accent/70 hover:-translate-y-1 cursor-pointer group" 
   );
@@ -105,7 +104,6 @@ export default function AdminDashboardPage() {
   const loadDashboardData = useCallback(() => {
     const customers = getAllMockCustomers();
     const usageRecords = getAllMockUsageRecords();
-    // const payments = getAllMockPayments(); // Not directly used for main metrics, but for dialogs if needed
     const notifications = getAllAdminNotifications();
 
     setTotalCustomers(customers.length);
@@ -187,9 +185,11 @@ export default function AdminDashboardPage() {
     },
   ];
   
-  const customersWithMonthlyRevenueData = customersWithMonthlyUsageData
-    .filter(c => c.cost > 0)
-    .sort((a, b) => b.cost - a.cost);
+  const customersWithMonthlyRevenueData = useMemo(() => {
+    return customersWithMonthlyUsageData
+      .filter(c => c.cost > 0)
+      .sort((a, b) => b.cost - a.cost);
+  }, [customersWithMonthlyUsageData]);
 
   return (
     <>

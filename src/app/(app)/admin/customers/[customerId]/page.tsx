@@ -7,7 +7,7 @@ import { LogUsageDialog } from '@/components/admin/customers/log-usage-dialog';
 import { RecordPaymentDialog } from '@/components/admin/customers/record-payment-dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2, User } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react'; // Removed User icon
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
@@ -58,7 +58,7 @@ export default function CustomerDetailPage() {
     } catch (error) {
       console.error("Failed to load customer data from store", error);
       const fallbackName = customerId ? `Customer ${customerId.substring(0,5)}` : 'Customer';
-      if (!customer) { // Avoid resetting customer if already partially loaded
+      if (!customer) { 
         setCustomer({ 
             id: customerId || 'unknown', 
             name: `${fallbackName} (Error Loading)`, 
@@ -78,7 +78,7 @@ export default function CustomerDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [customerId, toast, customer]); // customer state added back temporarily for fallback logic
+  }, [customerId, toast, customer]); 
 
   useEffect(() => {
     fetchCustomerData();
@@ -217,7 +217,7 @@ export default function CustomerDetailPage() {
 
   if (isLoading && !customer) { 
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center mt-6">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="ml-2">Loading customer details...</p>
       </div>
@@ -225,10 +225,16 @@ export default function CustomerDetailPage() {
   }
 
   if (!customer) { 
+    const UserPlaceholderIcon = () => ( // Simple SVG placeholder for User icon
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto h-12 w-12 text-muted-foreground">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    );
     return (
       <div className="mt-6">
         <div className="rounded-lg border bg-card p-4 text-center shadow-sm glassmorphism-card">
-            <User className="mx-auto h-12 w-12 text-muted-foreground" />
+            <UserPlaceholderIcon />
             <h3 className="mt-4 text-lg font-medium">Customer Not Found</h3>
             <p className="mt-1 text-sm text-muted-foreground">
             This customer may not exist or data could not be loaded.
