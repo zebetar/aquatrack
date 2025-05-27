@@ -10,20 +10,21 @@
   }
   html {
     scroll-behavior: smooth;
-    /* overflow-x: hidden; removed to let ScrollArea manage its own internal overflow */
+    /* overflow-x: hidden; Removed to let ScrollArea handle its own internal overflow */
+    /* overflow-y: scroll; /* Always show scrollbar to prevent layout shifts */
   }
 
   body {
     font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
     width: 100%;
     max-width: 100vw;
-    /* overflow-x: hidden; removed to let ScrollArea manage its own internal overflow */
+    /* overflow-x: hidden; /* Prevent horizontal scroll on body */
     /* overflow-y will be default 'auto' or 'scroll' if content exceeds viewport */
   }
 
   /* Light theme specific body background */
   body {
-    @apply bg-gradient-to-tl from-[hsl(var(--body-gradient-start-light))] to-[hsl(var(--body-gradient-end-light))];
+    background: linear-gradient(to top left, hsl(var(--body-gradient-start-light)), hsl(var(--body-gradient-end-light)));
   }
 
   /* Dark theme specific body background */
@@ -57,88 +58,85 @@
     --input-light: 210 20% 94%;
     --ring-light: 210 70% 50%;
 
-    /* Gradient for authentication pages */
-    --auth-gradient-start-light: 200 100% 90%; /* Light sky blue */
-    --auth-gradient-end-light: 220 100% 95%;   /* Lighter, slightly desaturated blue */
-
     /* Aesthetic body gradient (bottom-right to top-left) */
-    --body-gradient-start-light: 200 100% 90%; /* light blue for bottom-right */
-    --body-gradient-end-light: 210 100% 97%;   /* very light, almost white blue for top-left */
+    --body-gradient-start-light: 190 65% 88%; /* Soft aqua/teal for bottom-right */
+    --body-gradient-end-light: 210 55% 96%;   /* Very light cool blue for top-left */
 
     /* Sidebar Light Theme - Light Aesthetic Blue */
-    --sidebar-gradient-start-light: 210 70% 92% / 1; /* Right side of "to left" gradient */
-    --sidebar-gradient-end-light: 200 65% 95% / 1;   /* Left side of "to left" gradient */
+    --sidebar-gradient-start-light: 205 75% 88% / 1; /* Aesthetic light blue */
+    --sidebar-gradient-end-light: 210 70% 90% / 1;   /* Slightly softer aesthetic light blue */
     --sidebar-background-light: linear-gradient(to left, hsl(var(--sidebar-gradient-start-light)), hsl(var(--sidebar-gradient-end-light)));
-    --sidebar-fg-light-rgb: 30, 58, 135; /* Dark Blue Text/Icons */
-    --sidebar-icon-fg-light-rgb: 30, 58, 135; /* Dark Blue Icons */
+    --sidebar-fg-light-rgb: 20, 40, 80; /* Very dark, almost navy blue */
+    --sidebar-icon-fg-light-rgb: 20, 40, 80; /* Very dark, almost navy blue */
     --sidebar-active-bg-light: 205 75% 60%; /* Aesthetic Blue for active item background */
     --sidebar-active-fg-light-rgb: 48, 53, 77; /* Dark text for active items */
     --sidebar-hover-bg-light: 205 70% 75%; /* Lighter aesthetic blue for hover */
     --sidebar-hover-fg-light-rgb: 48, 53, 77; /* Dark text for hover items */
-    --sidebar-border-light: 210 70% 92%; /* Matches sidebar-gradient-start-light */
+    --sidebar-border-light: 205 75% 88%; /* Matches sidebar-gradient-start-light */
 
 
     /* Table Specific Styles - Light Theme */
+    --table-header-gradient-start-light: 213 67% 94%; /* #e6f0fa */
+    --table-header-gradient-end-light: 200 65% 95%;   /* Lighter blue for header gradient end */
     --table-row-gradient-start-light: 213 67% 96%;  /* Slightly lighter #f0f5fa */
     --table-row-gradient-end-light: 0 0% 100%;     /* #ffffff */
-    --table-row-hover-bg-light: 216 100% 92%;     /* Lighter #d9e8ff */
-    --table-header-gradient-start-light: 210 70% 92%; /* Lighter blue for header gradient start */
-    --table-header-gradient-end-light: 200 65% 95%;   /* Even lighter blue for header gradient end */
+    --table-row-hover-bg-light: 216 100% 91%;     /* Lighter #d1e4ff */
+
 
     /* Dialog background gradient */
     --dialog-gradient-top-light: 210 50% 96%;
     --dialog-gradient-bottom-light: 210 40% 98%;
 
 
-    /* Dark Theme: Futuristic, Sleek, Cool with Gold Accents */
-    --background-dark: 222 80% 6%; /* Deep, rich navy/charcoal */
-    --foreground-dark: 210 30% 85%; /* Light, cool grey for text */
-    --card-dark: 222 70% 9%;
-    --card-foreground-dark: 210 30% 85%;
-    --popover-dark: 222 80% 5%;
-    --popover-foreground-dark: 210 30% 85%;
-    --primary-dark: 185 90% 35%; /* Darker Vibrant cyan/teal */
-    --primary-foreground-dark: 222 80% 8%;
-    --secondary-dark: 210 30% 25%;
-    --secondary-foreground-dark: 200 15% 80%;
-    --muted-dark: 220 30% 20%;
-    --muted-foreground-dark: 200 15% 65%;
-    --accent-dark: 280 75% 65%; /* Vivid Magenta/Purple accent */
-    --accent-foreground-dark: 222 80% 8%;
+    /* Dark Theme: Lighter, more contrasted */
+    --background-dark: 220 15% 15%; /* Dark cool grey, not black */
+    --foreground-dark: 210 30% 90%; /* Very light cool grey for text */
+    --card-dark: 220 15% 20%; /* Slightly lighter dark cool grey for cards */
+    --card-foreground-dark: 210 30% 90%;
+    --popover-dark: 220 15% 12%; /* Even darker for popovers for depth */
+    --popover-foreground-dark: 210 30% 90%;
+    --primary-dark: 190 80% 55%; /* Bright cyan - more visible */
+    --primary-foreground-dark: 220 15% 10%; /* Very dark for text on bright primary */
+    --secondary-dark: 210 20% 30%; /* Muted blue-grey */
+    --secondary-foreground-dark: 210 30% 80%;
+    --muted-dark: 210 15% 25%; /* Slightly lighter muted */
+    --muted-foreground-dark: 210 20% 65%;
+    --accent-dark: 270 70% 65%; /* Vibrant purple - eye-catching */
+    --accent-foreground-dark: 210 30% 90%; /* Light text on accent */
     --destructive-dark: 0 65% 50%;
     --destructive-foreground-dark: 0 0% 98%;
-    --success-dark: 120 50% 30%; /* Dark Green for success badge background */
-    --success-foreground-dark: 0 0% 100%; /* White text for success badge */
-    --border-dark: 210 25% 20%;
-    --input-dark: 220 30% 15%;
-    --ring-dark: 185 90% 55%;
+    --success-dark: 120 50% 30%;
+    --success-foreground-dark: 0 0% 100%;
+    --border-dark: 210 15% 28%; /* More visible border */
+    --input-dark: 210 15% 22%; /* Distinct input background */
+    --ring-dark: 190 80% 65%; /* Ring color matching primary */
 
     /* Auth Page Gradient Dark */
-    --auth-gradient-start-dark: 220 50% 10%;
-    --auth-gradient-end-dark: 230 60% 15%;
+    --auth-gradient-start-dark: 220 25% 18%;
+    --auth-gradient-end-dark: 230 30% 22%;
 
-    /* Sidebar Dark Theme - Aesthetic Blue */
-    --sidebar-gradient-start-dark: 220 40% 25% / 1; /* Right side of "to left" gradient */
-    --sidebar-gradient-end-dark: 215 35% 35% / 1;   /* Left side of "to left" gradient */
+    /* Sidebar Dark Theme - Lighter, more distinct */
+    --sidebar-gradient-start-dark: 220 20% 18% / 1;   /* Right side of "to left" gradient */
+    --sidebar-gradient-end-dark: 215 20% 22% / 1;     /* Left side */
     --sidebar-background-dark: linear-gradient(to left, hsl(var(--sidebar-gradient-start-dark)), hsl(var(--sidebar-gradient-end-dark)));
-    --sidebar-fg-dark-rgb: 80, 120, 170; /* Darker Blue Text/Icons */
-    --sidebar-icon-fg-dark-rgb: 80, 120, 170; /* Darker Blue Icons */
-    --sidebar-active-bg-dark: 195 85% 45%; /* Aesthetic Blue for active item background */
-    --sidebar-active-fg-dark-rgb: 230, 245, 255; /* Very light text for active */
-    --sidebar-hover-bg-dark: 220 40% 30%;
-    --sidebar-hover-fg-dark-rgb: 128, 207, 245; /* Keep hover brighter for feedback */
-    --sidebar-border-dark: 220 40% 25%; /* Matches sidebar-gradient-start-dark */
+    --sidebar-fg-dark-rgb: 190, 210, 230; /* Light blueish grey text */
+    --sidebar-icon-fg-dark-rgb: 190, 210, 230;
+    --sidebar-active-bg-dark: 190 80% 50%; /* Active background - bright cyan, distinct */
+    --sidebar-active-fg-dark-rgb: 20, 30, 40; /* Dark text for active items for contrast */
+    --sidebar-hover-bg-dark: 220 20% 25%; /* Hover background - slightly lighter than sidebar bg */
+    --sidebar-hover-fg-dark-rgb: 200, 220, 240; /* Brighter text on hover */
+    --sidebar-border-dark: 220 20% 18%; /* Matches sidebar-gradient-start-dark */
 
     /* Table Specific Styles - Dark Theme */
-    --table-row-gradient-start-dark: var(--card-dark);
-    --table-row-gradient-end-dark: var(--card-dark); /* No gradient for dark theme rows by default */
-    --table-row-hover-bg-dark: var(--muted-dark);
-    --table-header-gradient-start-dark: 220 30% 18%; /* Darker muted for header gradient start */
-    --table-header-gradient-end-dark: 220 30% 22%;   /* Slightly lighter muted for header gradient end */
+    --table-header-gradient-start-dark: 220 15% 22%;
+    --table-header-gradient-end-dark: 220 15% 25%;
+    --table-row-gradient-start-dark: hsl(var(--card-dark));
+    --table-row-gradient-end-dark: hsl(var(--card-dark));
+    --table-row-hover-bg-dark: 220 15% 28%; /* Slightly lighter for hover */
 
     /* Dialog background gradient dark */
-    --dialog-gradient-top-dark: 222 80% 8%;
-    --dialog-gradient-bottom-dark: 222 75% 10%;
+    --dialog-gradient-top-dark: 220 15% 18%;
+    --dialog-gradient-bottom-dark: 220 15% 20%;
 
 
     /* Chart Colors */
@@ -148,16 +146,16 @@
     --chart-4-light: 220 50% 65%; /* Soft Cool Blue */
     --chart-5-light: 330 65% 70%; /* Soft Pink/Rose */
 
-    --chart-1-dark: 185 90% 50%; /* Vibrant Cyan/Teal */
-    --chart-2-dark: 280 75% 65%;  /* Vivid Magenta/Purple */
-    --chart-3-dark: 40 90% 55%; /* Bright Gold/Orange */
-    --chart-4-dark: 230 60% 70%; /* Bright Cool Blue */
-    --chart-5-dark: 170 70% 50%; /* Bright Green */
+    --chart-1-dark: 190 75% 60%; /* Bright Cyan */
+    --chart-2-dark: 270 65% 70%;  /* Vivid Purple */
+    --chart-3-dark: 40 85% 60%; /* Bright Gold/Orange */
+    --chart-4-dark: 230 70% 75%; /* Bright Cool Blue */
+    --chart-5-dark: 170 65% 55%; /* Bright Green */
 
     --radius: 0.75rem;
 
     /* Sidebar specific variables */
-    --sidebar-collapsed-width: 64px; /* Increased slightly for better icon spacing */
+    --sidebar-collapsed-width: 64px;
     --sidebar-expanded-width: 256px;
     --sidebar-header-height: 64px;
     --sidebar-footer-height: 64px;
@@ -205,11 +203,14 @@
     --chart-4: hsl(var(--chart-4-light));
     --chart-5: hsl(var(--chart-5-light));
 
+    --table-header-gradient-start: hsl(var(--table-header-gradient-start-light));
+    --table-header-gradient-end: hsl(var(--table-header-gradient-end-light));
     --table-row-gradient-start: hsl(var(--table-row-gradient-start-light));
     --table-row-gradient-end: hsl(var(--table-row-gradient-end-light));
     --table-row-hover-bg: hsl(var(--table-row-hover-bg-light));
-    --table-header-gradient-start: hsl(var(--table-header-gradient-start-light));
-    --table-header-gradient-end: hsl(var(--table-header-gradient-end-light));
+
+    --dialog-gradient-top: hsl(var(--dialog-gradient-top-light));
+    --dialog-gradient-bottom: hsl(var(--dialog-gradient-bottom-light));
   }
 
   .dark {
@@ -250,11 +251,14 @@
     --chart-4: hsl(var(--chart-4-dark));
     --chart-5: hsl(var(--chart-5-dark));
 
+    --table-header-gradient-start: hsl(var(--table-header-gradient-start-dark));
+    --table-header-gradient-end: hsl(var(--table-header-gradient-end-dark));
     --table-row-gradient-start: hsl(var(--table-row-gradient-start-dark));
     --table-row-gradient-end: hsl(var(--table-row-gradient-end-dark));
     --table-row-hover-bg: hsl(var(--table-row-hover-bg-dark));
-    --table-header-gradient-start: hsl(var(--table-header-gradient-start-dark));
-    --table-header-gradient-end: hsl(var(--table-header-gradient-end-dark));
+
+    --dialog-gradient-top: hsl(var(--dialog-gradient-top-dark));
+    --dialog-gradient-bottom: hsl(var(--dialog-gradient-bottom-dark));
   }
 }
 
@@ -306,13 +310,13 @@
 
 /* Styles for the hover-to-expand sidebar */
 .sidebar-main-container {
+  @apply fixed inset-y-0 left-0 z-30 hidden flex-col md:flex rounded-r-lg overflow-hidden;
   width: var(--sidebar-collapsed-width);
   transition: width var(--sidebar-transition-duration) ease-in-out;
-  background: var(--sidebar-actual-bg); /* Uses CSS variable for dynamic theme */
+  background: var(--sidebar-actual-bg);
   border-right-width: 1px;
   border-right-style: solid;
-  border-right-color: var(--sidebar-border-color); /* Uses CSS variable for dynamic theme */
-  @apply rounded-r-lg overflow-hidden;
+  border-right-color: var(--sidebar-border-color);
 }
 .sidebar-main-container:hover {
   width: var(--sidebar-expanded-width);
@@ -323,6 +327,7 @@
 .sidebar-header {
   height: var(--sidebar-header-height);
   @apply flex items-center px-4;
+  /* Removed border-b to hide line */
 }
 
 .sidebar-app-name-text {
@@ -348,6 +353,7 @@
 
 .sidebar-footer {
     @apply mt-auto p-2 opacity-0 transition-opacity duration-200 ease-in-out;
+    /* Removed border-t to hide line */
 }
 .sidebar-main-container:hover .sidebar-footer {
     @apply opacity-100;
@@ -387,23 +393,25 @@
   opacity: 1;
 }
 
-/* Force horizontal scroll for ScrollArea viewports - More specific and forceful */
-/* [data-radix-scroll-area-viewport] {
+/* Force horizontal scroll for ScrollArea viewports - Use with caution */
+/*
+[data-radix-scroll-area-viewport] {
   overflow-x: auto !important;
   overflow-y: auto !important;
-} */
-/* This was removed in a previous step to allow ScrollArea to manage its own overflow. Re-adding with !important can be a last resort. */
+}
+*/
 
 
 /* Dialog gradient background */
 .dialog-gradient-background {
-  background-image: linear-gradient(to bottom, hsl(var(--dialog-gradient-top-light)), hsl(var(--dialog-gradient-bottom-light)));
-  color: hsl(var(--foreground-light)); /* Ensure text is readable */
+  background-image: linear-gradient(to bottom, hsl(var(--dialog-gradient-top)), hsl(var(--dialog-gradient-bottom)));
+  color: hsl(var(--foreground)); /* Ensure text is readable */
 }
+/* Ensure dark mode dialogs also use foreground text color */
 .dark .dialog-gradient-background {
-  background-image: linear-gradient(to bottom, hsl(var(--dialog-gradient-top-dark)), hsl(var(--dialog-gradient-bottom-dark)));
-  color: hsl(var(--foreground-dark)); /* Ensure text is readable */
+  color: hsl(var(--foreground-dark));
 }
+
 
 /* Fade-in animation */
 @keyframes fadeIn {
