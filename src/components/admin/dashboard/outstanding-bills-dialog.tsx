@@ -30,7 +30,7 @@ export function OutstandingBillsDialog({ isOpen, onClose, data }: OutstandingBil
         
         <ScrollArea className="h-[400px] w-full pr-4 mt-4">
           {data.length > 0 ? (
-            <Table className="min-w-[400px]"> {/* Added min-width */}
+            <Table className="min-w-[400px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer Name</TableHead>
