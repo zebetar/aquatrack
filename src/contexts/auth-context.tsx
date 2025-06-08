@@ -5,7 +5,14 @@ import type { User, Customer } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { getAllMockCustomers, updateCustomerEmail as updateCustomerEmailInStore } from '@/lib/mock-data-store';
+import { 
+  // getAllMockCustomers, // No longer used for individual viewer profile fetching
+  updateCustomerEmail as updateCustomerEmailInStore 
+} from '@/lib/mock-data-store'; // Keep this for actual data updates
+import { auth as firebaseAuth, db } from '@/lib/firebase-config'; // Ensure db is imported
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+
 
 interface AuthContextType {
   user: User | null;
@@ -14,14 +21,14 @@ interface AuthContextType {
   logout: () => void;
   updateUserEmail: (newEmail: string) => void;
   updateAdminName: (newName: string) => void;
-  updateUserAvatarUrl: (newUrl: string | null) => void; // Can be string (Data URI) or null
+  updateUserAvatarUrl: (newUrl: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MOCK_ADMIN_USER_BASE: Omit<User, 'id' | 'role'> = { email: 'admin@aquatrack.com', name: 'Admin User' };
+const MOCK_ADMIN_USER_BASE: Omit<User, 'id' | 'role' | 'avatarUrl'> = { email: 'admin@aquatrack.com', name: 'Admin User' };
 const MOCK_ADMIN_PASSWORD = "adminpassword";
-export const MOCK_VIEWER_PASSWORD = "viewerpassword";
+export const MOCK_VIEWER_PASSWORD = "viewerpassword"; // Exported for use in forms if needed
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -34,119 +41,185 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setLoading(true);
-    const storedUser = localStorage.getItem('authUser');
-    if (storedUser) {
-      try {
-        const parsedUser: User = JSON.parse(storedUser);
-        if (parsedUser && parsedUser.id && parsedUser.email && parsedUser.role) {
-          setUser(parsedUser);
-        } else {
-          console.warn("Stored user data is incomplete or invalid. Clearing.");
-          localStorage.removeItem('authUser');
-        }
-      } catch (error) {
-        console.error("Failed to parse stored user:", error);
-        localStorage.removeItem('authUser');
-      }
-    }
-    setLoading(false);
-  }, []);
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
+      console.log("AuthProvider (onAuthStateChanged): Auth state changed. Firebase user:", firebaseUser);
+      if (firebaseUser) {
+        // User is signed in with Firebase Auth. Now fetch their app-specific profile.
+        const storedUserString = localStorage.getItem('authUser');
+        let appUserRole: 'admin' | 'viewer' | null = null;
+        let appUserName: string | undefined;
+        let appUserAvatarUrl: string | undefined;
 
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    const isAuthPage = pathname.startsWith('/login');
-
-    if (!user) {
-      if (!isAuthPage) {
-        router.push('/login');
-      }
-    } else {
-      if (isAuthPage) {
-        router.push(user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard');
-      }
-      // Ensure correct dashboard for role if already logged in and trying to access wrong section
-      if (user.role === 'admin' && pathname.startsWith('/viewer')) {
-        router.push('/admin/dashboard');
-      } else if (user.role === 'viewer' && pathname.startsWith('/admin')) {
-        router.push('/viewer/dashboard');
-      }
-    }
-  }, [user, loading, pathname, router]);
-
-
-  const login = async (email: string, password: string, role: 'admin' | 'viewer'): Promise<void> => {
-    setLoading(true);
-    await delay(500);
-
-    let loggedInUser: User | null = null;
-    const processedEmail = email; // Already trimmed and lowercased by Zod schema in LoginForm
-
-    if (role === 'admin' && processedEmail === MOCK_ADMIN_USER_BASE.email.trim().toLowerCase() && password === MOCK_ADMIN_PASSWORD) {
-      const storedAdminUser = localStorage.getItem('authUser');
-      let adminData = { ...MOCK_ADMIN_USER_BASE, id: 'admin001', role: 'admin' as const };
-      if (storedAdminUser) {
-        try {
-          const parsedUser: User = JSON.parse(storedAdminUser);
-          if(parsedUser.id === 'admin001') {
-            adminData = { ...adminData, name: parsedUser.name, avatarUrl: parsedUser.avatarUrl };
-          }
-        } catch { /* ignore parsing error, use defaults */ }
-      }
-      loggedInUser = adminData;
-    } else if (role === 'viewer') {
-      const customers = getAllMockCustomers();
-      const foundCustomer = customers.find(
-        (c: Customer) =>
-          c.email?.trim().toLowerCase() === processedEmail &&
-          c.authUID
-      );
-
-      if (foundCustomer && password === MOCK_VIEWER_PASSWORD) {
-        loggedInUser = {
-          id: foundCustomer.authUID!,
-          email: foundCustomer.email!,
-          role: 'viewer',
-          name: foundCustomer.name,
-          customerId: foundCustomer.id,
-        };
-        const storedViewerData = localStorage.getItem('authUser');
-        if (storedViewerData) {
+        if (storedUserString) {
           try {
-            const parsedUser: User = JSON.parse(storedViewerData);
-            if (parsedUser.id === loggedInUser.id) {
-              loggedInUser.avatarUrl = parsedUser.avatarUrl;
+            const storedAppUser = JSON.parse(storedUserString);
+            if (storedAppUser.id === firebaseUser.uid) { // Check if stored user matches current Firebase user
+              appUserRole = storedAppUser.role;
+              appUserName = storedAppUser.name;
+              appUserAvatarUrl = storedAppUser.avatarUrl;
+            } else {
+              console.warn("AuthProvider (onAuthStateChanged): Stored 'authUser' ID does not match current Firebase user UID. Ignoring stale localStorage data for role/name.");
+              localStorage.removeItem('authUser'); // Clear stale data
             }
-          } catch { /* ignore */ }
+          } catch (e) {
+            console.error("AuthProvider (onAuthStateChanged): Error parsing 'authUser' from localStorage", e);
+            localStorage.removeItem('authUser'); // Clear corrupted data
+          }
+        }
+        
+        console.log(`AuthProvider (onAuthStateChanged): Attempting to build full user profile for UID: ${firebaseUser.uid}, Email: ${firebaseUser.email}`);
+
+        if (firebaseUser.email === MOCK_ADMIN_USER_BASE.email) {
+          console.log("AuthProvider (onAuthStateChanged): Admin email detected.");
+          const adminUser: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email,
+            role: 'admin',
+            name: appUserName || MOCK_ADMIN_USER_BASE.name, // Use stored name if available
+            avatarUrl: appUserAvatarUrl,
+          };
+          setUser(adminUser);
+          localStorage.setItem('authUser', JSON.stringify(adminUser)); // Re-save potentially updated admin info
+          console.log("AuthProvider (onAuthStateChanged): Admin user profile set:", adminUser);
+          setLoading(false);
+          if (pathname.startsWith('/login') || !pathname.startsWith('/admin')) {
+             router.push('/admin/dashboard');
+          }
+        } else {
+          console.log("AuthProvider (onAuthStateChanged): Non-admin email. Attempting to find viewer profile via targeted query. UID:", firebaseUser.uid, "Email:", firebaseUser.email);
+          try {
+            const customersRef = collection(db, "customers");
+            const q = query(customersRef, where("authUID", "==", firebaseUser.uid));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+              if (querySnapshot.size > 1) {
+                console.warn(`AuthProvider (onAuthStateChanged): Multiple customer profiles found for authUID ${firebaseUser.uid}. Using the first one.`);
+              }
+              const customerDoc = querySnapshot.docs[0];
+              const customerData = customerDoc.data() as Customer;
+
+              // Secondary check: ensure email also matches, just in case of data issues.
+              if (customerData.email && customerData.email.toLowerCase() === firebaseUser.email?.toLowerCase()) {
+                const viewerUser: User = {
+                  id: firebaseUser.uid,
+                  email: firebaseUser.email!,
+                  role: 'viewer',
+                  name: customerData.name,
+                  customerId: customerDoc.id,
+                  avatarUrl: appUserAvatarUrl, // Use stored avatar if available from login persistence
+                };
+                setUser(viewerUser);
+                localStorage.setItem('authUser', JSON.stringify(viewerUser));
+                console.log("AuthProvider (onAuthStateChanged): Viewer user profile set:", viewerUser);
+                if (pathname.startsWith('/login') || !pathname.startsWith('/viewer')) {
+                   router.push('/viewer/dashboard');
+                }
+              } else {
+                 console.error(`AuthProvider (onAuthStateChanged): VIEWER PROFILE EMAIL MISMATCH. Firestore email: ${customerData.email}, Auth email: ${firebaseUser.email}. UID: ${firebaseUser.uid}`);
+                toast({
+                  variant: "destructive",
+                  title: `Profile Email Mismatch (UID: ${firebaseUser.uid})`,
+                  description: `Authenticated as ${firebaseUser.email}, but the linked customer profile email (${customerData.email}) does not match. Logging out.`,
+                  duration: 9000,
+                });
+                await signOut(firebaseAuth); // Sign out from Firebase Auth
+              }
+            } else {
+              console.error(`AuthProvider (onAuthStateChanged): VIEWER PROFILE NOT FOUND for authUID: ${firebaseUser.uid} and email: ${firebaseUser.email}`);
+              toast({
+                variant: "destructive",
+                title: `Profile Loading Error (UID: ${firebaseUser.uid})`,
+                description: `Authentication was successful for ${firebaseUser.email}, but no customer profile found linked to your account. Please contact support. You have been logged out.`,
+                duration: 9000,
+              });
+              await signOut(firebaseAuth); // Sign out from Firebase Auth
+            }
+          } catch (error) {
+            console.error(`AuthProvider (onAuthStateChanged): Error during targeted query for customer profile (viewer):`, error);
+            const firebaseError = error as { code?: string; message?: string };
+            toast({
+              variant: "destructive",
+              title: `Profile Loading Error (UID: ${firebaseUser.uid}): ${firebaseError.code || 'Query Failed'}`,
+              description: `${firebaseError.message || 'Could not load your customer profile due to a database error.'} Ensure your customer account is correctly set up in Firestore. You have been logged out.`,
+              duration: 9000,
+            });
+            await signOut(firebaseAuth); // Sign out from Firebase Auth
+          } finally {
+            setLoading(false);
+          }
+        }
+      } else {
+        // User is signed out
+        console.log("AuthProvider (onAuthStateChanged): No Firebase user. Clearing app user state.");
+        setUser(null);
+        localStorage.removeItem('authUser');
+        setLoading(false);
+        if (!pathname.startsWith('/login')) {
+           router.push('/login');
         }
       }
-    }
+    });
 
-    if (loggedInUser) {
-      setUser(loggedInUser);
-      localStorage.setItem('authUser', JSON.stringify(loggedInUser));
-      toast({ title: "Login Successful", description: `Welcome back, ${loggedInUser.name || loggedInUser.email}!` });
-    } else {
-      toast({ variant: "destructive", title: "Login Failed", description: "Invalid credentials or role mismatch." });
+    return () => unsubscribe();
+  }, [router, pathname, toast]); // Added toast to dependencies
+
+  const login = async (email: string, password: string, formSelectedRole: 'admin' | 'viewer'): Promise<void> => {
+    console.log(`AuthProvider (login): Initiating login for formSelectedRole=${formSelectedRole}`);
+    const processedEmail = email.trim().toLowerCase();
+    
+    console.log(`Email (to be sent to Firebase): '${processedEmail}'`);
+    console.log(`Password (length to be sent to Firebase): ${password.length}`);
+
+    setLoading(true);
+    try {
+      // Attempt Firebase sign-in. onAuthStateChanged will handle profile linking.
+      await signInWithEmailAndPassword(firebaseAuth, processedEmail, password);
+      console.log(`AuthProvider (login): Firebase signInWithEmailAndPassword successful for ${processedEmail}. Waiting for onAuthStateChanged to process.`);
+      // Success/failure toast is now handled by onAuthStateChanged based on profile linking
+    } catch (error: any) {
+      console.error("AuthProvider (login): Firebase signInWithEmailAndPassword error:", error);
+      let description = "An unexpected error occurred during login.";
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        description = "Invalid email or password. Please try again.";
+        console.error(`AuthProvider (login): Specific error code '${error.code}' points to incorrect credentials for email: '${processedEmail}'.`);
+      } else if (error.code === 'auth/too-many-requests') {
+        description = "Too many login attempts. Please try again later.";
+      }
+      toast({ variant: "destructive", title: "Login Failed", description });
+      setUser(null); // Ensure user state is cleared
+      localStorage.removeItem('authUser');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('authUser');
-    router.push('/login');
+  const logout = async () => {
+    setLoading(true);
+    console.log("AuthProvider (logout): Logging out.");
+    try {
+      await signOut(firebaseAuth);
+      // onAuthStateChanged will handle clearing user state and localStorage
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      // router.push('/login') is handled by useEffect based on user state
+    } catch (error) {
+      console.error("AuthProvider (logout): Error during sign out:", error);
+      toast({ variant: "destructive", title: "Logout Failed", description: "Could not log you out." });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateUserEmail = (newEmail: string) => {
+  const updateUserEmail = (newEmail: string) => { // For Viewer
     if (user && user.role === 'viewer' && user.customerId) {
       const processedNewEmail = newEmail.trim().toLowerCase();
       const updatedUser = { ...user, email: processedNewEmail };
       setUser(updatedUser);
       localStorage.setItem('authUser', JSON.stringify(updatedUser));
-      updateCustomerEmailInStore(user.customerId, processedNewEmail);
+      updateCustomerEmailInStore(user.customerId, processedNewEmail); // This updates the mock store for now
+      // TODO: Implement actual Firebase email update if needed (requires re-authentication)
+      // For now, we assume this updates the email used for LOOKUP in our app, not Firebase Auth email directly.
+      toast({ title: "Viewer Email Updated (App Level)", description: `Your app email reference is now ${processedNewEmail}.` });
     }
   };
 
@@ -163,19 +236,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-
-  const updateUserAvatarUrl = (newDataUrl: string | null) => { // Accepts string (Data URI) or null
+  
+  const updateUserAvatarUrl = (newAvatarUrl: string | null) => {
     if (user) {
-      const updatedUser = { ...user, avatarUrl: newDataUrl || undefined }; // Store null as undefined
+      const updatedUser = { ...user, avatarUrl: newAvatarUrl || undefined };
       setUser(updatedUser);
       localStorage.setItem('authUser', JSON.stringify(updatedUser));
-      if (newDataUrl) {
+      if (newAvatarUrl) {
         toast({ title: "Avatar Updated", description: "Your profile picture has been updated." });
       } else {
         toast({ title: "Avatar Removed", description: "Your profile picture has been removed." });
       }
     }
   };
+
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, updateUserEmail, updateAdminName, updateUserAvatarUrl }}>
