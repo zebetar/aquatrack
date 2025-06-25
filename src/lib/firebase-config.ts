@@ -1,12 +1,9 @@
 
 // src/lib/firebase-config.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
-import { getFirestore, Timestamp } from 'firebase/firestore'; // Added Timestamp
+import { getFirestore, Timestamp } from 'firebase/firestore'; 
 import { getAuth } from 'firebase/auth';
 
-// IMPORTANT: Your Firebase configuration is now managed by environment variables.
-// Create a .env.local file in the root of your project and add your keys there.
-// See the .env file for the required variable names.
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -16,15 +13,36 @@ const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
-let app;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
+// Validate that the required environment variables are set.
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error(
+`
+********************************************************************************
+*                                                                              *
+*                      FIREBASE CONFIGURATION ERROR                            *
+*                                                                              *
+*      Firebase environment variables are not set.                             *
+*      Please create a '.env.local' file in the root of your project and       *
+*      add your Firebase project credentials from your Firebase Console.       *
+*                                                                              *
+*      Example .env.local:                                                     *
+*      NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...                                  *
+*      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com           *
+*      NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id                         *
+*      ...                                                                     *
+*                                                                              *
+*      The application will not function correctly until these are provided.   *
+*                                                                              *
+********************************************************************************
+`
+  );
 }
 
-const db = getFirestore(app);
-const auth = getAuth(app); // If you plan to use Firebase Authentication
 
-export { db, auth, app, Timestamp }; // Export Timestamp
+// Initialize Firebase
+// This structure prevents re-initialization on hot reloads
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+export { db, auth, app, Timestamp };
