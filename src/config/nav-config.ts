@@ -11,7 +11,6 @@ import {
   FileText,
   UserCog,
   FileDown,
-  Wand2,
 } from 'lucide-react';
 
 export const adminNavItems: NavItem[] = [
@@ -61,12 +60,6 @@ export const adminNavItems: NavItem[] = [
     title: 'Data Export',
     href: '/admin/data-export',
     icon: FileDown,
-    role: 'admin',
-  },
-  {
-    title: 'Stitch Studio',
-    href: '/admin/stitch',
-    icon: Wand2,
     role: 'admin',
   },
   {
