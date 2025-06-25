@@ -7,21 +7,21 @@ import { LogUsageDialog } from '@/components/admin/customers/log-usage-dialog';
 import { RecordPaymentDialog } from '@/components/admin/customers/record-payment-dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react'; // Removed User icon
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { formatDurationFromHours } from '@/lib/utils';
 import { 
-  getMockCustomerById, 
-  getMockUsageRecordsByCustomerId, 
-  getMockPaymentsByCustomerId,
-  addMockUsageRecord,
-  addMockPayment,
-  updateMockCustomer,
-  updateMockUsageRecord,
-  updateMockPaymentRecord,
-  addMockNotification
+  getCustomerByIdFromFirestore, 
+  getUsageRecordsByCustomerIdFromFirestore,
+  getPaymentsByCustomerIdFromFirestore,
+  addUsageRecordToFirestore,
+  addPaymentToFirestore,
+  updateCustomerInFirestore,
+  updateUsageRecordInFirestore,
+  updatePaymentRecordInFirestore,
+  addNotificationToFirestore
 } from '@/lib/mock-data-store';
 
 export default function CustomerDetailPage() {
@@ -43,11 +43,11 @@ export default function CustomerDetailPage() {
     }
     setIsLoading(true);
     try {
-      // Simulate async fetch if needed, or directly call store functions
-      await new Promise(resolve => setTimeout(resolve, 50)); 
-      const custData = getMockCustomerById(customerId);
-      const usageData = getMockUsageRecordsByCustomerId(customerId);
-      const paymentData = getMockPaymentsByCustomerId(customerId);
+      const [custData, usageData, paymentData] = await Promise.all([
+        getCustomerByIdFromFirestore(customerId),
+        getUsageRecordsByCustomerIdFromFirestore(customerId),
+        getPaymentsByCustomerIdFromFirestore(customerId)
+      ]);
       
       setCustomer(custData || null);
       if (custData) { 
@@ -56,106 +56,109 @@ export default function CustomerDetailPage() {
       setUsageRecords(usageData || []);
       setPayments(paymentData || []);
     } catch (error) {
-      console.error("Failed to load customer data from store", error);
-      const fallbackName = customerId ? `Customer ${customerId.substring(0,5)}` : 'Customer';
-      if (!customer) { 
-        setCustomer({ 
-            id: customerId || 'unknown', 
-            name: `${fallbackName} (Error Loading)`, 
-            contactInfo: 'N/A', 
-            email: 'N/A',
-            createdAt: new Date(), 
-            balance: 0 
-        });
-        setEditedCustomerData({ 
-            id: customerId || 'unknown', 
-            name: `${fallbackName} (Error Loading)`, 
-            contactInfo: 'N/A',
-            email: 'N/A',
-        });
-      }
-       toast({ variant: "destructive", title: "Error", description: "Could not load customer data." });
+      console.error("Failed to load customer data from Firestore", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not load customer data from the database. Check console for details." });
     } finally {
       setIsLoading(false);
     }
-  }, [customerId, toast, customer]); 
+  }, [customerId, toast]);
 
   useEffect(() => {
     fetchCustomerData();
-  }, [fetchCustomerData]); 
+  }, [fetchCustomerData]);
 
-  const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
+  const handleAddUsageRecord = async (newRecord: WaterUsageRecord) => {
     if (!customerId || !customer) return;
-    addMockUsageRecord(newRecord); 
+    try {
+      await addUsageRecordToFirestore(newRecord);
 
-    const viewerNotification: Notification = {
-        id: `noti-${Date.now()}-viewer`,
-        userId: customer.authUID || customer.id, 
-        message: `New water usage logged: ${formatDurationFromHours(newRecord.durationHours)}, Cost: PKR ${newRecord.cost.toLocaleString()}.`,
-        type: 'USAGE_LOGGED',
-        isRead: false,
-        linkTo: `/viewer/usage`,
-        createdAt: new Date(),
-    };
-    addMockNotification(viewerNotification);
+      const viewerNotification: Notification = {
+          id: `noti-${Date.now()}-viewer`,
+          userId: customer.authUID || customer.id,
+          message: `New water usage logged: ${formatDurationFromHours(newRecord.durationHours)}, Cost: PKR ${newRecord.cost.toLocaleString()}.`,
+          type: 'USAGE_LOGGED',
+          isRead: false,
+          linkTo: `/viewer/usage`,
+          createdAt: new Date(),
+      };
+      await addNotificationToFirestore(viewerNotification);
 
-    const adminNotification: Notification = {
-        id: `noti-${Date.now()}-admin`,
-        userId: 'admin001', 
-        message: `Water usage logged for ${customer.name}: ${formatDurationFromHours(newRecord.durationHours)}.`,
-        type: 'USAGE_LOGGED',
-        isRead: false,
-        linkTo: `/admin/customers/${customer.id}`,
-        createdAt: new Date(),
-    };
-    addMockNotification(adminNotification);
+      const adminNotification: Notification = {
+          id: `noti-${Date.now()}-admin`,
+          userId: 'admin001',
+          message: `Water usage logged for ${customer.name}: ${formatDurationFromHours(newRecord.durationHours)}.`,
+          type: 'USAGE_LOGGED',
+          isRead: false,
+          linkTo: `/admin/customers/${customer.id}`,
+          createdAt: new Date(),
+      };
+      await addNotificationToFirestore(adminNotification);
 
-    fetchCustomerData(); 
-    toast({ title: "Usage Logged", description: `${formatDurationFromHours(newRecord.durationHours)} logged for ${newRecord.customerName}.` });
+      await fetchCustomerData();
+      toast({ title: "Usage Logged", description: `${formatDurationFromHours(newRecord.durationHours)} logged for ${newRecord.customerName}.` });
+    } catch (error) {
+      console.error("Failed to log usage record:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not log water usage. Please try again." });
+    }
   };
 
-  const handleAddPaymentRecord = (newPayment: Payment) => {
+  const handleAddPaymentRecord = async (newPayment: Payment) => {
     if (!customerId || !customer) return;
-    addMockPayment(newPayment);
+    try {
+      await addPaymentToFirestore(newPayment);
 
-    const viewerNotification: Notification = {
-        id: `noti-${Date.now()}-viewer`,
-        userId: customer.authUID || customer.id,
-        message: `Payment of PKR ${newPayment.amountPaid.toLocaleString()} has been recorded.`,
-        type: 'PAYMENT_RECORDED',
-        isRead: false,
-        linkTo: `/viewer/billing`,
-        createdAt: new Date(),
-    };
-    addMockNotification(viewerNotification);
+      const viewerNotification: Notification = {
+          id: `noti-${Date.now()}-viewer`,
+          userId: customer.authUID || customer.id,
+          message: `Payment of PKR ${newPayment.amountPaid.toLocaleString()} has been recorded.`,
+          type: 'PAYMENT_RECORDED',
+          isRead: false,
+          linkTo: `/viewer/billing`,
+          createdAt: new Date(),
+      };
+      await addNotificationToFirestore(viewerNotification);
 
-     const adminNotification: Notification = {
-        id: `noti-${Date.now()}-admin`,
-        userId: 'admin001',
-        message: `Payment of PKR ${newPayment.amountPaid.toLocaleString()} recorded for ${customer.name}.`,
-        type: 'PAYMENT_RECORDED',
-        isRead: false,
-        linkTo: `/admin/customers/${customer.id}`,
-        createdAt: new Date(),
-    };
-    addMockNotification(adminNotification);
+      const adminNotification: Notification = {
+          id: `noti-${Date.now()}-admin`,
+          userId: 'admin001',
+          message: `Payment of PKR ${newPayment.amountPaid.toLocaleString()} recorded for ${customer.name}.`,
+          type: 'PAYMENT_RECORDED',
+          isRead: false,
+          linkTo: `/admin/customers/${customer.id}`,
+          createdAt: new Date(),
+      };
+      await addNotificationToFirestore(adminNotification);
 
-    fetchCustomerData(); 
-    toast({ title: "Payment Recorded", description: `PKR ${newPayment.amountPaid.toLocaleString()} recorded.`});
+      await fetchCustomerData();
+      toast({ title: "Payment Recorded", description: `PKR ${newPayment.amountPaid.toLocaleString()} recorded.`});
+    } catch (error) {
+      console.error("Failed to record payment:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not record payment. Please try again." });
+    }
   };
 
-  const handleUpdateUsageRecord = (updatedRecord: WaterUsageRecord) => {
+  const handleUpdateUsageRecord = async (updatedRecord: WaterUsageRecord) => {
     if (!customerId || !customer) return;
-    updateMockUsageRecord(updatedRecord);
-    fetchCustomerData(); 
-    toast({ title: "Usage Record Updated", description: `Usage record for ${updatedRecord.customerName} has been updated.` });
+    try {
+      await updateUsageRecordInFirestore(updatedRecord);
+      await fetchCustomerData();
+      toast({ title: "Usage Record Updated", description: `Usage record for ${updatedRecord.customerName} has been updated.` });
+    } catch(error) {
+      console.error("Failed to update usage record:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not update usage record." });
+    }
   };
 
-  const handleUpdatePaymentRecord = (updatedPayment: Payment) => {
+  const handleUpdatePaymentRecord = async (updatedPayment: Payment) => {
     if (!customerId || !customer) return;
-    updateMockPaymentRecord(updatedPayment);
-    fetchCustomerData(); 
-    toast({ title: "Payment Record Updated", description: `Payment record for ${updatedPayment.customerName} has been updated.` });
+    try {
+      await updatePaymentRecordInFirestore(updatedPayment);
+      await fetchCustomerData();
+      toast({ title: "Payment Record Updated", description: `Payment record for ${updatedPayment.customerName} has been updated.` });
+    } catch (error) {
+      console.error("Failed to update payment record:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not update payment record." });
+    }
   };
 
   const handleToggleEdit = () => {
@@ -169,42 +172,48 @@ export default function CustomerDetailPage() {
     setEditedCustomerData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveChanges = () => {
-    if (customer && editedCustomerData) {
-      const updatedCustomerData: Customer = {
-        ...customer, 
-        name: editedCustomerData.name || customer.name,
-        contactInfo: editedCustomerData.contactInfo, 
-        email: editedCustomerData.email ? editedCustomerData.email.trim().toLowerCase() : undefined, 
-      };
-      updateMockCustomer(updatedCustomerData);
-
-       const adminNotification: Notification = {
-        id: `noti-${Date.now()}-admin-update`,
-        userId: 'admin001',
-        message: `Customer details for ${updatedCustomerData.name} updated.`,
-        type: 'CUSTOMER_UPDATED',
-        isRead: false,
-        linkTo: `/admin/customers/${updatedCustomerData.id}`,
-        createdAt: new Date(),
-      };
-      addMockNotification(adminNotification);
-      if (updatedCustomerData.authUID) {
-        const viewerNotification: Notification = {
-            id: `noti-${Date.now()}-viewer-update`,
-            userId: updatedCustomerData.authUID,
-            message: `Your account details have been updated by an administrator.`,
-            type: 'CUSTOMER_UPDATED',
-            isRead: false,
-            linkTo: `/viewer/profile`,
-            createdAt: new Date(),
+  const handleSaveChanges = async () => {
+    if (customer && customerId && editedCustomerData) {
+      try {
+        const updatedData: Partial<Customer> = {
+          name: editedCustomerData.name || customer.name,
+          contactInfo: editedCustomerData.contactInfo,
+          email: editedCustomerData.email ? editedCustomerData.email.trim().toLowerCase() : undefined,
         };
-        addMockNotification(viewerNotification);
-      }
 
-      fetchCustomerData(); 
-      setIsEditing(false);
-      toast({ title: "Customer Updated", description: "Customer details have been saved." });
+        await updateCustomerInFirestore({ id: customerId, ...updatedData });
+        
+        const adminNotification: Notification = {
+          id: `noti-${Date.now()}-admin-update`,
+          userId: 'admin001',
+          message: `Customer details for ${updatedData.name} updated.`,
+          type: 'CUSTOMER_UPDATED',
+          isRead: false,
+          linkTo: `/admin/customers/${customerId}`,
+          createdAt: new Date(),
+        };
+        await addNotificationToFirestore(adminNotification);
+
+        if (customer.authUID) {
+          const viewerNotification: Notification = {
+              id: `noti-${Date.now()}-viewer-update`,
+              userId: customer.authUID,
+              message: `Your account details have been updated by an administrator.`,
+              type: 'CUSTOMER_UPDATED',
+              isRead: false,
+              linkTo: `/viewer/profile`,
+              createdAt: new Date(),
+          };
+          await addNotificationToFirestore(viewerNotification);
+        }
+
+        await fetchCustomerData();
+        setIsEditing(false);
+        toast({ title: "Customer Updated", description: "Customer details have been saved." });
+      } catch (error) {
+        console.error("Failed to save customer changes:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not save customer details." });
+      }
     }
   };
 
@@ -224,8 +233,8 @@ export default function CustomerDetailPage() {
     );
   }
 
-  if (!customer) { 
-    const UserPlaceholderIcon = () => ( // Simple SVG placeholder for User icon
+  if (!customer) {
+    const UserPlaceholderIcon = () => (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto h-12 w-12 text-muted-foreground">
         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
