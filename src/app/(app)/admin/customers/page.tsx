@@ -7,61 +7,81 @@ import { CustomerListTable } from '@/components/admin/customers/customer-list-ta
 import type { Customer, Notification, WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  getAllMockCustomers, 
-  addMockCustomer as addCustomerToStore,
+  getAllCustomersFromFirestore, 
+  addCustomerToFirestore,
   addMockNotification,
   getAllMockUsageRecords 
 } from '@/lib/mock-data-store';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 100)); 
-    const storedCustomers = getAllMockCustomers();
-    const usageRecords = getAllMockUsageRecords();
+    try {
+      const storedCustomers = await getAllCustomersFromFirestore();
+      const usageRecords = getAllMockUsageRecords();
 
-    const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
-      const customerUsage = usageRecords
-        .filter(record => record.customerId === customer.id)
-        .reduce((sum, record) => sum + record.durationHours, 0);
-      return { ...customer, totalUsageHours: customerUsage };
-    });
-    setCustomers(customersWithUsage.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    setIsLoading(false);
-  }, []);
+      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
+        const customerUsage = usageRecords
+          .filter(record => record.customerId === customer.id)
+          .reduce((sum, record) => sum + record.durationHours, 0);
+        return { ...customer, totalUsageHours: customerUsage };
+      });
+      setCustomers(customersWithUsage);
+    } catch (error) {
+        console.error("Failed to fetch customers from Firestore:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load customers",
+          description: "Could not retrieve customer data from the database. Check console for details.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = (newCustomer: Customer) => {
-    addCustomerToStore(newCustomer); 
-    
-    const adminNotification: Notification = {
-        id: `noti-${Date.now()}-admin-newcust`,
-        userId: 'admin001', 
-        message: `New customer added: ${newCustomer.name}.`,
-        type: 'CUSTOMER_ADDED',
-        isRead: false,
-        linkTo: `/admin/customers/${newCustomer.id}`,
-        createdAt: new Date(),
-    };
-    addMockNotification(adminNotification);
+  const handleAddCustomer = async (newCustomer: Customer) => {
+    try {
+      await addCustomerToFirestore(newCustomer);
+      
+      const adminNotification: Notification = {
+          id: `noti-${Date.now()}-admin-newcust`,
+          userId: 'admin001', 
+          message: `New customer added: ${newCustomer.name}.`,
+          type: 'CUSTOMER_ADDED',
+          isRead: false,
+          linkTo: `/admin/customers/${newCustomer.id}`,
+          createdAt: new Date(),
+      };
+      addMockNotification(adminNotification);
 
-    fetchCustomers(); 
+      fetchCustomers();
+    } catch (error) {
+        console.error("Failed to add customer to Firestore:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to add customer",
+          description: "Could not save new customer to the database. Please try again.",
+        });
+    }
   };
 
   if (isLoading && customers.length === 0) { 
     return (
         <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2">Loading customers...</p>
+            <p className="ml-2">Loading customers from database...</p>
         </div>
     );
   }
@@ -70,6 +90,7 @@ export default function AdminCustomersPage() {
     <div className="mt-6">
       <PageHeader 
         title="Customer Management" 
+        description="Live data from Firestore"
         actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
       />
       {isLoading && customers.length > 0 && ( 
