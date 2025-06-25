@@ -2,14 +2,19 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Loader2, Palette } from 'lucide-react'; // Added more icons
+import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Loader2, Palette } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import type { Notification } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
-import { getAllAdminNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
+import { 
+  getAdminNotificationsFromFirestore, 
+  markNotificationAsReadInFirestore, 
+  markAllNotificationsAsReadInFirestore 
+} from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 const NotificationIcon = ({ type }: { type: Notification['type']}) => {
   switch(type) {
@@ -18,7 +23,7 @@ const NotificationIcon = ({ type }: { type: Notification['type']}) => {
     case 'CUSTOMER_ADDED': return <UserPlus className="h-5 w-5" />;
     case 'CUSTOMER_UPDATED': return <UserCog className="h-5 w-5" />;
     case 'BILL_REMINDER': return <BellRing className="h-5 w-5 text-destructive" />;
-    case 'ANNOUNCEMENT': return <Palette className="h-5 w-5" />; // Changed icon for announcement
+    case 'ANNOUNCEMENT': return <Palette className="h-5 w-5" />;
     default: return <BellRing className="h-5 w-5" />;
   }
 };
@@ -26,29 +31,44 @@ const NotificationIcon = ({ type }: { type: Notification['type']}) => {
 export default function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const fetchNotifications = useCallback(() => {
+  const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
-    // Simulate delay
-    setTimeout(() => {
-      const adminNotifications = getAllAdminNotifications();
+    try {
+      const adminNotifications = await getAdminNotificationsFromFirestore();
       setNotifications(adminNotifications);
+    } catch(error) {
+      console.error("Failed to load notifications from Firestore", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not load notifications from Firestore. Check console for details." });
+    } finally {
       setIsLoading(false);
-    }, 100);
-  }, []);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  const handleMarkAsRead = (notificationId: string) => {
-    markNotificationAsRead(notificationId, 'admin001'); // Assuming 'admin001' is the admin's userId
-    fetchNotifications(); // Re-fetch to update UI
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await markNotificationAsReadInFirestore(notificationId);
+      fetchNotifications();
+    } catch(error) {
+      console.error("Failed to mark notification as read:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not mark notification as read." });
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    markAllNotificationsAsRead('admin001');
-    fetchNotifications();
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllNotificationsAsReadInFirestore('admin001');
+      fetchNotifications();
+      toast({ title: "Success", description: "All notifications marked as read." });
+    } catch(error) {
+      console.error("Failed to mark all notifications as read:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not mark all notifications as read." });
+    }
   };
   
   if (isLoading) {
@@ -64,8 +84,7 @@ export default function AdminNotificationsPage() {
 
   return (
     <>
-      {/* PageHeader removed as per request */}
-      <Card className="shadow-md glassmorphism-card mt-6"> {/* Added mt-6 for spacing after removing PageHeader */}
+      <Card className="shadow-md glassmorphism-card mt-6">
         <CardHeader>
            <div className="flex justify-between items-center">
             <div>
@@ -85,7 +104,7 @@ export default function AdminNotificationsPage() {
           {notifications.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center">No notifications yet.</p>
           ) : (
-            <ScrollArea className="h-[calc(100vh-16rem)] pr-4"> {/* Adjusted height assuming no PageHeader */}
+            <ScrollArea className="h-[calc(100vh-16rem)] pr-4">
               <ul className="space-y-4">
                 {notifications.map((notification) => (
                   <li

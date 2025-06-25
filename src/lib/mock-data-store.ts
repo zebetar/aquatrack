@@ -427,23 +427,66 @@ export async function addNotificationToFirestore(notification: Notification): Pr
   }
 }
 
-export async function getAdminNotificationsFromFirestore(): Promise<Notification[]> {
+export async function getNotificationsByUserIdFromFirestore(userId: string, fetchLimit?: number): Promise<Notification[]> {
+    try {
+        const notificationsCol = collection(db, 'notifications');
+        const constraints = [where('userId', '==', userId), orderBy('createdAt', 'desc')];
+        if (fetchLimit) {
+            constraints.push(limit(fetchLimit));
+        }
+        const q = query(notificationsCol, ...constraints);
+        const notificationSnapshot = await getDocs(q);
+        return notificationSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                createdAt: (data.createdAt as Timestamp).toDate(),
+            } as Notification;
+        });
+    } catch (e) {
+        console.error(`Error fetching notifications for user ${userId} from Firestore: `, e);
+        if ((e as any).code === 'failed-precondition') {
+            console.error(`ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'notifications' on 'userId' and 'createdAt desc'. Please check your browser's developer console for a link to create it.`);
+        }
+        throw e;
+    }
+}
+
+export async function getAdminNotificationsFromFirestore(fetchLimit?: number): Promise<Notification[]> {
+  return getNotificationsByUserIdFromFirestore('admin001', fetchLimit);
+}
+
+export async function markNotificationAsReadInFirestore(notificationId: string): Promise<void> {
   try {
+    const notificationRef = doc(db, 'notifications', notificationId);
+    await updateDoc(notificationRef, { isRead: true });
+  } catch (e) {
+    console.error(`Error marking notification ${notificationId} as read in Firestore:`, e);
+    throw e;
+  }
+}
+
+export async function markAllNotificationsAsReadInFirestore(userId: string): Promise<void> {
+  try {
+    const batch = writeBatch(db);
     const notificationsCol = collection(db, 'notifications');
-    const q = query(notificationsCol, where('userId', '==', 'admin001'), orderBy('createdAt', 'desc'), limit(10));
-    const notificationSnapshot = await getDocs(q);
-    return notificationSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-        createdAt: (data.createdAt as Timestamp).toDate(),
-      } as Notification;
+    const q = query(notificationsCol, where('userId', '==', userId), where('isRead', '==', false));
+    const unreadSnapshot = await getDocs(q);
+    
+    if (unreadSnapshot.empty) {
+      return; // Nothing to do
+    }
+
+    unreadSnapshot.forEach(doc => {
+      batch.update(doc.ref, { isRead: true });
     });
-  } catch(e) {
-    console.error("Error fetching admin notifications from Firestore: ", e);
-     if ((e as any).code === 'failed-precondition') {
-        console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX. Please check your browser's developer console for a link to create it. The index should be for the 'notifications' collection, on 'userId' and 'createdAt desc'.");
+
+    await batch.commit();
+  } catch (e) {
+    console.error(`Error marking all notifications as read for user ${userId} in Firestore:`, e);
+    if ((e as any).code === 'failed-precondition') {
+      console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'notifications' on 'userId' and 'isRead'. Please check your browser's developer console for a link to create it.");
     }
     throw e;
   }

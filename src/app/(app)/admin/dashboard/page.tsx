@@ -117,12 +117,12 @@ export default function AdminDashboardPage() {
         getAllCustomersFromFirestore(),
         getUsageRecordsForDateRangeFromFirestore(firstDay, lastDay),
         getOutstandingCustomersFromFirestore(),
-        getAdminNotificationsFromFirestore(),
+        getAdminNotificationsFromFirestore(3),
       ]);
 
       setTotalCustomers(customers.length);
       setCustomersWithOutstandingBills(outstandingCustomers);
-      setRecentNotifications(notifications.slice(0, 3));
+      setRecentNotifications(notifications);
 
       const currentSupply = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
       const currentRevenue = usageRecords.reduce((sum, record) => sum + record.cost, 0);
