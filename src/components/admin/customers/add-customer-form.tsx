@@ -48,19 +48,29 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     
-    // Ensure email is undefined if it's an empty string after Zod processing, otherwise use the processed value.
-    const customerEmail = values.email && values.email.length > 0 ? values.email : undefined;
-
+    // Base customer object with required fields.
+    // This prevents sending 'undefined' values to Firestore, which is not allowed.
     const newCustomer: Customer = {
       id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       name: values.name,
-      email: customerEmail, // Use the processed email
-      contactInfo: values.contactInfo || undefined,
-      // Generate authUID only if customerEmail is a valid, non-empty string
-      authUID: customerEmail ? `authuid-${Math.random().toString(36).substring(2, 9)}` : undefined,
       createdAt: new Date(),
       balance: 0,
     };
+
+    // Conditionally add optional fields only if they have a value.
+    const customerEmail = values.email?.trim();
+    if (customerEmail) {
+      newCustomer.email = customerEmail.toLowerCase();
+      newCustomer.authUID = `authuid-${Math.random().toString(36).substring(2, 9)}`;
+    }
+
+    const contactInfo = values.contactInfo?.trim();
+    if (contactInfo) {
+      newCustomer.contactInfo = contactInfo;
+    }
+    
+    // The newCustomer object is now clean and ready for Firestore.
+    // The parent component will handle the actual database call.
     
     toast({
       title: "Customer Added Successfully!",
