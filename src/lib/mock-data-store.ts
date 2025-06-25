@@ -233,6 +233,34 @@ export async function getAllUsageRecordsFromFirestore(): Promise<WaterUsageRecor
   }
 }
 
+export async function getUsageRecordsForDateRangeFromFirestore(startDate: Date, endDate: Date): Promise<WaterUsageRecord[]> {
+    try {
+        const usageCol = collection(db, 'usageRecords');
+        const q = query(usageCol, 
+                        where('date', '>=', Timestamp.fromDate(startDate)), 
+                        where('date', '<=', Timestamp.fromDate(endDate)),
+                        orderBy('date', 'desc'));
+        const usageSnapshot = await getDocs(q);
+        return usageSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                date: (data.date as Timestamp).toDate(),
+                startTime: (data.startTime as Timestamp).toDate(),
+                endTime: (data.endTime as Timestamp).toDate(),
+                createdAt: (data.createdAt as Timestamp).toDate(),
+            } as WaterUsageRecord;
+        });
+    } catch (e) {
+        console.error("Error fetching usage records for date range from Firestore: ", e);
+        if ((e as any).code === 'failed-precondition') {
+            console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX. Please check your browser's developer console for a link to create it. The index should be on 'usageRecords' collection for 'date' (>=), 'date' (<=), and 'date' (desc).");
+        }
+        throw e;
+    }
+}
+
 export async function getUsageRecordsByCustomerIdFromFirestore(customerId: string): Promise<WaterUsageRecord[]> {
   try {
     const usageCol = collection(db, 'usageRecords');
@@ -395,6 +423,28 @@ export async function addNotificationToFirestore(notification: Notification): Pr
     await setDoc(notificationRef, notificationData);
   } catch(e) {
     console.error(`Error adding notification ${notification.id} to Firestore:`, e);
+    throw e;
+  }
+}
+
+export async function getAdminNotificationsFromFirestore(): Promise<Notification[]> {
+  try {
+    const notificationsCol = collection(db, 'notifications');
+    const q = query(notificationsCol, where('userId', '==', 'admin001'), orderBy('createdAt', 'desc'), limit(10));
+    const notificationSnapshot = await getDocs(q);
+    return notificationSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: (data.createdAt as Timestamp).toDate(),
+      } as Notification;
+    });
+  } catch(e) {
+    console.error("Error fetching admin notifications from Firestore: ", e);
+     if ((e as any).code === 'failed-precondition') {
+        console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX. Please check your browser's developer console for a link to create it. The index should be for the 'notifications' collection, on 'userId' and 'createdAt desc'.");
+    }
     throw e;
   }
 }

@@ -2,21 +2,23 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, BellRing } from 'lucide-react'; // Removed Sparkles, Briefcase
+import { Users, Droplets, CreditCard, BarChart3, BellRing, Loader2 } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
-  getAllMockCustomers, 
-  getAllMockUsageRecords,
-  getAllAdminNotifications
+  getAllCustomersFromFirestore,
+  getUsageRecordsForDateRangeFromFirestore,
+  getOutstandingCustomersFromFirestore,
+  getAdminNotificationsFromFirestore,
 } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
-import { format, isThisMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
 import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog';
 import { MonthlyRevenueDetailsDialog } from '@/components/admin/dashboard/monthly-revenue-details-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const KeyMetricCard = memo(({ 
   title, 
@@ -86,6 +88,9 @@ KeyMetricCard.displayName = 'KeyMetricCard';
 
 
 export default function AdminDashboardPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [monthlySupply, setMonthlySupply] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
@@ -101,58 +106,73 @@ export default function AdminDashboardPage() {
   const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false);
 
 
-  const loadDashboardData = useCallback(() => {
-    const customers = getAllMockCustomers();
-    const usageRecords = getAllMockUsageRecords();
-    const notifications = getAllAdminNotifications();
+  const loadDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const today = new Date();
+      const firstDay = startOfMonth(today);
+      const lastDay = endOfMonth(today);
 
-    setTotalCustomers(customers.length);
+      const [customers, usageRecords, outstandingCustomers, notifications] = await Promise.all([
+        getAllCustomersFromFirestore(),
+        getUsageRecordsForDateRangeFromFirestore(firstDay, lastDay),
+        getOutstandingCustomersFromFirestore(),
+        getAdminNotificationsFromFirestore(),
+      ]);
 
-    const currentMonthUsageRecords = usageRecords.filter(record => {
-      const recordDate = new Date(record.date); 
-      return !isNaN(recordDate.getTime()) && isThisMonth(recordDate);
-    });
-    const currentSupply = currentMonthUsageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-    const currentRevenue = currentMonthUsageRecords.reduce((sum, record) => sum + record.cost, 0);
+      setTotalCustomers(customers.length);
+      setCustomersWithOutstandingBills(outstandingCustomers);
+      setRecentNotifications(notifications.slice(0, 3));
+
+      const currentSupply = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
+      const currentRevenue = usageRecords.reduce((sum, record) => sum + record.cost, 0);
+      setMonthlySupply(currentSupply);
+      setMonthlyRevenue(currentRevenue);
+
+      const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
+      setOutstandingBillsValue(totalDue);
+      
+      const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
+      customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
+
+      usageRecords.forEach(record => { 
+        const entry = customerUsageMap.get(record.customerId);
+        if (entry) {
+          entry.usageHours += record.durationHours;
+          entry.cost += record.cost;
+        }
+      });
     
-    setMonthlySupply(currentSupply);
-    setMonthlyRevenue(currentRevenue);
+      const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
+        .map(([id, data]) => ({ id, ...data }))
+        .filter(item => item.usageHours > 0 || item.cost > 0) 
+        .sort((a,b) => b.usageHours - a.usageHours);
+      setCustomersWithMonthlyUsageData(processedDialogData);
 
-    const customersWithDues = customers.filter(c => c.balance > 0).sort((a,b) => b.balance - a.balance);
-    setCustomersWithOutstandingBills(customersWithDues);
-    const totalDue = customersWithDues.reduce((sum, customer) => sum + customer.balance, 0);
-    setOutstandingBillsValue(totalDue);
-    
-    const validNotifications = notifications.filter(activity => {
-        const activityDate = new Date(activity.createdAt); 
-        return !isNaN(activityDate.getTime());
-    });
-    setRecentNotifications(validNotifications.slice(0, 3)); 
-
-    const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
-    customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
-
-    currentMonthUsageRecords.forEach(record => { 
-      const entry = customerUsageMap.get(record.customerId);
-      if (entry) {
-        entry.usageHours += record.durationHours;
-        entry.cost += record.cost;
-      }
-    });
-    
-    const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
-      .map(([id, data]) => ({ id, ...data }))
-      .filter(item => item.usageHours > 0 || item.cost > 0) 
-      .sort((a,b) => b.usageHours - a.usageHours);
-    setCustomersWithMonthlyUsageData(processedDialogData);
-
-  }, []);
+    } catch (error) {
+      console.error("Failed to load dashboard data from Firestore", error);
+      toast({
+        variant: "destructive",
+        title: "Error Loading Dashboard",
+        description: "Could not retrieve live data from Firestore. Check console for details.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     loadDashboardData();
-    const intervalId = setInterval(loadDashboardData, 30000);
-    return () => clearInterval(intervalId);
   }, [loadDashboardData]);
+  
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center mt-6">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading live dashboard data...</p>
+      </div>
+    );
+  }
 
   const metrics = [
     { 
