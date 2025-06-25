@@ -6,12 +6,11 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  // getAllMockCustomers, // No longer used for individual viewer profile fetching
   updateCustomerEmail as updateCustomerEmailInStore 
-} from '@/lib/mock-data-store'; // Keep this for actual data updates
-import { auth as firebaseAuth, db } from '@/lib/firebase-config'; // Ensure db is imported
+} from '@/lib/mock-data-store';
+import { auth as firebaseAuth, db } from '@/lib/firebase-config';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 
 interface AuthContextType {
@@ -27,10 +26,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const MOCK_ADMIN_USER_BASE: Omit<User, 'id' | 'role' | 'avatarUrl'> = { email: 'admin@aquatrack.com', name: 'Admin User' };
-const MOCK_ADMIN_PASSWORD = "adminpassword";
 export const MOCK_VIEWER_PASSWORD = "viewerpassword"; // Exported for use in forms if needed
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -81,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(adminUser);
           localStorage.setItem('authUser', JSON.stringify(adminUser)); // Re-save potentially updated admin info
           console.log("AuthProvider (onAuthStateChanged): Admin user profile set:", adminUser);
-          setLoading(false);
           if (pathname.startsWith('/login') || !pathname.startsWith('/admin')) {
              router.push('/admin/dashboard');
           }
@@ -99,7 +94,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const customerDoc = querySnapshot.docs[0];
               const customerData = customerDoc.data() as Customer;
 
-              // Secondary check: ensure email also matches, just in case of data issues.
               if (customerData.email && customerData.email.toLowerCase() === firebaseUser.email?.toLowerCase()) {
                 const viewerUser: User = {
                   id: firebaseUser.uid,
@@ -107,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   role: 'viewer',
                   name: customerData.name,
                   customerId: customerDoc.id,
-                  avatarUrl: appUserAvatarUrl, // Use stored avatar if available from login persistence
+                  avatarUrl: appUserAvatarUrl, 
                 };
                 setUser(viewerUser);
                 localStorage.setItem('authUser', JSON.stringify(viewerUser));
@@ -123,17 +117,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   description: `Authenticated as ${firebaseUser.email}, but the linked customer profile email (${customerData.email}) does not match. Logging out.`,
                   duration: 9000,
                 });
-                await signOut(firebaseAuth); // Sign out from Firebase Auth
+                await signOut(firebaseAuth);
               }
             } else {
               console.error(`AuthProvider (onAuthStateChanged): VIEWER PROFILE NOT FOUND for authUID: ${firebaseUser.uid} and email: ${firebaseUser.email}`);
               toast({
                 variant: "destructive",
                 title: `Profile Loading Error (UID: ${firebaseUser.uid})`,
-                description: `Authentication was successful for ${firebaseUser.email}, but no customer profile found linked to your account. Please contact support. You have been logged out.`,
+                description: `Authentication was successful, but no customer profile was found linked to your account. Please contact support. You have been logged out.`,
                 duration: 9000,
               });
-              await signOut(firebaseAuth); // Sign out from Firebase Auth
+              await signOut(firebaseAuth);
             }
           } catch (error) {
             console.error(`AuthProvider (onAuthStateChanged): Error during targeted query for customer profile (viewer):`, error);
@@ -141,12 +135,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             toast({
               variant: "destructive",
               title: `Profile Loading Error (UID: ${firebaseUser.uid}): ${firebaseError.code || 'Query Failed'}`,
-              description: `${firebaseError.message || 'Could not load your customer profile due to a database error.'} Ensure your customer account is correctly set up in Firestore. You have been logged out.`,
+              description: `${firebaseError.message || 'Could not load your customer profile due to a database error.'} This may be due to missing Firestore security rules or a missing index. You have been logged out.`,
               duration: 9000,
             });
-            await signOut(firebaseAuth); // Sign out from Firebase Auth
-          } finally {
-            setLoading(false);
+            await signOut(firebaseAuth);
           }
         }
       } else {
@@ -154,39 +146,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("AuthProvider (onAuthStateChanged): No Firebase user. Clearing app user state.");
         setUser(null);
         localStorage.removeItem('authUser');
-        setLoading(false);
         if (!pathname.startsWith('/login')) {
            router.push('/login');
         }
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router, pathname, toast]); // Added toast to dependencies
+  }, [router, pathname, toast]);
 
   const login = async (email: string, password: string, formSelectedRole: 'admin' | 'viewer'): Promise<void> => {
-    console.log(`AuthProvider (login): Initiating login for formSelectedRole=${formSelectedRole}`);
     const processedEmail = email.trim().toLowerCase();
-    
-    console.log(`Email (to be sent to Firebase): '${processedEmail}'`);
-    console.log(`Password (length to be sent to Firebase): ${password.length}`);
-
     setLoading(true);
     try {
       // Attempt Firebase sign-in. onAuthStateChanged will handle profile linking.
       await signInWithEmailAndPassword(firebaseAuth, processedEmail, password);
       console.log(`AuthProvider (login): Firebase signInWithEmailAndPassword successful for ${processedEmail}. Waiting for onAuthStateChanged to process.`);
-      // Success/failure toast is now handled by onAuthStateChanged based on profile linking
     } catch (error: any) {
       console.error("AuthProvider (login): Firebase signInWithEmailAndPassword error:", error);
+      let title = "Login Failed";
       let description = "An unexpected error occurred during login.";
+
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        description = "Invalid email or password. Please try again.";
+        title = "Invalid Credentials";
+        description = "The email or password does not match a valid user. Please go to your Firebase Authentication console, verify the user exists, is enabled, and reset their password if needed.";
         console.error(`AuthProvider (login): Specific error code '${error.code}' points to incorrect credentials for email: '${processedEmail}'.`);
       } else if (error.code === 'auth/too-many-requests') {
-        description = "Too many login attempts. Please try again later.";
+        title = "Too Many Attempts";
+        description = "Access to this account has been temporarily disabled due to many failed login attempts. You can restore it by resetting your password or you can try again later.";
       }
-      toast({ variant: "destructive", title: "Login Failed", description });
+      
+      toast({ 
+        variant: "destructive", 
+        title: title, 
+        description: description,
+        duration: 9000 // Give user more time to read the instructions
+      });
       setUser(null); // Ensure user state is cleared
       localStorage.removeItem('authUser');
     } finally {
@@ -199,9 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log("AuthProvider (logout): Logging out.");
     try {
       await signOut(firebaseAuth);
-      // onAuthStateChanged will handle clearing user state and localStorage
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      // router.push('/login') is handled by useEffect based on user state
     } catch (error) {
       console.error("AuthProvider (logout): Error during sign out:", error);
       toast({ variant: "destructive", title: "Logout Failed", description: "Could not log you out." });
@@ -216,9 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = { ...user, email: processedNewEmail };
       setUser(updatedUser);
       localStorage.setItem('authUser', JSON.stringify(updatedUser));
-      updateCustomerEmailInStore(user.customerId, processedNewEmail); // This updates the mock store for now
-      // TODO: Implement actual Firebase email update if needed (requires re-authentication)
-      // For now, we assume this updates the email used for LOOKUP in our app, not Firebase Auth email directly.
+      updateCustomerEmailInStore(user.customerId, processedNewEmail);
       toast({ title: "Viewer Email Updated (App Level)", description: `Your app email reference is now ${processedNewEmail}.` });
     }
   };
@@ -265,5 +257,3 @@ export function useAuth() {
   }
   return context;
 }
-
-    
