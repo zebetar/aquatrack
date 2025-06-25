@@ -2,21 +2,19 @@
 "use client";
 
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, WaterUsageRecord } from '@/types';
+import type { Customer } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import {
-  getAllMockCustomers,
-  deleteMockCustomer as deleteCustomerFromStore,
-  getMockCustomerById,
-  getMockUsageRecordsByCustomerId,
-  getMockPaymentsByCustomerId,
-  getAllMockUsageRecords
+  getAllCustomersFromFirestore,
+  deleteCustomerAndRelatedDataFromFirestore,
+  getCustomerByIdFromFirestore,
+  getUsageRecordsByCustomerIdFromFirestore,
+  getPaymentsByCustomerIdFromFirestore,
+  getAllUsageRecordsFromFirestore
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -26,11 +24,13 @@ export default function AdminUsersPage() {
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchCustomers = useCallback(() => {
+  const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      const storedCustomers = getAllMockCustomers();
-      const usageRecords = getAllMockUsageRecords(); 
+    try {
+      const [storedCustomers, usageRecords] = await Promise.all([
+        getAllCustomersFromFirestore(),
+        getAllUsageRecordsFromFirestore(),
+      ]);
 
       const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
         const customerUsage = usageRecords
@@ -39,10 +39,18 @@ export default function AdminUsersPage() {
         return { ...customer, totalUsageHours: customerUsage };
       });
 
-      setCustomers(customersWithUsage.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      setCustomers(customersWithUsage);
+    } catch(error) {
+       console.error("Failed to fetch users from Firestore:", error);
+       toast({
+          variant: "destructive",
+          title: "Failed to load users",
+          description: "Could not retrieve user data from the database. Check console for details.",
+        });
+    } finally {
       setIsLoading(false);
-    }, 100);
-  }, []);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchCustomers();
@@ -50,41 +58,48 @@ export default function AdminUsersPage() {
 
   const handleCustomerDeleted = async (customerId: string) => {
     setDeletingCustomerId(customerId);
-    const customerForToastName = customers.find(c => c.id === customerId);
-    const customerDataForPdf = getMockCustomerById(customerId);
+    
+    try {
+      const customerForPdf = await getCustomerByIdFromFirestore(customerId);
 
-    if (customerDataForPdf) {
-      try {
-        const usageRecords = getMockUsageRecordsByCustomerId(customerId);
-        const payments = getMockPaymentsByCustomerId(customerId);
-        await generateCustomerPdf(customerDataForPdf, usageRecords, payments);
-        toast({
-          title: "Statement Generated",
-          description: `PDF statement for ${customerDataForPdf.name} is being downloaded.`,
-        });
-      } catch (error) {
-        console.error("Error generating PDF before deletion:", error);
-        toast({
-          variant: "destructive",
-          title: "PDF Generation Failed",
-          description: "Could not generate PDF statement. Customer will still be deleted.",
-        });
+      if (customerForPdf) {
+        try {
+          const [usageRecords, payments] = await Promise.all([
+            getUsageRecordsByCustomerIdFromFirestore(customerId),
+            getPaymentsByCustomerIdFromFirestore(customerId),
+          ]);
+          await generateCustomerPdf(customerForPdf, usageRecords, payments);
+          toast({
+            title: "Statement Generated",
+            description: `PDF statement for ${customerForPdf.name} is being downloaded.`,
+          });
+        } catch (pdfError) {
+          console.error("Error generating PDF before deletion:", pdfError);
+          toast({
+            variant: "destructive",
+            title: "PDF Generation Failed",
+            description: "Could not generate PDF statement. Customer will still be deleted.",
+          });
+        }
       }
-    } else {
+
+      await deleteCustomerAndRelatedDataFromFirestore(customerId);
+      toast({
+        title: "Customer Deleted",
+        description: `${customerForPdf?.name || 'Customer'} and all associated data have been removed from Firestore.`,
+      });
+
+    } catch (error) {
+      console.error("Failed to delete customer:", error);
       toast({
         variant: "destructive",
-        title: "Customer Data Not Found for PDF",
-        description: "Could not retrieve customer details for PDF generation. Proceeding with deletion.",
+        title: "Deletion Failed",
+        description: "An error occurred while deleting the customer. See console for details.",
       });
+    } finally {
+      setDeletingCustomerId(null);
+      fetchCustomers(); // Refresh the customer list
     }
-
-    deleteCustomerFromStore(customerId);
-    fetchCustomers();
-    setDeletingCustomerId(null);
-    toast({
-      title: "Customer Deleted",
-      description: `${customerForToastName?.name || 'Customer'} and all associated data have been removed.`,
-    });
   };
 
   if (isLoading && customers.length === 0) {

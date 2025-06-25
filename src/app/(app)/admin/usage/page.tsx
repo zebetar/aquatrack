@@ -6,22 +6,33 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
-import { getAllMockUsageRecords } from '@/lib/mock-data-store';
+import { getAllUsageRecordsFromFirestore } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { formatDurationFromHours } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminUsagePage() {
   const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const loadUsageData = useCallback(() => {
+  const loadUsageData = useCallback(async () => {
     setIsLoading(true);
-    const records = getAllMockUsageRecords();
-    records.sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-    setUsageRecords(records);
-    setIsLoading(false);
-  }, []);
+    try {
+      const records = await getAllUsageRecordsFromFirestore();
+      setUsageRecords(records);
+    } catch(error) {
+       console.error("Failed to fetch usage records from Firestore:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load usage records",
+          description: "Could not retrieve usage data from the database. Check console for details.",
+        });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     loadUsageData();

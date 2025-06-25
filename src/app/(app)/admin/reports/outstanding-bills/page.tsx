@@ -2,39 +2,46 @@
 "use client";
 
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, WaterUsageRecord } from '@/types'; 
+import type { Customer } from '@/types'; 
 import { useState, useEffect, useCallback } from 'react';
-import { getAllMockCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store'; 
+import { getOutstandingCustomersFromFirestore, getAllUsageRecordsFromFirestore } from '@/lib/mock-data-store'; 
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function OutstandingBillsPage() {
   const [outstandingCustomers, setOutstandingCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const fetchOutstandingCustomers = useCallback(() => {
+  const fetchOutstandingCustomers = useCallback(async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      const allCustomers = getAllMockCustomers();
-      const usageRecords = getAllMockUsageRecords(); 
+    try {
+        const customers = await getOutstandingCustomersFromFirestore();
+        const usageRecords = await getAllUsageRecordsFromFirestore();
+        
+        const augmentedCustomers = customers.map(customer => {
+            const customerUsage = usageRecords
+                .filter(record => record.customerId === customer.id)
+                .reduce((sum, record) => sum + record.durationHours, 0);
+            return { ...customer, totalUsageHours: customerUsage };
+        });
 
-      const augmentedCustomers = allCustomers.map(customer => {
-        const customerUsage = usageRecords
-          .filter(record => record.customerId === customer.id)
-          .reduce((sum, record) => sum + record.durationHours, 0);
-        return { ...customer, totalUsageHours: customerUsage };
-      });
-      
-      const filteredCustomers = augmentedCustomers
-        .filter(customer => customer.balance > 0)
-        .sort((a, b) => b.balance - a.balance); 
-      setOutstandingCustomers(filteredCustomers);
-      setIsLoading(false);
-    }, 100);
-  }, []);
+        setOutstandingCustomers(augmentedCustomers);
+    } catch (error) {
+        console.error("Failed to fetch outstanding customers from Firestore:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load report",
+          description: "Could not retrieve outstanding bills report from the database. Check console for details.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchOutstandingCustomers();

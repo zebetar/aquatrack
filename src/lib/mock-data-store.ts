@@ -2,7 +2,7 @@
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
 import { db, Timestamp } from '@/lib/firebase-config';
 import {
-  collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc,
+  collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc,
   writeBatch, orderBy, limit, increment, runTransaction
 } from 'firebase/firestore';
 
@@ -111,6 +111,29 @@ export async function getAllCustomersFromFirestore(): Promise<Customer[]> {
   }
 }
 
+export async function getOutstandingCustomersFromFirestore(): Promise<Customer[]> {
+  try {
+    const customersCol = collection(db, 'customers');
+    const q = query(customersCol, where('balance', '>', 0), orderBy('balance', 'desc'));
+    const customerSnapshot = await getDocs(q);
+    return customerSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: (data.createdAt as Timestamp).toDate()
+      } as Customer;
+    });
+  } catch (e) {
+    console.error("Error fetching outstanding customers from Firestore: ", e);
+    if ((e as any).code === 'failed-precondition') {
+      console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'customers' on fields 'balance > 0' and 'balance desc'. Please check your browser's developer console for a link to create it.");
+    }
+    throw e;
+  }
+}
+
+
 export async function getCustomerByIdFromFirestore(customerId: string): Promise<Customer | null> {
   try {
     const customerRef = doc(db, 'customers', customerId);
@@ -140,6 +163,31 @@ export async function updateCustomerInFirestore(customer: Partial<Customer> & { 
     }
 }
 
+export async function deleteCustomerAndRelatedDataFromFirestore(customerId: string): Promise<void> {
+    try {
+        const batch = writeBatch(db);
+
+        const customerRef = doc(db, 'customers', customerId);
+        batch.delete(customerRef);
+
+        const usageQuery = query(collection(db, 'usageRecords'), where('customerId', '==', customerId));
+        const usageSnapshot = await getDocs(usageQuery);
+        usageSnapshot.forEach(doc => batch.delete(doc.ref));
+
+        const paymentsQuery = query(collection(db, 'payments'), where('customerId', '==', customerId));
+        const paymentsSnapshot = await getDocs(paymentsQuery);
+        paymentsSnapshot.forEach(doc => batch.delete(doc.ref));
+
+        // Note: Notifications are not being deleted here to keep it simple.
+        // In a real app, this might be handled by a Cloud Function.
+
+        await batch.commit();
+    } catch (e) {
+        console.error(`Error deleting customer ${customerId} and related data from Firestore: `, e);
+        throw e;
+    }
+}
+
 
 // USAGE RECORDS
 export async function addUsageRecordToFirestore(record: WaterUsageRecord): Promise<void> {
@@ -158,6 +206,31 @@ export async function addUsageRecordToFirestore(record: WaterUsageRecord): Promi
   batch.set(usageRecordRef, recordData);
   batch.update(customerRef, { balance: increment(record.cost) });
   await batch.commit();
+}
+
+export async function getAllUsageRecordsFromFirestore(): Promise<WaterUsageRecord[]> {
+  try {
+    const usageCol = collection(db, 'usageRecords');
+    const q = query(usageCol, orderBy('startTime', 'desc'));
+    const usageSnapshot = await getDocs(q);
+    return usageSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        date: (data.date as Timestamp).toDate(),
+        startTime: (data.startTime as Timestamp).toDate(),
+        endTime: (data.endTime as Timestamp).toDate(),
+        createdAt: (data.createdAt as Timestamp).toDate(),
+      } as WaterUsageRecord;
+    });
+  } catch (e) {
+    console.error("Error fetching all usage records from Firestore: ", e);
+    if ((e as any).code === 'failed-precondition') {
+      console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'usageRecords' ordered by 'startTime desc'. Please check your browser's developer console for a link to create it.");
+    }
+    throw e;
+  }
 }
 
 export async function getUsageRecordsByCustomerIdFromFirestore(customerId: string): Promise<WaterUsageRecord[]> {
@@ -234,6 +307,30 @@ export async function addPaymentToFirestore(payment: Payment): Promise<void> {
   batch.update(customerRef, { balance: increment(-payment.amountPaid) });
   await batch.commit();
 }
+
+export async function getAllPaymentsFromFirestore(): Promise<Payment[]> {
+    try {
+        const paymentsCol = collection(db, 'payments');
+        const q = query(paymentsCol, orderBy('paymentDate', 'desc'));
+        const paymentSnapshot = await getDocs(q);
+        return paymentSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                paymentDate: (data.paymentDate as Timestamp).toDate(),
+                createdAt: (data.createdAt as Timestamp).toDate(),
+            } as Payment;
+        });
+    } catch (e) {
+        console.error("Error fetching all payments from Firestore: ", e);
+        if ((e as any).code === 'failed-precondition') {
+            console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'payments' ordered by 'paymentDate desc'. Please check your browser's developer console for a link to create it.");
+        }
+        throw e;
+    }
+}
+
 
 export async function getPaymentsByCustomerIdFromFirestore(customerId: string): Promise<Payment[]> {
   try {
@@ -382,6 +479,16 @@ export function markAllNotificationsAsRead(userId: string): void {
   saveStoreToLocalStorage();
 }
 
+export function getMockCustomerById(customerId: string): Customer | null {
+  const customer = store.customers.find(c => c.id === customerId);
+  return customer ? { ...customer } : null;
+}
+
 export function exportMockDataAsJSON(): string {
-  return JSON.stringify(store, null, 2);
+  // This function now only exports the mock parts of the store (notifications)
+  // as other data is now live in Firestore.
+  const mockStore = {
+     notifications: store.notifications,
+  };
+  return JSON.stringify(mockStore, null, 2);
 }
