@@ -1,7 +1,11 @@
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+// Genkit initialization has been commented out to prevent potential server start-up issues.
+// To re-enable Genkit, uncomment the code below and ensure you have valid API keys
+// configured for your environment.
 
-export const ai = genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
-});
+// import {genkit} from 'genkit';
+// import {googleAI} from '@genkit-ai/googleai';
+
+// export const ai = genkit({
+//   plugins: [googleAI()],
+//   model: 'googleai/gemini-2.0-flash',
+// });

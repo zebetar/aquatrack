@@ -1,1 +1,2 @@
-// Flows will be imported for their side effects in this file.
+// This file is used for Genkit's development server.
+// Since AI flows have been removed, this file is currently not in use.
