@@ -105,6 +105,13 @@ export default function AdminDashboardPage() {
 
   const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false);
 
+  // Moved useMemo before any conditional returns to fix hook order violation
+  const customersWithMonthlyRevenueData = useMemo(() => {
+    return customersWithMonthlyUsageData
+      .filter(c => c.cost > 0)
+      .sort((a, b) => b.cost - a.cost);
+  }, [customersWithMonthlyUsageData]);
+
 
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
@@ -204,12 +211,6 @@ export default function AdminDashboardPage() {
       onClick: () => setIsOutstandingBillsDialogOpen(true)
     },
   ];
-  
-  const customersWithMonthlyRevenueData = useMemo(() => {
-    return customersWithMonthlyUsageData
-      .filter(c => c.cost > 0)
-      .sort((a, b) => b.cost - a.cost);
-  }, [customersWithMonthlyUsageData]);
 
   return (
     <>
