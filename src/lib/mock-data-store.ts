@@ -72,6 +72,57 @@ function saveStoreToLocalStorage(): void {
 
 loadStoreFromLocalStorage();
 
+
+// --- Centralized Firestore Error Handler ---
+function handleFirestoreError(e: unknown, context: string): never {
+    console.error(`Error during ${context}:`, e);
+    const firebaseError = e as { code?: string; message?: string };
+
+    if (firebaseError.code === 'permission-denied') {
+        console.error(
+`
+********************************************************************************
+*                                                                              *
+*                      FIREBASE PERMISSION DENIED                              *
+*                                                                              *
+*      Your Firestore security rules are blocking this operation.              *
+*      Go to your Firebase Console > Firestore Database > Rules tab and        *
+*      ensure the authenticated user has permission for this action.           *
+*                                                                              *
+*      For DEVELOPMENT, you can use these permissive rules:                    *
+*      rules_version = '2';                                                    *
+*      service cloud.firestore {                                               *
+*        match /databases/{database}/documents {                               *
+*          match /{document=**} {                                              *
+*            allow read, write: if request.auth != null;                       *
+*          }                                                                   *
+*        }                                                                     *
+*      }                                                                       *
+*                                                                              *
+*      IMPORTANT: These rules are NOT secure for production.                   *
+*                                                                              *
+********************************************************************************
+`
+        );
+    } else if (firebaseError.code === 'failed-precondition') {
+        console.error(
+`
+********************************************************************************
+*                                                                              *
+*                      FIREBASE INDEX REQUIRED                                 *
+*                                                                              *
+*      This query failed because it requires a composite index.                *
+*      Check the browser's developer console for a Firebase error message      *
+*      that includes a DIRECT LINK to create the necessary index.              *
+*                                                                              *
+********************************************************************************
+`
+        );
+    }
+    throw e;
+}
+
+
 // --- Firestore Functions ---
 
 // CUSTOMERS
@@ -84,8 +135,7 @@ export async function addCustomerToFirestore(customer: Customer): Promise<void> 
     };
     await setDoc(customerRef, customerDataForFirestore);
   } catch (e) {
-    console.error("Error adding customer to Firestore: ", e);
-    throw e;
+    handleFirestoreError(e, 'addCustomerToFirestore');
   }
 }
 
@@ -103,11 +153,7 @@ export async function getAllCustomersFromFirestore(): Promise<Customer[]> {
       } as Customer;
     });
   } catch (e) {
-    console.error("Error fetching all customers from Firestore: ", e);
-    if ((e as any).code === 'failed-precondition') {
-      console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX. Please check your browser's developer console for a Firebase error message that includes a DIRECT LINK to create the necessary index in your Firestore console. The index should be for the 'customers' collection, ordered by 'createdAt desc'.");
-    }
-    throw e;
+    handleFirestoreError(e, 'getAllCustomersFromFirestore');
   }
 }
 
@@ -117,8 +163,7 @@ export async function getTotalCustomerCount(): Promise<number> {
         const snapshot = await getCountFromServer(customersCol);
         return snapshot.data().count;
     } catch (e) {
-        console.error("Error fetching total customer count from Firestore: ", e);
-        throw e;
+        handleFirestoreError(e, 'getTotalCustomerCount');
     }
 }
 
@@ -136,11 +181,7 @@ export async function getOutstandingCustomersFromFirestore(): Promise<Customer[]
       } as Customer;
     });
   } catch (e) {
-    console.error("Error fetching outstanding customers from Firestore: ", e);
-    if ((e as any).code === 'failed-precondition') {
-      console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'customers' on fields 'balance > 0' and 'balance desc'. Please check your browser's developer console for a link to create it.");
-    }
-    throw e;
+    handleFirestoreError(e, 'getOutstandingCustomersFromFirestore');
   }
 }
 
@@ -159,8 +200,7 @@ export async function getCustomerByIdFromFirestore(customerId: string): Promise<
     }
     return null;
   } catch (e) {
-    console.error(`Error fetching customer ${customerId} from Firestore:`, e);
-    throw e;
+    handleFirestoreError(e, `getCustomerByIdFromFirestore for ID ${customerId}`);
   }
 }
 
@@ -169,8 +209,7 @@ export async function updateCustomerInFirestore(customer: Partial<Customer> & { 
         const customerRef = doc(db, 'customers', customer.id);
         await updateDoc(customerRef, customer);
     } catch (e) {
-        console.error(`Error updating customer ${customer.id} in Firestore: `, e);
-        throw e;
+        handleFirestoreError(e, `updateCustomerInFirestore for ID ${customer.id}`);
     }
 }
 
@@ -188,35 +227,35 @@ export async function deleteCustomerAndRelatedDataFromFirestore(customerId: stri
         const paymentsQuery = query(collection(db, 'payments'), where('customerId', '==', customerId));
         const paymentsSnapshot = await getDocs(paymentsQuery);
         paymentsSnapshot.forEach(doc => batch.delete(doc.ref));
-
-        // Note: Notifications are not being deleted here to keep it simple.
-        // In a real app, this might be handled by a Cloud Function.
-
+        
         await batch.commit();
     } catch (e) {
-        console.error(`Error deleting customer ${customerId} and related data from Firestore: `, e);
-        throw e;
+        handleFirestoreError(e, `deleteCustomerAndRelatedDataFromFirestore for ID ${customerId}`);
     }
 }
 
 
 // USAGE RECORDS
 export async function addUsageRecordToFirestore(record: WaterUsageRecord): Promise<void> {
-  const customerRef = doc(db, 'customers', record.customerId);
-  const usageRecordRef = doc(db, 'usageRecords', record.id);
-  
-  const recordData = {
-    ...record,
-    createdAt: Timestamp.fromDate(record.createdAt),
-    date: Timestamp.fromDate(record.date),
-    startTime: Timestamp.fromDate(record.startTime),
-    endTime: Timestamp.fromDate(record.endTime),
-  };
+  try {
+    const customerRef = doc(db, 'customers', record.customerId);
+    const usageRecordRef = doc(db, 'usageRecords', record.id);
+    
+    const recordData = {
+      ...record,
+      createdAt: Timestamp.fromDate(record.createdAt),
+      date: Timestamp.fromDate(record.date),
+      startTime: Timestamp.fromDate(record.startTime),
+      endTime: Timestamp.fromDate(record.endTime),
+    };
 
-  const batch = writeBatch(db);
-  batch.set(usageRecordRef, recordData);
-  batch.update(customerRef, { balance: increment(record.cost) });
-  await batch.commit();
+    const batch = writeBatch(db);
+    batch.set(usageRecordRef, recordData);
+    batch.update(customerRef, { balance: increment(record.cost) });
+    await batch.commit();
+  } catch (e) {
+    handleFirestoreError(e, `addUsageRecordToFirestore for customer ${record.customerId}`);
+  }
 }
 
 export async function getAllUsageRecordsFromFirestore(): Promise<WaterUsageRecord[]> {
@@ -236,11 +275,7 @@ export async function getAllUsageRecordsFromFirestore(): Promise<WaterUsageRecor
       } as WaterUsageRecord;
     });
   } catch (e) {
-    console.error("Error fetching all usage records from Firestore: ", e);
-    if ((e as any).code === 'failed-precondition') {
-      console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'usageRecords' ordered by 'startTime desc'. Please check your browser's developer console for a link to create it.");
-    }
-    throw e;
+    handleFirestoreError(e, 'getAllUsageRecordsFromFirestore');
   }
 }
 
@@ -264,11 +299,7 @@ export async function getUsageRecordsForDateRangeFromFirestore(startDate: Date, 
             } as WaterUsageRecord;
         });
     } catch (e) {
-        console.error("Error fetching usage records for date range from Firestore: ", e);
-        if ((e as any).code === 'failed-precondition') {
-            console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX. Please check your browser's developer console for a link to create it. The index should be on 'usageRecords' collection for 'date' (>=), 'date' (<=), and 'date' (desc).");
-        }
-        throw e;
+        handleFirestoreError(e, `getUsageRecordsForDateRangeFromFirestore`);
     }
 }
 
@@ -289,62 +320,65 @@ export async function getUsageRecordsByCustomerIdFromFirestore(customerId: strin
       } as WaterUsageRecord;
     });
   } catch (e) {
-    console.error(`Error fetching usage records for customer ${customerId} from Firestore:`, e);
-     if ((e as any).code === 'failed-precondition') {
-        console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX. Please check your browser's developer console for a Firebase error message that includes a DIRECT LINK to create the necessary index in your Firestore console. The index should be for the 'usageRecords' collection, on fields 'customerId' and 'startTime desc'.");
-    }
-    throw e;
+    handleFirestoreError(e, `getUsageRecordsByCustomerIdFromFirestore for ID ${customerId}`);
   }
 }
 
 export async function updateUsageRecordInFirestore(updatedRecord: WaterUsageRecord): Promise<void> {
   const usageRecordRef = doc(db, 'usageRecords', updatedRecord.id);
   const customerRef = doc(db, 'customers', updatedRecord.customerId);
-
-  await runTransaction(db, async (transaction) => {
-    const usageRecordSnap = await transaction.get(usageRecordRef);
-    if (!usageRecordSnap.exists()) {
-      throw `Usage Record ${updatedRecord.id} does not exist!`;
-    }
-    const oldRecordData = usageRecordSnap.data();
-    const oldRecord = {
-        ...oldRecordData,
-        date: (oldRecordData.date as Timestamp).toDate(),
-        startTime: (oldRecordData.startTime as Timestamp).toDate(),
-        endTime: (oldRecordData.endTime as Timestamp).toDate(),
-        createdAt: (oldRecordData.createdAt as Timestamp).toDate(),
-    } as WaterUsageRecord
-    
-    const costDifference = updatedRecord.cost - oldRecord.cost;
-    
-    const recordDataForFirestore = {
-      ...updatedRecord,
-      createdAt: Timestamp.fromDate(updatedRecord.createdAt),
-      date: Timestamp.fromDate(updatedRecord.date),
-      startTime: Timestamp.fromDate(updatedRecord.startTime),
-      endTime: Timestamp.fromDate(updatedRecord.endTime),
-    };
-    
-    transaction.update(customerRef, { balance: increment(costDifference) });
-    transaction.set(usageRecordRef, recordDataForFirestore);
-  });
+  try {
+    await runTransaction(db, async (transaction) => {
+      const usageRecordSnap = await transaction.get(usageRecordRef);
+      if (!usageRecordSnap.exists()) {
+        throw `Usage Record ${updatedRecord.id} does not exist!`;
+      }
+      const oldRecordData = usageRecordSnap.data();
+      const oldRecord = {
+          ...oldRecordData,
+          date: (oldRecordData.date as Timestamp).toDate(),
+          startTime: (oldRecordData.startTime as Timestamp).toDate(),
+          endTime: (oldRecordData.endTime as Timestamp).toDate(),
+          createdAt: (oldRecordData.createdAt as Timestamp).toDate(),
+      } as WaterUsageRecord
+      
+      const costDifference = updatedRecord.cost - oldRecord.cost;
+      
+      const recordDataForFirestore = {
+        ...updatedRecord,
+        createdAt: Timestamp.fromDate(updatedRecord.createdAt),
+        date: Timestamp.fromDate(updatedRecord.date),
+        startTime: Timestamp.fromDate(updatedRecord.startTime),
+        endTime: Timestamp.fromDate(updatedRecord.endTime),
+      };
+      
+      transaction.update(customerRef, { balance: increment(costDifference) });
+      transaction.set(usageRecordRef, recordDataForFirestore);
+    });
+  } catch (e) {
+    handleFirestoreError(e, `updateUsageRecordInFirestore for ID ${updatedRecord.id}`);
+  }
 }
 
 // PAYMENTS
 export async function addPaymentToFirestore(payment: Payment): Promise<void> {
-  const customerRef = doc(db, 'customers', payment.customerId);
-  const paymentRef = doc(db, 'payments', payment.id);
+  try {
+    const customerRef = doc(db, 'customers', payment.customerId);
+    const paymentRef = doc(db, 'payments', payment.id);
 
-  const paymentData = {
-    ...payment,
-    createdAt: Timestamp.fromDate(payment.createdAt),
-    paymentDate: Timestamp.fromDate(payment.paymentDate),
-  };
+    const paymentData = {
+      ...payment,
+      createdAt: Timestamp.fromDate(payment.createdAt),
+      paymentDate: Timestamp.fromDate(payment.paymentDate),
+    };
 
-  const batch = writeBatch(db);
-  batch.set(paymentRef, paymentData);
-  batch.update(customerRef, { balance: increment(-payment.amountPaid) });
-  await batch.commit();
+    const batch = writeBatch(db);
+    batch.set(paymentRef, paymentData);
+    batch.update(customerRef, { balance: increment(-payment.amountPaid) });
+    await batch.commit();
+  } catch(e) {
+    handleFirestoreError(e, `addPaymentToFirestore for customer ${payment.customerId}`);
+  }
 }
 
 export async function getAllPaymentsFromFirestore(): Promise<Payment[]> {
@@ -362,11 +396,7 @@ export async function getAllPaymentsFromFirestore(): Promise<Payment[]> {
             } as Payment;
         });
     } catch (e) {
-        console.error("Error fetching all payments from Firestore: ", e);
-        if ((e as any).code === 'failed-precondition') {
-            console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'payments' ordered by 'paymentDate desc'. Please check your browser's developer console for a link to create it.");
-        }
-        throw e;
+        handleFirestoreError(e, 'getAllPaymentsFromFirestore');
     }
 }
 
@@ -386,11 +416,7 @@ export async function getPaymentsByCustomerIdFromFirestore(customerId: string): 
       } as Payment;
     });
   } catch (e) {
-    console.error(`Error fetching payments for customer ${customerId} from Firestore:`, e);
-    if ((e as any).code === 'failed-precondition') {
-        console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX. Please check your browser's developer console for a Firebase error message that includes a DIRECT LINK to create the necessary index in your Firestore console. The index should be for the 'payments' collection, on fields 'customerId' and 'paymentDate desc'.");
-    }
-    throw e;
+    handleFirestoreError(e, `getPaymentsByCustomerIdFromFirestore for ID ${customerId}`);
   }
 }
 
@@ -398,29 +424,33 @@ export async function updatePaymentRecordInFirestore(updatedPayment: Payment): P
   const paymentRecordRef = doc(db, 'payments', updatedPayment.id);
   const customerRef = doc(db, 'customers', updatedPayment.customerId);
 
-  await runTransaction(db, async (transaction) => {
-    const paymentRecordSnap = await transaction.get(paymentRecordRef);
-    if (!paymentRecordSnap.exists()) {
-      throw `Payment Record ${updatedPayment.id} does not exist!`;
-    }
-    const oldPaymentData = paymentRecordSnap.data();
-    const oldPayment = {
-        ...oldPaymentData,
-        paymentDate: (oldPaymentData.paymentDate as Timestamp).toDate(),
-        createdAt: (oldPaymentData.createdAt as Timestamp).toDate(),
-    } as Payment;
+  try {
+    await runTransaction(db, async (transaction) => {
+      const paymentRecordSnap = await transaction.get(paymentRecordRef);
+      if (!paymentRecordSnap.exists()) {
+        throw `Payment Record ${updatedPayment.id} does not exist!`;
+      }
+      const oldPaymentData = paymentRecordSnap.data();
+      const oldPayment = {
+          ...oldPaymentData,
+          paymentDate: (oldPaymentData.paymentDate as Timestamp).toDate(),
+          createdAt: (oldPaymentData.createdAt as Timestamp).toDate(),
+      } as Payment;
 
-    const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid;
+      const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid;
 
-    const paymentDataForFirestore = {
-      ...updatedPayment,
-      createdAt: Timestamp.fromDate(updatedPayment.createdAt),
-      paymentDate: Timestamp.fromDate(updatedPayment.paymentDate),
-    };
+      const paymentDataForFirestore = {
+        ...updatedPayment,
+        createdAt: Timestamp.fromDate(updatedPayment.createdAt),
+        paymentDate: Timestamp.fromDate(updatedPayment.paymentDate),
+      };
 
-    transaction.update(customerRef, { balance: increment(amountDifference) });
-    transaction.set(paymentRecordRef, paymentDataForFirestore);
-  });
+      transaction.update(customerRef, { balance: increment(amountDifference) });
+      transaction.set(paymentRecordRef, paymentDataForFirestore);
+    });
+  } catch (e) {
+    handleFirestoreError(e, `updatePaymentRecordInFirestore for ID ${updatedPayment.id}`);
+  }
 }
 
 // NOTIFICATIONS
@@ -433,8 +463,7 @@ export async function addNotificationToFirestore(notification: Notification): Pr
     };
     await setDoc(notificationRef, notificationData);
   } catch(e) {
-    console.error(`Error adding notification ${notification.id} to Firestore:`, e);
-    throw e;
+    handleFirestoreError(e, `addNotificationToFirestore for ID ${notification.id}`);
   }
 }
 
@@ -456,11 +485,7 @@ export async function getNotificationsByUserIdFromFirestore(userId: string, fetc
             } as Notification;
         });
     } catch (e) {
-        console.error(`Error fetching notifications for user ${userId} from Firestore: `, e);
-        if ((e as any).code === 'failed-precondition') {
-            console.error(`ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'notifications' on 'userId' and 'createdAt desc'. Please check your browser's developer console for a link to create it.`);
-        }
-        throw e;
+        handleFirestoreError(e, `getNotificationsByUserIdFromFirestore for user ${userId}`);
     }
 }
 
@@ -473,8 +498,7 @@ export async function markNotificationAsReadInFirestore(notificationId: string):
     const notificationRef = doc(db, 'notifications', notificationId);
     await updateDoc(notificationRef, { isRead: true });
   } catch (e) {
-    console.error(`Error marking notification ${notificationId} as read in Firestore:`, e);
-    throw e;
+    handleFirestoreError(e, `markNotificationAsReadInFirestore for ID ${notificationId}`);
   }
 }
 
@@ -495,11 +519,7 @@ export async function markAllNotificationsAsReadInFirestore(userId: string): Pro
 
     await batch.commit();
   } catch (e) {
-    console.error(`Error marking all notifications as read for user ${userId} in Firestore:`, e);
-    if ((e as any).code === 'failed-precondition') {
-      console.error("ACTION REQUIRED: This Firestore query likely failed due to a MISSING COMPOSITE INDEX for 'notifications' on 'userId' and 'isRead'. Please check your browser's developer console for a link to create it.");
-    }
-    throw e;
+    handleFirestoreError(e, `markAllNotificationsAsReadInFirestore for user ${userId}`);
   }
 }
 
