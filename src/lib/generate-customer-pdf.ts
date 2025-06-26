@@ -4,6 +4,7 @@ import autoTable from 'jspdf-autotable';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
 import { format } from 'date-fns';
 import { APP_NAME } from './constants';
+import { formatDurationFromHours } from './utils';
 
 export async function generateCustomerPdf(
   customer: Customer,
@@ -12,131 +13,140 @@ export async function generateCustomerPdf(
 ): Promise<void> {
   const doc = new jsPDF();
   const pageHeight = doc.internal.pageSize.height;
-  let yPos = 20; // Initial Y position for content
+  const pageWidth = doc.internal.pageSize.width;
+  const margin = 14;
 
-  // Helper function to add text and manage Y position
-  const addText = (text: string, x: number, y: number, options?: any) => {
-    doc.text(text, x, y, options);
+  const drawHeader = () => {
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(40, 52, 71); // Deep charcoal
+    doc.text(APP_NAME, margin, 20);
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(127, 140, 141); // Muted grey
+    doc.text('Customer Statement', margin, 28);
+    
+    doc.setDrawColor(220, 220, 220); // Light grey line
+    doc.line(margin, 35, pageWidth - margin, 35);
   };
-
-  // Helper function to check for page overflow and add new page
-  const checkPageOverflow = (currentY: number, neededHeight: number = 20) => {
-    if (currentY + neededHeight > pageHeight - 20) { // 20 for bottom margin
-      doc.addPage();
-      return 20; // Reset Y position for new page
-    }
-    return currentY;
+  
+  const drawFooter = (pageNumber: number) => {
+    const footerY = pageHeight - 15;
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+    
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(127, 140, 141);
+    doc.text('Thank you for choosing AquaTrack for your water management needs.', margin, footerY);
+    doc.text(`Page ${pageNumber}`, pageWidth - margin, footerY, { align: 'right' });
   };
+  
+  drawHeader();
+  let yPos = 45;
 
-  // Document Title
-  doc.setFontSize(18);
+  // --- CUSTOMER & BILLING SUMMARY (Two-column layout) ---
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  addText(`${APP_NAME} - Customer Statement`, 14, yPos);
-  yPos += 10;
-
-  // Date Generated
+  doc.setTextColor(44, 62, 80);
+  doc.text('BILLED TO', margin, yPos);
+  doc.text('BILLING SUMMARY', pageWidth / 2 + 10, yPos);
+  yPos += 7;
+  
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  addText(`Date Generated: ${format(new Date(), 'PPP p')}`, 14, yPos);
-  yPos += 10;
-
-  // Customer Information
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  addText('Customer Information', 14, yPos);
-  yPos += 7;
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  addText(`Name: ${customer.name}`, 14, yPos);
-  yPos += 6;
-  addText(`Customer ID: ${customer.id}`, 14, yPos);
-  yPos += 6;
-  addText(`Contact: ${customer.contactInfo || 'N/A'}`, 14, yPos);
-  yPos += 6;
-  addText(`Joined: ${format(new Date(customer.createdAt), 'PPP')}`, 14, yPos);
-  yPos += 10;
-
-  // Billing Summary
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  addText('Billing Summary', 14, yPos);
-  yPos += 7;
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  let balanceStatus = "Settled";
-  if (customer.balance > 0) balanceStatus = `Due: PKR ${customer.balance.toLocaleString('en-US')}`;
-  if (customer.balance < 0) balanceStatus = `Credit: PKR ${Math.abs(customer.balance).toLocaleString('en-US')}`;
-  addText(`Current Balance: ${balanceStatus}`, 14, yPos);
-  yPos += 10;
+  doc.setTextColor(80);
   
-  yPos = checkPageOverflow(yPos, 40); // Check space for table header
-
-  // Water Usage History
-  doc.setFontSize(14);
+  doc.text(customer.name, margin, yPos);
+  doc.text(customer.contactInfo || 'N/A', margin, yPos + 6);
+  doc.text(`Joined: ${format(new Date(customer.createdAt), 'PPP')}`, margin, yPos + 12);
+  
+  let balanceStatus = "PKR 0.00";
+  let balanceColor: [number, number, number] = [80, 80, 80];
+  if (customer.balance > 0) {
+    balanceStatus = `PKR ${customer.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    balanceColor = [231, 76, 60]; // Red for due
+  } else if (customer.balance < 0) {
+    balanceStatus = `PKR ${Math.abs(customer.balance).toLocaleString('en-US', {minimumFractionDigits: 2})} (Credit)`;
+    balanceColor = [39, 174, 96]; // Green for credit
+  }
+  
+  doc.text('Statement Date:', pageWidth / 2 + 10, yPos);
+  doc.text(format(new Date(), 'PPP'), pageWidth - margin, yPos, { align: 'right' });
+  
+  doc.text('Current Balance:', pageWidth / 2 + 10, yPos + 12);
   doc.setFont('helvetica', 'bold');
-  addText('Water Usage History', 14, yPos);
-  yPos += 7;
+  doc.setTextColor(...balanceColor);
+  doc.text(balanceStatus, pageWidth - margin, yPos + 12, { align: 'right' });
+  
+  yPos += 25;
+  
+  drawFooter(doc.internal.getNumberOfPages());
+
+  const tableConfig = {
+    theme: 'grid',
+    headStyles: {
+      fillColor: [44, 62, 80],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+    },
+    styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' },
+    bodyStyles: { fillColor: [248, 249, 249] },
+    alternateRowStyles: { fillColor: [255, 255, 255] },
+    didDrawPage: (data: any) => {
+      drawHeader();
+      drawFooter(data.pageNumber);
+      yPos = 45; // Reset yPos for the new page
+    },
+    margin: { top: 10, bottom: 25 },
+  };
 
   if (usageRecords.length > 0) {
     autoTable(doc, {
+      ...tableConfig,
+      // @ts-ignore
       startY: yPos,
-      head: [['Date', 'Start Time', 'End Time', 'Duration (Hrs)', 'Cost (PKR)']],
+      head: [['Date', 'Time Range', 'Duration', 'Cost (PKR)']],
       body: usageRecords.map(r => [
         format(new Date(r.date), 'PP'),
-        format(new Date(r.startTime), 'p'),
-        format(new Date(r.endTime), 'p'),
-        r.durationHours.toFixed(2),
-        r.cost.toLocaleString('en-US'),
+        `${format(new Date(r.startTime), 'p')} - ${format(new Date(r.endTime), 'p')}`,
+        formatDurationFromHours(r.durationHours),
+        r.cost.toLocaleString('en-US', {minimumFractionDigits: 2}),
       ]),
-      theme: 'striped',
-      headStyles: { fillColor: [22, 160, 133] }, // Teal color
-      margin: { top: yPos },
-      didDrawPage: (data) => { yPos = data.cursor?.y ?? yPos; } // Update yPos after table draw
     });
-    yPos = (doc as any).lastAutoTable.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 10;
+    yPos = (doc as any).lastAutoTable.finalY + 15;
   } else {
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'italic');
-    addText('No water usage records found.', 14, yPos);
+    doc.text('No water usage records for this period.', margin, yPos);
     yPos += 10;
   }
-
-  yPos = checkPageOverflow(yPos, 40); // Check space for table header
-
-  // Payment History
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  addText('Payment History', 14, yPos);
-  yPos += 7;
+  
+  // Check for overflow before drawing the next table
+  if (yPos > pageHeight - 50) {
+    doc.addPage();
+    yPos = 45; 
+  }
 
   if (payments.length > 0) {
     autoTable(doc, {
+      ...tableConfig,
+      // @ts-ignore
       startY: yPos,
+      headStyles: { ...tableConfig.headStyles, fillColor: [41, 128, 185] },
       head: [['Payment Date', 'Amount Paid (PKR)', 'Recorded By']],
       body: payments.map(p => [
         format(new Date(p.paymentDate), 'PP p'),
-        p.amountPaid.toLocaleString('en-US'),
+        p.amountPaid.toLocaleString('en-US', {minimumFractionDigits: 2}),
         p.recordedBy === 'admin001' ? 'Admin' : p.recordedBy,
       ]),
-      theme: 'striped',
-      headStyles: { fillColor: [41, 128, 185] }, // Blue color
-      margin: { top: yPos },
-      didDrawPage: (data) => { yPos = data.cursor?.y ?? yPos; }
     });
-    yPos = (doc as any).lastAutoTable.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 10;
   } else {
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'italic');
-    addText('No payment records found.', 14, yPos);
-    yPos += 10;
+    doc.text('No payment records for this period.', margin, yPos);
   }
 
-  // Footer Note (Optional)
-  yPos = checkPageOverflow(yPos);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'italic');
-  addText('Thank you for choosing AquaTrack Mobile.', 14, pageHeight - 10);
-
-  // Save PDF
   doc.save(`AquaTrack_Statement_${customer.name.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }
