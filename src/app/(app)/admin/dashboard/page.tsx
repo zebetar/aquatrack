@@ -325,7 +325,7 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6 animate-fade-in">
         {metrics.map(metric => (
           <KeyMetricCard 
             key={metric.title} 
@@ -339,7 +339,7 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
         <Card className="glassmorphism-card">
           <CardHeader>
             <CardTitle className="text-base font-medium text-muted-foreground">Supply Volume</CardTitle>
@@ -391,7 +391,7 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
         <Card className="glassmorphism-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Top Outstanding Bills</CardTitle>
