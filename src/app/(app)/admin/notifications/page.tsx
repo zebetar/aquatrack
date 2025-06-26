@@ -15,16 +15,18 @@ import {
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const NotificationIcon = ({ type }: { type: Notification['type']}) => {
+  const iconProps = { className: "h-5 w-5" };
   switch(type) {
-    case 'USAGE_LOGGED': return <Droplets className="h-5 w-5" />;
-    case 'PAYMENT_RECORDED': return <CreditCard className="h-5 w-5" />;
-    case 'CUSTOMER_ADDED': return <UserPlus className="h-5 w-5" />;
-    case 'CUSTOMER_UPDATED': return <UserCog className="h-5 w-5" />;
-    case 'BILL_REMINDER': return <BellRing className="h-5 w-5 text-destructive" />;
-    case 'ANNOUNCEMENT': return <Palette className="h-5 w-5" />;
-    default: return <BellRing className="h-5 w-5" />;
+    case 'USAGE_LOGGED': return <Droplets {...iconProps} />;
+    case 'PAYMENT_RECORDED': return <CreditCard {...iconProps} />;
+    case 'CUSTOMER_ADDED': return <UserPlus {...iconProps} />;
+    case 'CUSTOMER_UPDATED': return <UserCog {...iconProps} />;
+    case 'BILL_REMINDER': return <BellRing {...iconProps} />;
+    case 'ANNOUNCEMENT': return <Palette {...iconProps} />;
+    default: return <BellRing {...iconProps} />;
   }
 };
 
@@ -100,24 +102,31 @@ export default function AdminNotificationsPage() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {notifications.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center">No notifications yet.</p>
           ) : (
-            <ScrollArea className="h-[calc(100vh-16rem)] pr-4">
-              <ul className="space-y-4">
+            <ScrollArea className="h-[calc(100vh-16rem)]">
+              <ul className="divide-y divide-border">
                 {notifications.map((notification) => (
                   <li
                     key={notification.id}
-                    className={`flex items-start space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50 ${
-                      !notification.isRead ? 'bg-primary/10 border-primary/50' : 'bg-card/80'
-                    }`}
+                    className={cn(
+                        "flex items-start space-x-4 p-4 transition-colors",
+                        !notification.isRead ? 'bg-primary/5' : 'hover:bg-muted/50'
+                    )}
                   >
-                    <div className={`mt-1 shrink-0 p-2 rounded-full ${!notification.isRead ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    <div className={cn(
+                        "mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                        !notification.isRead ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                    )}>
                       <NotificationIcon type={notification.type} />
                     </div>
                     <div className="flex-1">
-                      <p className={`text-sm ${!notification.isRead ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                      <p className={cn(
+                          "text-sm",
+                          !notification.isRead ? 'font-semibold text-foreground' : 'text-muted-foreground'
+                      )}>
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground/80 mt-1">
@@ -130,8 +139,8 @@ export default function AdminNotificationsPage() {
                       )}
                     </div>
                     {!notification.isRead && (
-                      <Button variant="ghost" size="sm" className="text-xs self-start" onClick={() => handleMarkAsRead(notification.id)}>
-                        <CheckCircle2 className="mr-1 h-3 w-3"/> Mark read
+                      <Button variant="ghost" size="icon" className="h-8 w-8 self-center" onClick={() => handleMarkAsRead(notification.id)} title="Mark as read">
+                        <CheckCircle2 className="h-4 w-4 text-muted-foreground"/>
                       </Button>
                     )}
                   </li>
