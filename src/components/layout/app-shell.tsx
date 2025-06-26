@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from 'react';
@@ -21,7 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
@@ -67,7 +66,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full">
       {/* Desktop Sidebar */}
       {!isMobile && (
         <aside className="sidebar-main-container group fixed inset-y-0 left-0 z-30 hidden flex-col md:flex">
