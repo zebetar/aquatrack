@@ -1,7 +1,8 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/shared/page-header';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Payment } from '@/types';
@@ -47,13 +48,14 @@ export default function AdminPaymentsPage() {
   }
 
   return (
-    <div className="flex justify-center">
-      <Card className="shadow-md mt-6 w-full max-w-6xl">
-        <CardHeader>
-          <CardTitle>All Payment Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-           <ScrollArea className="h-[calc(100vh-12rem)] w-full"> 
+    <div className="mt-6">
+      <PageHeader 
+        title="All Payment Records"
+        description="A complete history of all payments received."
+      />
+      <Card className="shadow-md glassmorphism-card">
+        <CardContent className="p-0">
+           <ScrollArea className="h-[calc(100vh-16rem)] w-full"> 
             <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
