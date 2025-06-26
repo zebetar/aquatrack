@@ -37,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
      <div className="sidebar-header">
       <Link href={user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard'} className="flex items-center gap-2 text-[rgb(var(--sidebar-icon-fg-light-rgb))] dark:text-[rgb(var(--sidebar-icon-fg-dark-rgb))] hover:text-[rgb(var(--sidebar-hover-fg-light-rgb))] dark:hover:text-[rgb(var(--sidebar-hover-fg-dark-rgb))]">
         <Droplets className="h-7 w-7 text-primary shrink-0" />
-        <span className="sidebar-app-name-text text-2xl text-blue-700 dark:text-blue-400">
+        <span className="sidebar-app-name-text text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             AquaTrack
         </span>
       </Link>
