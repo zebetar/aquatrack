@@ -90,7 +90,6 @@ export default function AdminCustomersPage() {
     <div className="mt-6">
       <PageHeader 
         title="Customer Management" 
-        description="View and manage all customer accounts"
         actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
       />
       {isLoading && customers.length > 0 && ( 

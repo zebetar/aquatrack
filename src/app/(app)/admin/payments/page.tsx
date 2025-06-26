@@ -51,7 +51,6 @@ export default function AdminPaymentsPage() {
     <div className="mt-6">
       <PageHeader 
         title="All Payment Records"
-        description="A complete history of all payments received."
       />
       <Card className="shadow-md glassmorphism-card">
         <CardContent className="p-0">

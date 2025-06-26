@@ -52,7 +52,6 @@ export default function AdminUsagePage() {
     <div className="mt-6">
       <PageHeader 
         title="All Usage Records"
-        description="A comprehensive log of all water usage across all customers."
       />
       <Card className="shadow-md glassmorphism-card">
         <CardContent className="p-0">
