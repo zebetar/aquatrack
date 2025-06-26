@@ -86,27 +86,27 @@
     --dialog-gradient-bottom-light: 210 40% 98%;
 
 
-    /* Dark Theme: Deep, Desaturated Navy/Charcoal with Vibrant Accents */
+    /* Dark Theme: Deep, Desaturated Navy/Charcoal with Vibrant Accents (Updated for Contrast) */
     --background-dark: 222 40% 12%; /* Deep, desaturated navy/charcoal */
-    --foreground-dark: 210 30% 85%; /* Light cool grey */
-    --card-dark: 222 40% 15%; /* Slightly lighter than background */
-    --card-foreground-dark: 210 30% 85%;
-    --popover-dark: 222 40% 10%;
-    --popover-foreground-dark: 210 30% 85%;
+    --foreground-dark: 210 30% 90%; /* Light cool grey (brighter) */
+    --card-dark: 222 40% 18%; /* Lighter than background for contrast */
+    --card-foreground-dark: 210 30% 90%;
+    --popover-dark: 222 40% 16%;
+    --popover-foreground-dark: 210 30% 90%;
     --primary-dark: 185 90% 55%; /* Vibrant Cyan/Light Blue */
     --primary-foreground-dark: 222 40% 5%; /* Very dark for contrast */
-    --secondary-dark: 210 30% 25%; /* Muted dark blue-grey */
-    --secondary-foreground-dark: 210 30% 75%;
-    --muted-dark: 210 25% 22%;
-    --muted-foreground-dark: 210 20% 65%;
+    --secondary-dark: 210 30% 28%; /* Muted dark blue-grey (lighter) */
+    --secondary-foreground-dark: 210 30% 80%;
+    --muted-dark: 210 25% 25%; /* (lighter) */
+    --muted-foreground-dark: 210 20% 70%; /* (lighter) */
     --accent-dark: 40 90% 60%;  /* Bright Gold/Orange for futuristic accent */
     --accent-foreground-dark: 222 40% 10%;
     --destructive-dark: 0 70% 50%;
     --destructive-foreground-dark: 0 0% 98%;
     --success-dark: 120 50% 30%;
     --success-foreground-dark: 0 0% 100%;
-    --border-dark: 210 20% 30%; /* Slightly more visible border */
-    --input-dark: 210 25% 20%; /* Distinct input background */
+    --border-dark: 210 20% 35%; /* Slightly more visible border (lighter) */
+    --input-dark: 210 25% 22%; /* Distinct input background (lighter) */
     --ring-dark: 185 80% 65%; /* Ring color matching primary */
 
     /* Auth Page Gradient Dark */
@@ -296,18 +296,15 @@
 }
 
 .dark .glassmorphism-card {
-  background-color: hsla(var(--primary-dark), 0.08);
-  border: 1px solid hsla(var(--primary-dark), 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 0 15px hsla(var(--primary-dark), 0.15),
-              0 4px 8px rgba(0, 0, 0, 0.25);
+  background-color: hsla(222, 40%, 18%, 0.65); /* Semi-transparent card color */
+  border: 1px solid hsla(222, 40%, 25%, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
 }
 .dark .glassmorphism-card:hover {
-  box-shadow: 0 0 20px hsla(var(--primary-dark), 0.25), /* Enhanced glow */
-              0 6px 12px rgba(0, 0, 0, 0.3);
-  border-color: hsl(var(--primary-dark)); /* Primary color border on hover for dark mode */
-  /* transform: translateY(-3px) scale(1.02); Removed transform */
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+  border-color: hsl(var(--primary-dark));
 }
 
 
