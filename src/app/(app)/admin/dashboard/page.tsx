@@ -85,7 +85,7 @@ const KeyMetricCard = memo(({
   const cardClasses = cn(
     "glassmorphism-card transition-all duration-300 ease-out",
     className,
-    (href || onClick) && "hover:shadow-lg hover:border-primary/50 dark:hover:border-accent/70 hover:-translate-y-1 cursor-pointer group" 
+    (href || onClick) && "cursor-pointer group" 
   );
 
   if (href && !onClick) {
