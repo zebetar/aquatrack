@@ -10,6 +10,7 @@ import {
   getUsageRecordsForDateRangeFromFirestore,
   getOutstandingCustomersFromFirestore,
   getAdminNotificationsFromFirestore,
+  getTotalCustomerCount,
 } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
@@ -97,15 +98,17 @@ export default function AdminDashboardPage() {
   const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
   const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
   
-  const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
+  // Data for dialogs
+  const [isDialogDataLoading, setIsDialogDataLoading] = useState(false);
   const [customersWithMonthlyUsageData, setCustomersWithMonthlyUsageData] = useState<CustomerMonthlyUsage[]>([]);
-
-  const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
   const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]);
+  const [monthlyUsageRecords, setMonthlyUsageRecords] = useState<WaterUsageRecord[]>([]);
 
+  // Dialog open states
+  const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
+  const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
   const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false);
 
-  // Moved useMemo before any conditional returns to fix hook order violation
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
       .filter(c => c.cost > 0)
@@ -120,14 +123,16 @@ export default function AdminDashboardPage() {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      const [customers, usageRecords, outstandingCustomers, notifications] = await Promise.all([
-        getAllCustomersFromFirestore(),
+      // Fetch only essential data for the main view
+      const [count, usageRecords, outstandingCustomers, notifications] = await Promise.all([
+        getTotalCustomerCount(), // More efficient count
         getUsageRecordsForDateRangeFromFirestore(firstDay, lastDay),
         getOutstandingCustomersFromFirestore(),
         getAdminNotificationsFromFirestore(3),
       ]);
 
-      setTotalCustomers(customers.length);
+      setTotalCustomers(count);
+      setMonthlyUsageRecords(usageRecords); // Store for later use in dialogs
       setCustomersWithOutstandingBills(outstandingCustomers);
       setRecentNotifications(notifications);
 
@@ -139,23 +144,6 @@ export default function AdminDashboardPage() {
       const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
       setOutstandingBillsValue(totalDue);
       
-      const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
-      customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
-
-      usageRecords.forEach(record => { 
-        const entry = customerUsageMap.get(record.customerId);
-        if (entry) {
-          entry.usageHours += record.durationHours;
-          entry.cost += record.cost;
-        }
-      });
-    
-      const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
-        .map(([id, data]) => ({ id, ...data }))
-        .filter(item => item.usageHours > 0 || item.cost > 0) 
-        .sort((a,b) => b.usageHours - a.usageHours);
-      setCustomersWithMonthlyUsageData(processedDialogData);
-
     } catch (error) {
       console.error("Failed to load dashboard data from Firestore", error);
       toast({
@@ -171,6 +159,53 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  const loadAndProcessDialogData = useCallback(async () => {
+      if (isDialogDataLoading) return;
+      setIsDialogDataLoading(true);
+      try {
+        const customers = await getAllCustomersFromFirestore();
+        
+        const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
+        customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
+
+        monthlyUsageRecords.forEach(record => { 
+          const entry = customerUsageMap.get(record.customerId);
+          if (entry) {
+            entry.usageHours += record.durationHours;
+            entry.cost += record.cost;
+          }
+        });
+      
+        const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
+          .map(([id, data]) => ({ id, ...data }))
+          .filter(item => item.usageHours > 0 || item.cost > 0) 
+          .sort((a,b) => b.usageHours - a.usageHours);
+          
+        setCustomersWithMonthlyUsageData(processedDialogData);
+      } catch (error) {
+        console.error("Failed to load detailed customer data for dialog", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not load detailed data for the dialog.",
+        });
+      } finally {
+        setIsDialogDataLoading(false);
+      }
+  }, [isDialogDataLoading, monthlyUsageRecords, toast]);
+
+  const handleOpenSupplyDialog = async () => {
+    setIsMonthlySupplyDialogOpen(true);
+    await loadAndProcessDialogData();
+  };
+
+  const handleOpenRevenueDialog = async () => {
+    setIsMonthlyRevenueDialogOpen(true);
+    if (customersWithMonthlyUsageData.length === 0) {
+      await loadAndProcessDialogData();
+    }
+  };
   
   if (isLoading) {
     return (
@@ -194,14 +229,14 @@ export default function AdminDashboardPage() {
       value: formatDurationFromHours(monthlySupply), 
       icon: Droplets, 
       description: 'Current month',
-      onClick: () => setIsMonthlySupplyDialogOpen(true)
+      onClick: handleOpenSupplyDialog
     },
     { 
       title: 'Monthly Revenue', 
       value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, 
       icon: CreditCard, 
       description: 'Current month',
-      onClick: () => setIsMonthlyRevenueDialogOpen(true)
+      onClick: handleOpenRevenueDialog
     },
     { 
       title: 'Outstanding Bills', 
@@ -267,11 +302,13 @@ export default function AdminDashboardPage() {
         isOpen={isMonthlySupplyDialogOpen}
         onClose={() => setIsMonthlySupplyDialogOpen(false)}
         data={customersWithMonthlyUsageData.filter(c => c.usageHours > 0)}
+        isLoading={isDialogDataLoading}
       />
       <MonthlyRevenueDetailsDialog
         isOpen={isMonthlyRevenueDialogOpen}
         onClose={() => setIsMonthlyRevenueDialogOpen(false)}
         data={customersWithMonthlyRevenueData}
+        isLoading={isDialogDataLoading}
       />
       <OutstandingBillsDialog 
         isOpen={isOutstandingBillsDialogOpen}

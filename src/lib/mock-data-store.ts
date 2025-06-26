@@ -3,7 +3,7 @@ import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types'
 import { db, Timestamp } from '@/lib/firebase-config';
 import {
   collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc,
-  writeBatch, orderBy, limit, increment, runTransaction
+  writeBatch, orderBy, limit, increment, runTransaction, getCountFromServer
 } from 'firebase/firestore';
 
 interface MockDataStore {
@@ -109,6 +109,17 @@ export async function getAllCustomersFromFirestore(): Promise<Customer[]> {
     }
     throw e;
   }
+}
+
+export async function getTotalCustomerCount(): Promise<number> {
+    try {
+        const customersCol = collection(db, 'customers');
+        const snapshot = await getCountFromServer(customersCol);
+        return snapshot.data().count;
+    } catch (e) {
+        console.error("Error fetching total customer count from Firestore: ", e);
+        throw e;
+    }
 }
 
 export async function getOutstandingCustomersFromFirestore(): Promise<Customer[]> {
