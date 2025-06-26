@@ -77,10 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setUser(adminUser);
         localStorage.setItem('authUser', JSON.stringify(adminUser));
-        toast({ title: "Admin Login Successful (Mock)" });
+        toast({ title: "Admin Login Successful" });
         router.push('/admin/dashboard');
       } else {
-        toast({ variant: "destructive", title: "Invalid Admin Email", description: "The mock admin email is 'admin@aquatrack.com'." });
+        toast({ variant: "destructive", title: "Invalid Admin Email", description: "The admin email is 'admin@aquatrack.com'." });
       }
       setLoading(false);
       return;
@@ -100,13 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           setUser(viewerUser);
           localStorage.setItem('authUser', JSON.stringify(viewerUser));
-          toast({ title: "Viewer Login Successful (Mock)" });
+          toast({ title: "Viewer Login Successful" });
           router.push('/viewer/dashboard');
         } else {
-          toast({ variant: "destructive", title: "Incorrect Password", description: `The mock password for all viewers is "${MOCK_VIEWER_PASSWORD}".` });
+          toast({ variant: "destructive", title: "Incorrect Password", description: `The password for all viewers is "${MOCK_VIEWER_PASSWORD}".` });
         }
       } else {
-        toast({ variant: "destructive", title: "Viewer Not Found", description: `No customer with the email '${processedEmail}' exists in the mock data. Please add one via the Admin panel.` });
+        toast({ variant: "destructive", title: "Viewer Not Found", description: `No customer with the email '${processedEmail}' exists in the system. Please add one via the Admin panel.` });
       }
     }
     setLoading(false);

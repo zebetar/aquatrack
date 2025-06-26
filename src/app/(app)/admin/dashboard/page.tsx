@@ -151,7 +151,7 @@ export default function AdminDashboardPage() {
       toast({
         variant: "destructive",
         title: "Error Loading Dashboard",
-        description: "Could not retrieve data from the mock store. Check console for details.",
+        description: "Could not retrieve data. Check console for details.",
       });
     } finally {
       setIsLoading(false);

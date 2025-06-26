@@ -40,7 +40,7 @@ export default function AdminCustomersPage() {
         toast({
           variant: "destructive",
           title: "Failed to load customers",
-          description: "Could not retrieve customer data from the mock store. Check console for details.",
+          description: "Could not retrieve customer data. Check console for details.",
         });
     } finally {
         setIsLoading(false);
@@ -72,7 +72,7 @@ export default function AdminCustomersPage() {
         toast({
           variant: "destructive",
           title: "Failed to add customer",
-          description: "Could not save new customer to the mock store. Please try again.",
+          description: "Could not save new customer. Please try again.",
         });
     }
   };
@@ -81,7 +81,7 @@ export default function AdminCustomersPage() {
     return (
         <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2">Loading customers from mock store...</p>
+            <p className="ml-2">Loading customers...</p>
         </div>
     );
   }
@@ -90,7 +90,7 @@ export default function AdminCustomersPage() {
     <div className="mt-6">
       <PageHeader 
         title="Customer Management" 
-        description="Live data from mock store"
+        description="View and manage all customer accounts"
         actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
       />
       {isLoading && customers.length > 0 && ( 

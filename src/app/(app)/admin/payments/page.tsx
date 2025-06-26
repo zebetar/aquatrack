@@ -26,7 +26,7 @@ export default function AdminPaymentsPage() {
       toast({
         variant: "destructive",
         title: "Failed to load payments",
-        description: "Could not retrieve payment data from the mock store. Check console for details.",
+        description: "Could not retrieve payment data. Check console for details.",
       });
     } finally {
       setIsLoading(false);

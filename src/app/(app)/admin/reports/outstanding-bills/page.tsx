@@ -36,7 +36,7 @@ export default function OutstandingBillsPage() {
         toast({
           variant: "destructive",
           title: "Failed to load report",
-          description: "Could not retrieve outstanding bills report from the mock store. Check console for details.",
+          description: "Could not retrieve outstanding bills report. Check console for details.",
         });
     } finally {
         setIsLoading(false);

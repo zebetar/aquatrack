@@ -43,7 +43,7 @@ export default function AdminUsersPage() {
        toast({
           variant: "destructive",
           title: "Failed to load users",
-          description: "Could not retrieve user data from the mock store. Check console for details.",
+          description: "Could not retrieve user data. Check console for details.",
         });
     } finally {
       setIsLoading(false);
@@ -82,7 +82,7 @@ export default function AdminUsersPage() {
       deleteMockCustomer(customerId);
       toast({
         title: "Customer Deleted",
-        description: `${customerForPdf?.name || 'Customer'} and all associated data have been removed from the mock store.`,
+        description: `${customerForPdf?.name || 'Customer'} and all associated data have been removed.`,
       });
 
     } catch (error) {

@@ -321,7 +321,7 @@ export default function AdminSettingsPage() {
                 <div>
                   <h4 className="text-md font-semibold mb-2">Admin Login Credentials</h4>
                   <p className="text-sm text-muted-foreground">
-                    The admin login email (<code className="bg-muted p-1 rounded-sm">{user?.email || 'admin@aquatrack.com'}</code>) and password are fixed for this mock application and cannot be changed through this interface.
+                    The admin login email (<code className="bg-muted p-1 rounded-sm">{user?.email || 'admin@aquatrack.com'}</code>) and password are fixed for this application and cannot be changed through this interface.
                   </p>
                 </div>
               </CardContent>
@@ -371,5 +371,4 @@ export default function AdminSettingsPage() {
     </>
   );
 }
-
     

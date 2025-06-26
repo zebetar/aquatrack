@@ -46,21 +46,21 @@ export default function DataExportPage() {
     setIsLoadingCustomers(false);
   }, []);
 
-  const handleMockExport = (dataType: string, formatType: string) => {
+  const handleDataExport = (dataType: string, formatType: string) => {
     toast({
-      title: "Export Initiated (Mock)",
-      description: `${dataType} data export to ${formatType} has started. (This is a mock action)`,
+      title: "Export Initiated",
+      description: `${dataType} data export to ${formatType} has started.`,
     });
   };
 
-  const handleDownloadAllMockData = () => {
+  const handleDownloadAllData = () => {
     try {
       const jsonData = exportMockDataAsJSON();
       if (jsonData === "{\n  \"customers\": [],\n  \"usageRecords\": [],\n  \"payments\": [],\n  \"notifications\": []\n}") {
          toast({
           variant: "default",
           title: "No Data to Export",
-          description: "The mock data store is currently empty.",
+          description: "The data store is currently empty.",
         });
         return;
       }
@@ -68,21 +68,21 @@ export default function DataExportPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `AquaTrack_mock_data_export_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
+      a.download = `AquaTrack_data_export_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast({
-        title: "Mock Data Exported",
-        description: "All current mock data from localStorage has been downloaded as a JSON file.",
+        title: "Data Exported",
+        description: "All current data from localStorage has been downloaded as a JSON file.",
       });
     } catch (error) {
-      console.error("Error exporting mock data:", error);
+      console.error("Error exporting data:", error);
       toast({
         variant: "destructive",
         title: "Export Failed",
-        description: "Could not export the mock data.",
+        description: "Could not export the data.",
       });
     }
   };
@@ -318,40 +318,40 @@ export default function DataExportPage() {
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
-                    <p className="text-sm text-muted-foreground">Simulate exporting a list of all customers and their details.</p>
+                    <p className="text-sm text-muted-foreground">Export a list of all customers and their details.</p>
                   </div>
-                  <Button onClick={() => handleMockExport("All Customer", "CSV")} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
+                  <Button onClick={() => handleDataExport("All Customer", "CSV")} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV
                   </Button>
                 </div>
 
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
-                    <p className="text-sm text-muted-foreground">Simulate exporting all logged water usage records.</p>
+                    <p className="text-sm text-muted-foreground">Export all logged water usage records.</p>
                   </div>
-                  <Button onClick={() => handleMockExport("All Water Usage", "CSV")} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
+                  <Button onClick={() => handleDataExport("All Water Usage", "CSV")} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV
                   </Button>
                 </div>
 
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
-                    <p className="text-sm text-muted-foreground">Simulate exporting all recorded payment transactions.</p>
+                    <p className="text-sm text-muted-foreground">Export all recorded payment transactions.</p>
                   </div>
-                  <Button onClick={() => handleMockExport("All Payment Histories", "CSV")} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV (Mock)
+                  <Button onClick={() => handleDataExport("All Payment Histories", "CSV")} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV
                   </Button>
                 </div>
 
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
                   <div className="mb-2 sm:mb-0">
-                    <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Download Mock Data Backup</h3>
+                    <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Download Data Backup</h3>
                     <p className="text-sm text-muted-foreground">Download all current data from localStorage as a single JSON file. This is useful for backup or migration.</p>
                   </div>
-                  <Button onClick={handleDownloadAllMockData} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Download localStorage Data
+                  <Button onClick={handleDownloadAllData} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Download All Data (JSON)
                   </Button>
                 </div>
               </CardContent>

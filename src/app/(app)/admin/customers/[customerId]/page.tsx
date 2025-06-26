@@ -55,7 +55,7 @@ export default function CustomerDetailPage() {
       setPayments(paymentData || []);
     } catch (error) {
       console.error("Failed to load customer data from mock store", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not load customer data from the mock store. Check console for details." });
+      toast({ variant: "destructive", title: "Error", description: "Could not load customer data. Check console for details." });
     } finally {
       setIsLoading(false);
     }

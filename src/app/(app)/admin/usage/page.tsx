@@ -27,7 +27,7 @@ export default function AdminUsagePage() {
         toast({
           variant: "destructive",
           title: "Failed to load usage records",
-          description: "Could not retrieve usage data from the mock store. Check console for details.",
+          description: "Could not retrieve usage data. Check console for details.",
         });
     } finally {
       setIsLoading(false);

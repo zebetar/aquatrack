@@ -40,7 +40,7 @@ export default function AdminNotificationsPage() {
       setNotifications(adminNotifications);
     } catch(error) {
       console.error("Failed to load notifications from mock store", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not load notifications from mock store. Check console for details." });
+      toast({ variant: "destructive", title: "Error", description: "Could not load notifications. Check console for details." });
     } finally {
       setIsLoading(false);
     }
