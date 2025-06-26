@@ -7,8 +7,8 @@ import { CustomerListTable } from '@/components/admin/customers/customer-list-ta
 import type { Customer, Notification, WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  getAllCustomersFromFirestore, 
-  addCustomerToFirestore,
+  getAllMockCustomers, 
+  addMockCustomer,
   addMockNotification,
   getAllMockUsageRecords 
 } from '@/lib/mock-data-store';
@@ -22,10 +22,10 @@ export default function AdminCustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
-  const fetchCustomers = useCallback(async () => {
+  const fetchCustomers = useCallback(() => {
     setIsLoading(true);
     try {
-      const storedCustomers = await getAllCustomersFromFirestore();
+      const storedCustomers = getAllMockCustomers();
       const usageRecords = getAllMockUsageRecords();
 
       const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
@@ -36,11 +36,11 @@ export default function AdminCustomersPage() {
       });
       setCustomers(customersWithUsage);
     } catch (error) {
-        console.error("Failed to fetch customers from Firestore:", error);
+        console.error("Failed to fetch customers from mock store:", error);
         toast({
           variant: "destructive",
           title: "Failed to load customers",
-          description: "Could not retrieve customer data from the database. Check console for details.",
+          description: "Could not retrieve customer data from the mock store. Check console for details.",
         });
     } finally {
         setIsLoading(false);
@@ -51,9 +51,9 @@ export default function AdminCustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = async (newCustomer: Customer) => {
+  const handleAddCustomer = (newCustomer: Customer) => {
     try {
-      await addCustomerToFirestore(newCustomer);
+      addMockCustomer(newCustomer);
       
       const adminNotification: Notification = {
           id: `noti-${Date.now()}-admin-newcust`,
@@ -68,11 +68,11 @@ export default function AdminCustomersPage() {
 
       fetchCustomers();
     } catch (error) {
-        console.error("Failed to add customer to Firestore:", error);
+        console.error("Failed to add customer to mock store:", error);
         toast({
           variant: "destructive",
           title: "Failed to add customer",
-          description: "Could not save new customer to the database. Please try again.",
+          description: "Could not save new customer to the mock store. Please try again.",
         });
     }
   };
@@ -81,7 +81,7 @@ export default function AdminCustomersPage() {
     return (
         <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2">Loading customers from database...</p>
+            <p className="ml-2">Loading customers from mock store...</p>
         </div>
     );
   }
@@ -90,7 +90,7 @@ export default function AdminCustomersPage() {
     <div className="mt-6">
       <PageHeader 
         title="Customer Management" 
-        description="Live data from Firestore"
+        description="Live data from mock store"
         actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
       />
       {isLoading && customers.length > 0 && ( 

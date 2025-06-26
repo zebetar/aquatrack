@@ -4,7 +4,7 @@
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer } from '@/types'; 
 import { useState, useEffect, useCallback } from 'react';
-import { getOutstandingCustomersFromFirestore, getAllUsageRecordsFromFirestore } from '@/lib/mock-data-store'; 
+import { getMockOutstandingCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store'; 
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,11 +17,11 @@ export default function OutstandingBillsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchOutstandingCustomers = useCallback(async () => {
+  const fetchOutstandingCustomers = useCallback(() => {
     setIsLoading(true);
     try {
-        const customers = await getOutstandingCustomersFromFirestore();
-        const usageRecords = await getAllUsageRecordsFromFirestore();
+        const customers = getMockOutstandingCustomers();
+        const usageRecords = getAllMockUsageRecords();
         
         const augmentedCustomers = customers.map(customer => {
             const customerUsage = usageRecords
@@ -32,11 +32,11 @@ export default function OutstandingBillsPage() {
 
         setOutstandingCustomers(augmentedCustomers);
     } catch (error) {
-        console.error("Failed to fetch outstanding customers from Firestore:", error);
+        console.error("Failed to fetch outstanding customers from mock store:", error);
         toast({
           variant: "destructive",
           title: "Failed to load report",
-          description: "Could not retrieve outstanding bills report from the database. Check console for details.",
+          description: "Could not retrieve outstanding bills report from the mock store. Check console for details.",
         });
     } finally {
         setIsLoading(false);

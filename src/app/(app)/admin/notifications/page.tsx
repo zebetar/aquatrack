@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import type { Notification } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  getAdminNotificationsFromFirestore, 
-  markNotificationAsReadInFirestore, 
-  markAllNotificationsAsReadInFirestore 
+  getAllAdminNotifications, 
+  markNotificationAsRead, 
+  markAllNotificationsAsRead 
 } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -33,14 +33,14 @@ export default function AdminNotificationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(() => {
     setIsLoading(true);
     try {
-      const adminNotifications = await getAdminNotificationsFromFirestore();
+      const adminNotifications = getAllAdminNotifications();
       setNotifications(adminNotifications);
     } catch(error) {
-      console.error("Failed to load notifications from Firestore", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not load notifications from Firestore. Check console for details." });
+      console.error("Failed to load notifications from mock store", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not load notifications from mock store. Check console for details." });
     } finally {
       setIsLoading(false);
     }
@@ -50,9 +50,9 @@ export default function AdminNotificationsPage() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const handleMarkAsRead = (notificationId: string) => {
     try {
-      await markNotificationAsReadInFirestore(notificationId);
+      markNotificationAsRead(notificationId, 'admin001');
       fetchNotifications();
     } catch(error) {
       console.error("Failed to mark notification as read:", error);
@@ -60,9 +60,9 @@ export default function AdminNotificationsPage() {
     }
   };
 
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllAsRead = () => {
     try {
-      await markAllNotificationsAsReadInFirestore('admin001');
+      markAllNotificationsAsRead('admin001');
       fetchNotifications();
       toast({ title: "Success", description: "All notifications marked as read." });
     } catch(error) {

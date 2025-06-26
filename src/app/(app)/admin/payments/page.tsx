@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Payment } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
-import { getAllPaymentsFromFirestore } from '@/lib/mock-data-store';
+import { getAllMockPayments } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -16,17 +16,17 @@ export default function AdminPaymentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const loadPaymentData = useCallback(async () => {
+  const loadPaymentData = useCallback(() => {
     setIsLoading(true);
     try {
-      const records = await getAllPaymentsFromFirestore();
+      const records = getAllMockPayments();
       setPayments(records);
     } catch (error) {
-      console.error("Failed to fetch payments from Firestore:", error);
+      console.error("Failed to fetch payments from mock store:", error);
       toast({
         variant: "destructive",
         title: "Failed to load payments",
-        description: "Could not retrieve payment data from the database. Check console for details.",
+        description: "Could not retrieve payment data from the mock store. Check console for details.",
       });
     } finally {
       setIsLoading(false);

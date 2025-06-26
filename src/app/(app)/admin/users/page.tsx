@@ -5,12 +5,12 @@ import { CustomerListTable } from '@/components/admin/customers/customer-list-ta
 import type { Customer } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import {
-  getAllCustomersFromFirestore,
-  deleteCustomerAndRelatedDataFromFirestore,
-  getCustomerByIdFromFirestore,
-  getUsageRecordsByCustomerIdFromFirestore,
-  getPaymentsByCustomerIdFromFirestore,
-  getAllUsageRecordsFromFirestore
+  getAllMockCustomers,
+  deleteMockCustomer,
+  getMockCustomerById,
+  getMockUsageRecordsByCustomerId,
+  getMockPaymentsByCustomerId,
+  getAllMockUsageRecords
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { Loader2 } from 'lucide-react';
@@ -24,13 +24,11 @@ export default function AdminUsersPage() {
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchCustomers = useCallback(async () => {
+  const fetchCustomers = useCallback(() => {
     setIsLoading(true);
     try {
-      const [storedCustomers, usageRecords] = await Promise.all([
-        getAllCustomersFromFirestore(),
-        getAllUsageRecordsFromFirestore(),
-      ]);
+      const storedCustomers = getAllMockCustomers();
+      const usageRecords = getAllMockUsageRecords();
 
       const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
         const customerUsage = usageRecords
@@ -41,11 +39,11 @@ export default function AdminUsersPage() {
 
       setCustomers(customersWithUsage);
     } catch(error) {
-       console.error("Failed to fetch users from Firestore:", error);
+       console.error("Failed to fetch users from mock store:", error);
        toast({
           variant: "destructive",
           title: "Failed to load users",
-          description: "Could not retrieve user data from the database. Check console for details.",
+          description: "Could not retrieve user data from the mock store. Check console for details.",
         });
     } finally {
       setIsLoading(false);
@@ -60,14 +58,12 @@ export default function AdminUsersPage() {
     setDeletingCustomerId(customerId);
     
     try {
-      const customerForPdf = await getCustomerByIdFromFirestore(customerId);
+      const customerForPdf = getMockCustomerById(customerId);
 
       if (customerForPdf) {
         try {
-          const [usageRecords, payments] = await Promise.all([
-            getUsageRecordsByCustomerIdFromFirestore(customerId),
-            getPaymentsByCustomerIdFromFirestore(customerId),
-          ]);
+          const usageRecords = getMockUsageRecordsByCustomerId(customerId);
+          const payments = getMockPaymentsByCustomerId(customerId);
           await generateCustomerPdf(customerForPdf, usageRecords, payments);
           toast({
             title: "Statement Generated",
@@ -83,10 +79,10 @@ export default function AdminUsersPage() {
         }
       }
 
-      await deleteCustomerAndRelatedDataFromFirestore(customerId);
+      deleteMockCustomer(customerId);
       toast({
         title: "Customer Deleted",
-        description: `${customerForPdf?.name || 'Customer'} and all associated data have been removed from Firestore.`,
+        description: `${customerForPdf?.name || 'Customer'} and all associated data have been removed from the mock store.`,
       });
 
     } catch (error) {

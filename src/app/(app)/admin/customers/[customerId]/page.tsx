@@ -13,15 +13,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { formatDurationFromHours } from '@/lib/utils';
 import { 
-  getCustomerByIdFromFirestore, 
-  getUsageRecordsByCustomerIdFromFirestore,
-  getPaymentsByCustomerIdFromFirestore,
-  addUsageRecordToFirestore,
-  addPaymentToFirestore,
-  updateCustomerInFirestore,
-  updateUsageRecordInFirestore,
-  updatePaymentRecordInFirestore,
-  addNotificationToFirestore
+  getMockCustomerById,
+  getMockUsageRecordsByCustomerId,
+  getMockPaymentsByCustomerId,
+  addMockUsageRecord,
+  addMockPayment,
+  updateMockCustomer,
+  updateMockUsageRecord,
+  updateMockPaymentRecord,
+  addMockNotification
 } from '@/lib/mock-data-store';
 
 export default function CustomerDetailPage() {
@@ -36,18 +36,16 @@ export default function CustomerDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedCustomerData, setEditedCustomerData] = useState<Partial<Customer>>({});
 
-  const fetchCustomerData = useCallback(async () => {
+  const fetchCustomerData = useCallback(() => {
     if (!customerId) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
     try {
-      const [custData, usageData, paymentData] = await Promise.all([
-        getCustomerByIdFromFirestore(customerId),
-        getUsageRecordsByCustomerIdFromFirestore(customerId),
-        getPaymentsByCustomerIdFromFirestore(customerId)
-      ]);
+      const custData = getMockCustomerById(customerId);
+      const usageData = getMockUsageRecordsByCustomerId(customerId);
+      const paymentData = getMockPaymentsByCustomerId(customerId);
       
       setCustomer(custData || null);
       if (custData) { 
@@ -56,8 +54,8 @@ export default function CustomerDetailPage() {
       setUsageRecords(usageData || []);
       setPayments(paymentData || []);
     } catch (error) {
-      console.error("Failed to load customer data from Firestore", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not load customer data from the database. Check console for details." });
+      console.error("Failed to load customer data from mock store", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not load customer data from the mock store. Check console for details." });
     } finally {
       setIsLoading(false);
     }
@@ -67,10 +65,10 @@ export default function CustomerDetailPage() {
     fetchCustomerData();
   }, [fetchCustomerData]);
 
-  const handleAddUsageRecord = async (newRecord: WaterUsageRecord) => {
+  const handleAddUsageRecord = (newRecord: WaterUsageRecord) => {
     if (!customerId || !customer) return;
     try {
-      await addUsageRecordToFirestore(newRecord);
+      addMockUsageRecord(newRecord);
 
       const viewerNotification: Notification = {
           id: `noti-${Date.now()}-viewer`,
@@ -81,7 +79,7 @@ export default function CustomerDetailPage() {
           linkTo: `/viewer/usage`,
           createdAt: new Date(),
       };
-      await addNotificationToFirestore(viewerNotification);
+      addMockNotification(viewerNotification);
 
       const adminNotification: Notification = {
           id: `noti-${Date.now()}-admin`,
@@ -92,9 +90,9 @@ export default function CustomerDetailPage() {
           linkTo: `/admin/customers/${customer.id}`,
           createdAt: new Date(),
       };
-      await addNotificationToFirestore(adminNotification);
+      addMockNotification(adminNotification);
 
-      await fetchCustomerData();
+      fetchCustomerData();
       toast({ title: "Usage Logged", description: `${formatDurationFromHours(newRecord.durationHours)} logged for ${newRecord.customerName}.` });
     } catch (error) {
       console.error("Failed to log usage record:", error);
@@ -102,10 +100,10 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const handleAddPaymentRecord = async (newPayment: Payment) => {
+  const handleAddPaymentRecord = (newPayment: Payment) => {
     if (!customerId || !customer) return;
     try {
-      await addPaymentToFirestore(newPayment);
+      addMockPayment(newPayment);
 
       const viewerNotification: Notification = {
           id: `noti-${Date.now()}-viewer`,
@@ -116,7 +114,7 @@ export default function CustomerDetailPage() {
           linkTo: `/viewer/billing`,
           createdAt: new Date(),
       };
-      await addNotificationToFirestore(viewerNotification);
+      addMockNotification(viewerNotification);
 
       const adminNotification: Notification = {
           id: `noti-${Date.now()}-admin`,
@@ -127,9 +125,9 @@ export default function CustomerDetailPage() {
           linkTo: `/admin/customers/${customer.id}`,
           createdAt: new Date(),
       };
-      await addNotificationToFirestore(adminNotification);
+      addMockNotification(adminNotification);
 
-      await fetchCustomerData();
+      fetchCustomerData();
       toast({ title: "Payment Recorded", description: `PKR ${newPayment.amountPaid.toLocaleString()} recorded.`});
     } catch (error) {
       console.error("Failed to record payment:", error);
@@ -137,11 +135,11 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const handleUpdateUsageRecord = async (updatedRecord: WaterUsageRecord) => {
+  const handleUpdateUsageRecord = (updatedRecord: WaterUsageRecord) => {
     if (!customerId || !customer) return;
     try {
-      await updateUsageRecordInFirestore(updatedRecord);
-      await fetchCustomerData();
+      updateMockUsageRecord(updatedRecord);
+      fetchCustomerData();
       toast({ title: "Usage Record Updated", description: `Usage record for ${updatedRecord.customerName} has been updated.` });
     } catch(error) {
       console.error("Failed to update usage record:", error);
@@ -149,11 +147,11 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const handleUpdatePaymentRecord = async (updatedPayment: Payment) => {
+  const handleUpdatePaymentRecord = (updatedPayment: Payment) => {
     if (!customerId || !customer) return;
     try {
-      await updatePaymentRecordInFirestore(updatedPayment);
-      await fetchCustomerData();
+      updateMockPaymentRecord(updatedPayment);
+      fetchCustomerData();
       toast({ title: "Payment Record Updated", description: `Payment record for ${updatedPayment.customerName} has been updated.` });
     } catch (error) {
       console.error("Failed to update payment record:", error);
@@ -172,7 +170,7 @@ export default function CustomerDetailPage() {
     setEditedCustomerData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = () => {
     if (customer && customerId && editedCustomerData) {
       try {
         const updatedData: Partial<Customer> = {
@@ -181,7 +179,7 @@ export default function CustomerDetailPage() {
           email: editedCustomerData.email ? editedCustomerData.email.trim().toLowerCase() : undefined,
         };
 
-        await updateCustomerInFirestore({ id: customerId, ...updatedData });
+        updateMockCustomer({ id: customerId, ...updatedData });
         
         const adminNotification: Notification = {
           id: `noti-${Date.now()}-admin-update`,
@@ -192,7 +190,7 @@ export default function CustomerDetailPage() {
           linkTo: `/admin/customers/${customerId}`,
           createdAt: new Date(),
         };
-        await addNotificationToFirestore(adminNotification);
+        addMockNotification(adminNotification);
 
         if (customer.authUID) {
           const viewerNotification: Notification = {
@@ -204,10 +202,10 @@ export default function CustomerDetailPage() {
               linkTo: `/viewer/profile`,
               createdAt: new Date(),
           };
-          await addNotificationToFirestore(viewerNotification);
+          addMockNotification(viewerNotification);
         }
 
-        await fetchCustomerData();
+        fetchCustomerData();
         setIsEditing(false);
         toast({ title: "Customer Updated", description: "Customer details have been saved." });
       } catch (error) {

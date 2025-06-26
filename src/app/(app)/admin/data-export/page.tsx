@@ -87,7 +87,7 @@ export default function DataExportPage() {
     }
   };
 
-  const handlePreviewFilteredData = async () => {
+  const handlePreviewFilteredData = () => {
     if (!selectedCustomerId || !startDate || !endDate) {
       toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer, start date, and end date." });
       return;
@@ -362,5 +362,4 @@ export default function DataExportPage() {
     </div>
   );
 }
-
     

@@ -70,14 +70,176 @@ function saveStoreToLocalStorage(): void {
   }
 }
 
+// Load the store from localStorage when the module is first imported
 loadStoreFromLocalStorage();
 
+// --- MOCK DATA FUNCTIONS ---
+// These functions interact with the in-memory/localStorage store for rapid development.
 
-// --- Centralized Firestore Error Handler ---
+export function addMockCustomer(customer: Customer): void {
+  store.customers.push(customer);
+  saveStoreToLocalStorage();
+}
+
+export function getAllMockCustomers(): Customer[] {
+  return [...store.customers].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function getMockCustomerById(customerId: string): Customer | null {
+  const customer = store.customers.find(c => c.id === customerId);
+  return customer ? { ...customer } : null;
+}
+
+export function updateMockCustomer(customerUpdate: Partial<Customer> & { id: string }): void {
+  const customerIndex = store.customers.findIndex(c => c.id === customerUpdate.id);
+  if (customerIndex > -1) {
+    store.customers[customerIndex] = { ...store.customers[customerIndex], ...customerUpdate };
+    saveStoreToLocalStorage();
+  }
+}
+
+export function deleteMockCustomer(customerId: string): void {
+  const customerToDelete = store.customers.find(c => c.id === customerId);
+  if (customerToDelete) {
+    store.customers = store.customers.filter(c => c.id !== customerId);
+    store.usageRecords = store.usageRecords.filter(ur => ur.customerId !== customerId);
+    store.payments = store.payments.filter(p => p.customerId !== customerId);
+    if (customerToDelete.authUID) {
+      store.notifications = store.notifications.filter(n => n.userId !== customerToDelete.authUID);
+    }
+    saveStoreToLocalStorage();
+  }
+}
+
+export function getMockOutstandingCustomers(): Customer[] {
+  return store.customers
+    .filter(c => c.balance > 0)
+    .sort((a, b) => b.balance - a.balance);
+}
+
+export function addMockUsageRecord(record: WaterUsageRecord): void {
+  store.usageRecords.unshift(record);
+  const customerIndex = store.customers.findIndex(c => c.id === record.customerId);
+  if (customerIndex > -1) {
+    store.customers[customerIndex].balance += record.cost;
+  }
+  saveStoreToLocalStorage();
+}
+
+export function updateMockUsageRecord(updatedRecord: WaterUsageRecord): void {
+    const recordIndex = store.usageRecords.findIndex(r => r.id === updatedRecord.id);
+    if (recordIndex > -1) {
+        const oldRecord = store.usageRecords[recordIndex];
+        const costDifference = updatedRecord.cost - oldRecord.cost;
+        
+        const customerIndex = store.customers.findIndex(c => c.id === updatedRecord.customerId);
+        if (customerIndex > -1) {
+            store.customers[customerIndex].balance += costDifference;
+        }
+
+        store.usageRecords[recordIndex] = updatedRecord;
+        saveStoreToLocalStorage();
+    }
+}
+
+
+export function getAllMockUsageRecords(): WaterUsageRecord[] {
+  return [...store.usageRecords].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageRecord[] {
+  return store.usageRecords
+    .filter(r => r.customerId === customerId)
+    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+}
+
+export function addMockPayment(payment: Payment): void {
+  store.payments.unshift(payment);
+  const customerIndex = store.customers.findIndex(c => c.id === payment.customerId);
+  if (customerIndex > -1) {
+    store.customers[customerIndex].balance -= payment.amountPaid;
+  }
+  saveStoreToLocalStorage();
+}
+
+export function updateMockPaymentRecord(updatedPayment: Payment): void {
+    const paymentIndex = store.payments.findIndex(p => p.id === updatedPayment.id);
+    if (paymentIndex > -1) {
+        const oldPayment = store.payments[paymentIndex];
+        const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid;
+
+        const customerIndex = store.customers.findIndex(c => c.id === updatedPayment.customerId);
+        if (customerIndex > -1) {
+            store.customers[customerIndex].balance += amountDifference;
+        }
+        
+        store.payments[paymentIndex] = updatedPayment;
+        saveStoreToLocalStorage();
+    }
+}
+
+export function getAllMockPayments(): Payment[] {
+  return [...store.payments].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
+  return store.payments
+    .filter(p => p.customerId === customerId)
+    .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+}
+
+export function addMockNotification(notification: Notification): void {
+  store.notifications.unshift(notification);
+  if (store.notifications.length > 100) store.notifications.pop();
+  saveStoreToLocalStorage();
+}
+
+export function getMockNotificationsByUserId(userId: string): Notification[] {
+  return store.notifications.filter(n => n.userId === userId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function getAllAdminNotifications(): Notification[] {
+  return store.notifications.filter(n => n.userId === 'admin001').sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function markNotificationAsRead(notificationId: string, userId: string): void {
+  const notificationIndex = store.notifications.findIndex(n => n.id === notificationId && n.userId === userId);
+  if (notificationIndex > -1) {
+    store.notifications[notificationIndex].isRead = true;
+    saveStoreToLocalStorage();
+  }
+}
+
+export function markAllNotificationsAsRead(userId: string): void {
+  store.notifications.forEach(n => {
+    if (n.userId === userId && !n.isRead) n.isRead = true;
+  });
+  saveStoreToLocalStorage();
+}
+
+export function updateCustomerEmail(customerId: string, newEmail: string): void {
+  const customerIndex = store.customers.findIndex(c => c.id === customerId);
+  if (customerIndex > -1) {
+    const processedNewEmail = newEmail.trim().toLowerCase();
+    store.customers[customerIndex] = {
+      ...store.customers[customerIndex],
+      email: processedNewEmail,
+    };
+    saveStoreToLocalStorage();
+  }
+}
+
+export function exportMockDataAsJSON(): string {
+  return JSON.stringify(store, null, 2);
+}
+
+
+// --- Firestore Functions ---
+// These functions are for when you are ready to connect to a live Firebase database.
+
 function handleFirestoreError(e: unknown, context: string): never {
     console.error(`Error during ${context}:`, e);
     const firebaseError = e as { code?: string; message?: string };
-
     if (firebaseError.code === 'permission-denied') {
         console.error(
 `
@@ -122,8 +284,6 @@ function handleFirestoreError(e: unknown, context: string): never {
     throw e;
 }
 
-
-// --- Firestore Functions ---
 
 // CUSTOMERS
 export async function addCustomerToFirestore(customer: Customer): Promise<void> {
@@ -184,7 +344,6 @@ export async function getOutstandingCustomersFromFirestore(): Promise<Customer[]
     handleFirestoreError(e, 'getOutstandingCustomersFromFirestore');
   }
 }
-
 
 export async function getCustomerByIdFromFirestore(customerId: string): Promise<Customer | null> {
   try {
@@ -521,98 +680,4 @@ export async function markAllNotificationsAsReadInFirestore(userId: string): Pro
   } catch (e) {
     handleFirestoreError(e, `markAllNotificationsAsReadInFirestore for user ${userId}`);
   }
-}
-
-
-// --- Mock Data Functions (for parts of the app not yet migrated) ---
-
-export function updateCustomerEmail(customerId: string, newEmail: string): void {
-  const customerIndex = store.customers.findIndex(c => c.id === customerId);
-  if (customerIndex > -1) {
-    const processedNewEmail = newEmail.trim().toLowerCase();
-    store.customers[customerIndex] = {
-      ...store.customers[customerIndex],
-      email: processedNewEmail,
-    };
-    saveStoreToLocalStorage();
-  }
-}
-
-export function getAllMockCustomers(): Customer[] {
-  return [...store.customers];
-}
-
-export function deleteMockCustomer(customerId: string): void {
-  const initialCustomerCount = store.customers.length;
-  const customerToDelete = store.customers.find(c => c.id === customerId);
-  store.customers = store.customers.filter(c => c.id !== customerId);
-  if (store.customers.length < initialCustomerCount && customerToDelete) {
-    store.usageRecords = store.usageRecords.filter(ur => ur.customerId !== customerId);
-    store.payments = store.payments.filter(p => p.customerId !== customerId);
-    store.notifications = store.notifications.filter(n => !(customerToDelete.authUID && n.userId === customerToDelete.authUID) && !n.linkTo?.includes(`/admin/customers/${customerId}`));
-    saveStoreToLocalStorage();
-  }
-}
-
-export function getAllMockUsageRecords(): WaterUsageRecord[] {
-  return [...store.usageRecords].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export function getMockUsageRecordsByCustomerId(customerId: string): WaterUsageRecord[] {
-  return store.usageRecords
-    .filter(r => r.customerId === customerId)
-    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-}
-
-export function getAllMockPayments(): Payment[] {
-  return [...store.payments].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export function getMockPaymentsByCustomerId(customerId: string): Payment[] {
-  return store.payments
-    .filter(p => p.customerId === customerId)
-    .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
-}
-
-export function addMockNotification(notification: Notification): void {
-  store.notifications.unshift(notification);
-  if (store.notifications.length > 100) store.notifications.pop();
-  saveStoreToLocalStorage();
-}
-
-export function getMockNotificationsByUserId(userId: string): Notification[] {
-  return store.notifications.filter(n => n.userId === userId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export function getAllAdminNotifications(): Notification[] {
-  return store.notifications.filter(n => n.userId === 'admin001').sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-}
-
-export function markNotificationAsRead(notificationId: string, userId: string): void {
-  const notificationIndex = store.notifications.findIndex(n => n.id === notificationId && n.userId === userId);
-  if (notificationIndex > -1) {
-    store.notifications[notificationIndex].isRead = true;
-    saveStoreToLocalStorage();
-  }
-}
-
-export function markAllNotificationsAsRead(userId: string): void {
-  store.notifications.forEach(n => {
-    if (n.userId === userId && !n.isRead) n.isRead = true;
-  });
-  saveStoreToLocalStorage();
-}
-
-export function getMockCustomerById(customerId: string): Customer | null {
-  const customer = store.customers.find(c => c.id === customerId);
-  return customer ? { ...customer } : null;
-}
-
-export function exportMockDataAsJSON(): string {
-  // This function now only exports the mock parts of the store (notifications)
-  // as other data is now live in Firestore.
-  const mockStore = {
-     notifications: store.notifications,
-  };
-  return JSON.stringify(mockStore, null, 2);
 }
