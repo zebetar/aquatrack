@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -37,9 +36,6 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
-          <DialogDescription>
-            Enter the details for the new customer. An email is required to create a Viewer account.
-          </DialogDescription>
         </DialogHeader>
         <AddCustomerForm onSuccessCallback={handleSuccess} />
       </DialogContent>
