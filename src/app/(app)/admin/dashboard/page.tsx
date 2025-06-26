@@ -2,15 +2,14 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, BellRing, Loader2 } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
   getAllMockCustomers,
   getAllMockUsageRecords,
-  getAllAdminNotifications,
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
+import type { Customer, WaterUsageRecord, CustomerMonthlyUsage } from '@/types';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly
 import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding-bills-dialog';
 import { MonthlyRevenueDetailsDialog } from '@/components/admin/dashboard/monthly-revenue-details-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const KeyMetricCard = memo(({ 
   title, 
@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
   const [monthlySupply, setMonthlySupply] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
-  const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
+  const [topOutstandingCustomers, setTopOutstandingCustomers] = useState<Customer[]>([]);
   
   // Data for dialogs
   const [isDialogDataLoading, setIsDialogDataLoading] = useState(false);
@@ -121,10 +121,8 @@ export default function AdminDashboardPage() {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      // Using mock data to prevent Firestore permission errors
       const allCustomers = getAllMockCustomers();
       const allUsageRecords = getAllMockUsageRecords();
-      const allNotifications = getAllAdminNotifications();
       
       const usageRecordsThisMonth = allUsageRecords.filter(record => {
         const recordDate = new Date(record.date);
@@ -136,7 +134,9 @@ export default function AdminDashboardPage() {
       setTotalCustomers(allCustomers.length);
       setMonthlyUsageRecords(usageRecordsThisMonth);
       setCustomersWithOutstandingBills(outstandingCustomers);
-      setRecentNotifications(allNotifications.slice(0, 3));
+      
+      const sortedOutstanding = [...outstandingCustomers].sort((a,b) => b.balance - a.balance);
+      setTopOutstandingCustomers(sortedOutstanding.slice(0, 5));
 
       const currentSupply = usageRecordsThisMonth.reduce((sum, record) => sum + record.durationHours, 0);
       const currentRevenue = usageRecordsThisMonth.reduce((sum, record) => sum + record.cost, 0);
@@ -265,38 +265,37 @@ export default function AdminDashboardPage() {
         ))}
       </div>
       <div className="mt-8">
-        <Card className="glassmorphism-card"> 
-          <CardHeader>
-            <CardTitle>Recent Notifications</CardTitle>
+        <Card className="glassmorphism-card">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Top Outstanding Bills</CardTitle>
+             <Button asChild variant="link" size="sm">
+                <Link href="/admin/reports/outstanding-bills">View All</Link>
+             </Button>
           </CardHeader>
           <CardContent>
-            {recentNotifications.length === 0 ? (
-              <p className="text-muted-foreground">No recent notifications.</p>
+            {topOutstandingCustomers.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No outstanding bills. Great job!</p>
             ) : (
-              <ul className="space-y-3">
-                {recentNotifications.map(activity => (
-                  <li key={activity.id} className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/30 dark:hover:bg-muted/10 transition-colors">
-                    <div className="p-1.5 bg-primary/10 dark:bg-primary/20 rounded-full">
-                       <BellRing className="h-5 w-5 text-primary flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="text-sm">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{!isNaN(new Date(activity.createdAt).getTime()) ? format(new Date(activity.createdAt), 'PP p') : 'Invalid date'}</p>
-                       {activity.linkTo && (
-                         <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary dark:text-accent">
-                           <Link href={activity.linkTo}>View</Link>
-                         </Button>
-                      )}
-                    </div>
+              <ul className="space-y-1">
+                {topOutstandingCustomers.map((customer) => (
+                  <li key={customer.id}>
+                    <Link href={`/admin/customers/${customer.id}`} className="flex items-center justify-between p-2 -m-2 rounded-lg hover:bg-muted transition-colors">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person avatar"/>
+                          <AvatarFallback>{customer.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <p className="font-semibold">{customer.name}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm text-destructive">PKR {customer.balance.toLocaleString()}</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </Link>
                   </li>
                 ))}
               </ul>
             )}
-            <Button variant="outline" asChild className="mt-6">
-              <Link href="/admin/notifications">
-                <span>View All Notifications</span>
-              </Link>
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -323,3 +322,4 @@ export default function AdminDashboardPage() {
     
 
     
+
