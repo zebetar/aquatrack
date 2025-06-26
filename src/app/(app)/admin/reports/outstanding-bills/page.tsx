@@ -73,17 +73,14 @@ export default function OutstandingBillsPage() {
       )}
 
       {outstandingCustomers.length > 0 ? (
-        <div className="flex justify-center">
-          <CustomerListTable
-            customers={outstandingCustomers}
-            onCustomerDeleted={() => {
-              fetchOutstandingCustomers(); 
-            }}
-            deletingCustomerId={null}
-            enableActions={false} 
-            className="w-full max-w-6xl"
-          />
-        </div>
+        <CustomerListTable
+          customers={outstandingCustomers}
+          onCustomerDeleted={() => {
+            fetchOutstandingCustomers(); 
+          }}
+          deletingCustomerId={null}
+          enableActions={false} 
+        />
       ) : (
         !isLoading && (
           <div className="rounded-lg border bg-card p-6 text-center shadow-sm glassmorphism-card max-w-md mx-auto">

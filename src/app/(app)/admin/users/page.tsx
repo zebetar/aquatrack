@@ -115,15 +115,12 @@ export default function AdminUsersPage() {
           <span>Refreshing user list...</span>
         </div>
       )}
-      <div className="flex justify-center">
-        <CustomerListTable
-          customers={customers}
-          onCustomerDeleted={handleCustomerDeleted}
-          deletingCustomerId={deletingCustomerId}
-          enableActions={true}
-          className="w-full max-w-6xl"
-        />
-      </div>
+      <CustomerListTable
+        customers={customers}
+        onCustomerDeleted={handleCustomerDeleted}
+        deletingCustomerId={deletingCustomerId}
+        enableActions={true}
+      />
     </div>
   );
 }
