@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -10,7 +10,7 @@ import {
   getAllMockUsageRecords,
 } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, CustomerMonthlyUsage } from '@/types';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
@@ -18,6 +18,37 @@ import { OutstandingBillsDialog } from '@/components/admin/dashboard/outstanding
 import { MonthlyRevenueDetailsDialog } from '@/components/admin/dashboard/monthly-revenue-details-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+
+interface MonthlyData {
+  month: string;
+  monthLabel: string;
+  supply: number;
+  revenue: number;
+}
+
+const StatChangeIndicator = memo(({ value }: { value: number }) => {
+  const isPositive = value > 0;
+  const isNegative = value < 0;
+  const Icon = isPositive ? ArrowUp : ArrowDown;
+
+  if (value === 0 || !isFinite(value)) {
+    return null;
+  }
+
+  return (
+    <span className={cn(
+      "flex items-center text-xs font-semibold",
+      isPositive && "text-green-600 dark:text-green-500",
+      isNegative && "text-destructive"
+    )}>
+      <Icon className="h-3 w-3 mr-1" />
+      {Math.abs(value).toFixed(0)}%
+    </span>
+  );
+});
+StatChangeIndicator.displayName = 'StatChangeIndicator';
+
 
 const KeyMetricCard = memo(({ 
   title, 
@@ -107,6 +138,11 @@ export default function AdminDashboardPage() {
   const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
   const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false);
 
+  // Chart state
+  const [chartData, setChartData] = useState<MonthlyData[]>([]);
+  const [supplyChange, setSupplyChange] = useState(0);
+  const [revenueChange, setRevenueChange] = useState(0);
+
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
       .filter(c => c.cost > 0)
@@ -120,6 +156,9 @@ export default function AdminDashboardPage() {
       const today = new Date();
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
+      const lastMonthDate = subMonths(today, 1);
+      const firstDayOfLastMonth = startOfMonth(lastMonthDate);
+      const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
       const allCustomers = getAllMockCustomers();
       const allUsageRecords = getAllMockUsageRecords();
@@ -128,6 +167,8 @@ export default function AdminDashboardPage() {
         const recordDate = new Date(record.date);
         return recordDate >= firstDay && recordDate <= lastDay;
       });
+      
+      const usageLastMonth = allUsageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
 
       const outstandingCustomers = allCustomers.filter(c => c.balance > 0);
 
@@ -146,8 +187,39 @@ export default function AdminDashboardPage() {
       const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
       setOutstandingBillsValue(totalDue);
       
+      // Calculate changes for charts
+      const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
+      const lastMonthRevenue = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
+      setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
+      setRevenueChange(lastMonthRevenue > 0 ? ((currentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : (currentRevenue > 0 ? 100 : 0));
+
+      // Prepare historical data for charts
+      const historicalMap = new Map<string, { supply: number, revenue: number }>();
+      for (let i = 5; i >= 0; i--) {
+          const date = subMonths(today, i);
+          const monthKey = format(date, 'yyyy-MM');
+          historicalMap.set(monthKey, { supply: 0, revenue: 0 });
+      }
+      
+      allUsageRecords.forEach(record => {
+          const recordDate = new Date(record.date);
+          const monthKey = format(recordDate, 'yyyy-MM');
+          if (historicalMap.has(monthKey)) {
+              const current = historicalMap.get(monthKey)!;
+              current.supply += record.durationHours;
+              current.revenue += record.cost;
+          }
+      });
+      
+      const processedChartData: MonthlyData[] = Array.from(historicalMap.entries()).map(([month, data]) => ({
+        month,
+        monthLabel: format(parseISO(month + '-01'), 'MMM'),
+        ...data,
+      }));
+      setChartData(processedChartData);
+
     } catch (error) {
-      console.error("Failed to load dashboard data from mock store", error);
+      console.error("Failed to load dashboard data", error);
       toast({
         variant: "destructive",
         title: "Error Loading Dashboard",
@@ -249,6 +321,8 @@ export default function AdminDashboardPage() {
     },
   ];
 
+  const currentMonthLabel = format(new Date(), 'MMMM yyyy');
+
   return (
     <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">
@@ -264,6 +338,59 @@ export default function AdminDashboardPage() {
           />
         ))}
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <Card className="glassmorphism-card">
+          <CardHeader>
+            <CardTitle className="text-base font-medium text-muted-foreground">Supply Volume</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{formatDurationFromHours(monthlySupply)}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
+              <StatChangeIndicator value={supplyChange} />
+            </div>
+            <div className="h-[120px] mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <XAxis dataKey="monthLabel" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}} formatter={(value) => [formatDurationFromHours(Number(value)), "Supply"]}/>
+                  <Bar dataKey="supply" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glassmorphism-card">
+          <CardHeader>
+            <CardTitle className="text-base font-medium text-muted-foreground">Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+             <div className="flex items-center gap-2 mt-1">
+              <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
+              <StatChangeIndicator value={revenueChange} />
+            </div>
+            <div className="h-[120px] mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                 <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="monthLabel" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}} formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, "Revenue"]} />
+                    <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
+                 </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="mt-8">
         <Card className="glassmorphism-card">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -322,4 +449,3 @@ export default function AdminDashboardPage() {
     
 
     
-
