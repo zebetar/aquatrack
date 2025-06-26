@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -37,18 +36,18 @@ export function MonthlySupplyDetailsDialog({ isOpen, onClose, data, isLoading }:
     }
     if (data.length > 0) {
       return (
-        <Table className="min-w-[500px]">
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow>
               <TableHead>Customer Name</TableHead>
-              <TableHead className="text-right">Usage</TableHead>
-              <TableHead className="text-right">Cost (PKR)</TableHead>
+              <TableHead className="w-[100px] text-right">Usage</TableHead>
+              <TableHead className="w-[120px] text-right">Cost (PKR)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell className="font-medium truncate">{item.name}</TableCell>
                 <TableCell className="text-right">{formatDurationFromHours(item.usageHours)}</TableCell>
                 <TableCell className="text-right">{item.cost.toLocaleString('en-US')}</TableCell>
               </TableRow>
