@@ -56,8 +56,6 @@ export function EditPaymentRecordForm({ existingPayment, onSuccess }: EditPaymen
       amountPaid: values.amountPaid,
     };
     
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
     toast({
       title: "Payment Record Updated!",
       description: `Payment of PKR ${values.amountPaid.toLocaleString('en-US')} for ${existingPayment.customerName} updated.`,
@@ -126,3 +124,5 @@ export function EditPaymentRecordForm({ existingPayment, onSuccess }: EditPaymen
     </Form>
   );
 }
+
+    

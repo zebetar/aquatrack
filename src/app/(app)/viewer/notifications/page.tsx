@@ -36,7 +36,6 @@ export default function ViewerNotificationsPage() {
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 100)); 
     const fetchedNotifications = getMockNotificationsByUserId(viewerUserId);
     setNotifications(fetchedNotifications || []);
     setIsLoading(false);
@@ -140,3 +139,5 @@ export default function ViewerNotificationsPage() {
     </Card>
   );
 }
+
+    

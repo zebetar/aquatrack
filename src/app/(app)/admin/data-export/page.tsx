@@ -100,8 +100,6 @@ export default function DataExportPage() {
     setIsPreviewing(true);
     setShowPreview(false);
 
-    await new Promise(resolve => setTimeout(resolve, 300));
-
     const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
 
     const usage = getMockUsageRecordsByCustomerId(selectedCustomerId)
@@ -148,8 +146,7 @@ export default function DataExportPage() {
     }
 
     setIsDownloading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-
+    
     try {
       await generateCustomerPdf(customer, filteredUsage, filteredPayments);
       toast({
@@ -365,3 +362,5 @@ export default function DataExportPage() {
     </div>
   );
 }
+
+    

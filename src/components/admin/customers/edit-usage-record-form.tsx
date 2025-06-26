@@ -131,8 +131,6 @@ export function EditUsageRecordForm({ existingRecord, onSuccess }: EditUsageForm
       cost: finalCost,
     };
     
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
     toast({
       title: "Usage Record Updated!",
       description: `Usage for ${existingRecord.customerName} updated. Cost: PKR ${finalCost.toLocaleString('en-US')}. Duration: ${formatDurationFromHours(finalDurationHours)}.`,
@@ -227,3 +225,5 @@ export function EditUsageRecordForm({ existingRecord, onSuccess }: EditUsageForm
     </Form>
   );
 }
+
+    

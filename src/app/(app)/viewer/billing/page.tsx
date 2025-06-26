@@ -23,7 +23,6 @@ export default function ViewerBillingPage() {
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 200)); 
     const paymentData = getMockPaymentsByCustomerId(user.customerId);
     const profileData = getMockCustomerById(user.customerId);
     
@@ -114,3 +113,5 @@ export default function ViewerBillingPage() {
     </div>
   );
 }
+
+    

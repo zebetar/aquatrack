@@ -72,8 +72,7 @@ export default function ViewerProfilePage() {
   const handleEmailChange = async (values: ChangeEmailFormValues) => {
     if (!user || !user.customerId) return;
     setIsEmailSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 700));
-
+    
     updateUserEmailInAuth(values.newEmail);
 
     toast({ title: "Email Updated", description: `Your email has been updated to ${values.newEmail}.` });
@@ -83,8 +82,7 @@ export default function ViewerProfilePage() {
 
   const handlePasswordChange = async (values: ChangePasswordFormValues) => {
     setIsPasswordSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 700));
-
+    
     if (values.currentPassword === MOCK_VIEWER_PASSWORD) {
       toast({ title: "Password Changed (Mock)", description: "Your password has been successfully updated (simulated)." });
       passwordForm.reset();
@@ -123,7 +121,6 @@ export default function ViewerProfilePage() {
         return;
     }
     setIsAvatarSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 700));
     updateUserAvatarUrl(avatarPreview);
     setIsAvatarSaving(false);
   };
@@ -305,3 +302,5 @@ export default function ViewerProfilePage() {
     </div>
   );
 }
+
+    

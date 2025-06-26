@@ -139,8 +139,6 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
       recordedBy: "admin001", 
       createdAt: new Date(),
     };
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
     toast({
       title: "Usage Logged Successfully!",
@@ -241,3 +239,5 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     </Form>
   );
 }
+
+    

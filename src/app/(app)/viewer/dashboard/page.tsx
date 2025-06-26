@@ -61,7 +61,6 @@ export default function ViewerDashboardPage() {
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 100)); 
 
     const profile = user?.customerId ? getMockCustomerById(user.customerId) : null;
     setCustomerProfile(profile);
@@ -168,3 +167,5 @@ export default function ViewerDashboardPage() {
     </div>
   );
 }
+
+    

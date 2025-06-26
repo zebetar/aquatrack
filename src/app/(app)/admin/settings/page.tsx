@@ -82,8 +82,6 @@ export default function AdminSettingsPage() {
       return;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 700));
-
     updateCoreWaterRate(rateValue);
     setCurrentRate(rateValue);
 
@@ -96,7 +94,6 @@ export default function AdminSettingsPage() {
 
   const handleAdminNameChange = async (values: AdminChangeNameFormValues) => {
     setIsSavingName(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
     updateAdminName(values.newAdminName);
     setIsSavingName(false);
   };
@@ -131,7 +128,6 @@ export default function AdminSettingsPage() {
     }
 
     setIsSavingAvatar(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
     updateUserAvatarUrl(avatarPreview); 
     setIsSavingAvatar(false);
   };
@@ -375,3 +371,5 @@ export default function AdminSettingsPage() {
     </>
   );
 }
+
+    

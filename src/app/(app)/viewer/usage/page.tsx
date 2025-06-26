@@ -24,7 +24,6 @@ export default function ViewerUsagePage() {
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 200));
     const records = getMockUsageRecordsByCustomerId(user.customerId);
     records.sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     setUsageRecords(records || []);
@@ -108,3 +107,5 @@ export default function ViewerUsagePage() {
     </div>
   );
 }
+
+    

@@ -61,9 +61,6 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     };
 
     console.log("Record Payment Data (New Payment):", newPayment);
-
-    // Simulate API call - in a real app, this would interact with a backend
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
     toast({
       title: "Payment Recorded Successfully!",
@@ -140,3 +137,5 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     </Form>
   );
 }
+
+    
