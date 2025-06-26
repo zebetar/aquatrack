@@ -1,10 +1,9 @@
 
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
-import { db, Timestamp } from '@/lib/firebase-config';
-import {
-  collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc,
-  writeBatch, orderBy, limit, increment, runTransaction, getCountFromServer
-} from 'firebase/firestore';
+
+// This file is configured for a full MOCK data flow.
+// All data is stored in the browser's localStorage to simulate a database.
+// This is ideal for rapid development and UI testing without needing a live backend.
 
 interface MockDataStore {
   customers: Customer[];
@@ -15,6 +14,7 @@ interface MockDataStore {
 
 const STORAGE_KEY = 'aquaTrackMockDataStore';
 
+// Initialize a default store structure.
 let store: MockDataStore = {
   customers: [],
   usageRecords: [],
@@ -31,6 +31,7 @@ function loadStoreFromLocalStorage(): void {
       if (serializedStore) {
         const parsedStore: MockDataStore = JSON.parse(serializedStore);
 
+        // Revive dates from string format
         store.customers = parsedStore.customers?.map(c => ({
           ...c,
           createdAt: new Date(c.createdAt),
@@ -51,9 +52,13 @@ function loadStoreFromLocalStorage(): void {
           ...n,
           createdAt: new Date(n.createdAt),
         })) || [];
+      } else {
+         // If no store exists, create some default data for a better first-run experience.
+         createDefaultMockData();
+         saveStoreToLocalStorage(); // Save the new default data
       }
     } catch (error) {
-      console.error("Error loading mock data store from localStorage:", error);
+      console.error("Error loading or parsing mock data store from localStorage:", error);
       store = { customers: [], usageRecords: [], payments: [], notifications: [] };
     }
   }
@@ -70,11 +75,77 @@ function saveStoreToLocalStorage(): void {
   }
 }
 
+function createDefaultMockData(): void {
+    const customer1: Customer = {
+        id: 'cust-001',
+        name: 'Alice Johnson',
+        email: 'viewer@example.com',
+        contactInfo: '123-456-7890',
+        authUID: 'auth-001',
+        createdAt: new Date(),
+        balance: 1500,
+    };
+    const customer2: Customer = {
+        id: 'cust-002',
+        name: 'Bob Williams',
+        email: 'bob@example.com',
+        contactInfo: '098-765-4321',
+        authUID: 'auth-002',
+        createdAt: new Date(Date.now() - 86400000 * 5), // 5 days ago
+        balance: 0,
+    };
+    store.customers = [customer1, customer2];
+
+    const usage1: WaterUsageRecord = {
+        id: 'usage-001',
+        customerId: 'cust-001',
+        customerName: 'Alice Johnson',
+        date: new Date(Date.now() - 86400000 * 2), // 2 days ago
+        startTime: new Date(Date.now() - 86400000 * 2 - 3600000 * 2),
+        endTime: new Date(Date.now() - 86400000 * 2),
+        durationHours: 2,
+        cost: 2400,
+        recordedBy: 'admin001',
+        createdAt: new Date(),
+    };
+    store.usageRecords = [usage1];
+
+    const payment1: Payment = {
+        id: 'payment-001',
+        customerId: 'cust-001',
+        customerName: 'Alice Johnson',
+        paymentDate: new Date(Date.now() - 86400000), // yesterday
+        amountPaid: 900,
+        recordedBy: 'admin001',
+        createdAt: new Date(),
+    };
+    store.payments = [payment1];
+
+    const notif1: Notification = {
+        id: 'noti-001-admin',
+        userId: 'admin001',
+        message: 'Welcome to AquaTrack! You can now manage your customers.',
+        type: 'ANNOUNCEMENT',
+        isRead: false,
+        createdAt: new Date(),
+    };
+    const notif2: Notification = {
+        id: 'noti-002-viewer',
+        userId: 'auth-001',
+        message: 'Welcome, Alice! Your account has been created.',
+        type: 'ANNOUNCEMENT',
+        isRead: false,
+        linkTo: '/viewer/profile',
+        createdAt: new Date(),
+    };
+    store.notifications = [notif1, notif2];
+}
+
+
 // Load the store from localStorage when the module is first imported
 loadStoreFromLocalStorage();
 
 // --- MOCK DATA FUNCTIONS ---
-// These functions interact with the in-memory/localStorage store for rapid development.
 
 export function addMockCustomer(customer: Customer): void {
   store.customers.push(customer);
@@ -87,6 +158,13 @@ export function getAllMockCustomers(): Customer[] {
 
 export function getMockCustomerById(customerId: string): Customer | null {
   const customer = store.customers.find(c => c.id === customerId);
+  return customer ? { ...customer } : null;
+}
+
+export function getMockCustomerByEmail(email: string): Customer | null {
+  if (!email) return null;
+  const processedEmail = email.trim().toLowerCase();
+  const customer = store.customers.find(c => c.email?.toLowerCase() === processedEmail);
   return customer ? { ...customer } : null;
 }
 
@@ -231,453 +309,4 @@ export function updateCustomerEmail(customerId: string, newEmail: string): void 
 
 export function exportMockDataAsJSON(): string {
   return JSON.stringify(store, null, 2);
-}
-
-
-// --- Firestore Functions ---
-// These functions are for when you are ready to connect to a live Firebase database.
-
-function handleFirestoreError(e: unknown, context: string): never {
-    console.error(`Error during ${context}:`, e);
-    const firebaseError = e as { code?: string; message?: string };
-    if (firebaseError.code === 'permission-denied') {
-        console.error(
-`
-********************************************************************************
-*                                                                              *
-*                      FIREBASE PERMISSION DENIED                              *
-*                                                                              *
-*      Your Firestore security rules are blocking this operation.              *
-*      Go to your Firebase Console > Firestore Database > Rules tab and        *
-*      ensure the authenticated user has permission for this action.           *
-*                                                                              *
-*      For DEVELOPMENT, you can use these permissive rules:                    *
-*      rules_version = '2';                                                    *
-*      service cloud.firestore {                                               *
-*        match /databases/{database}/documents {                               *
-*          match /{document=**} {                                              *
-*            allow read, write: if request.auth != null;                       *
-*          }                                                                   *
-*        }                                                                     *
-*      }                                                                       *
-*                                                                              *
-*      IMPORTANT: These rules are NOT secure for production.                   *
-*                                                                              *
-********************************************************************************
-`
-        );
-    } else if (firebaseError.code === 'failed-precondition') {
-        console.error(
-`
-********************************************************************************
-*                                                                              *
-*                      FIREBASE INDEX REQUIRED                                 *
-*                                                                              *
-*      This query failed because it requires a composite index.                *
-*      Check the browser's developer console for a Firebase error message      *
-*      that includes a DIRECT LINK to create the necessary index.              *
-*                                                                              *
-********************************************************************************
-`
-        );
-    }
-    throw e;
-}
-
-
-// CUSTOMERS
-export async function addCustomerToFirestore(customer: Customer): Promise<void> {
-  try {
-    const customerRef = doc(db, 'customers', customer.id);
-    const customerDataForFirestore = {
-      ...customer,
-      createdAt: Timestamp.fromDate(customer.createdAt),
-    };
-    await setDoc(customerRef, customerDataForFirestore);
-  } catch (e) {
-    handleFirestoreError(e, 'addCustomerToFirestore');
-  }
-}
-
-export async function getAllCustomersFromFirestore(): Promise<Customer[]> {
-  try {
-    const customersCol = collection(db, 'customers');
-    const q = query(customersCol, orderBy('createdAt', 'desc'));
-    const customerSnapshot = await getDocs(q);
-    return customerSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-        createdAt: (data.createdAt as Timestamp).toDate()
-      } as Customer;
-    });
-  } catch (e) {
-    handleFirestoreError(e, 'getAllCustomersFromFirestore');
-  }
-}
-
-export async function getTotalCustomerCount(): Promise<number> {
-    try {
-        const customersCol = collection(db, 'customers');
-        const snapshot = await getCountFromServer(customersCol);
-        return snapshot.data().count;
-    } catch (e) {
-        handleFirestoreError(e, 'getTotalCustomerCount');
-    }
-}
-
-export async function getOutstandingCustomersFromFirestore(): Promise<Customer[]> {
-  try {
-    const customersCol = collection(db, 'customers');
-    const q = query(customersCol, where('balance', '>', 0), orderBy('balance', 'desc'));
-    const customerSnapshot = await getDocs(q);
-    return customerSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-        createdAt: (data.createdAt as Timestamp).toDate()
-      } as Customer;
-    });
-  } catch (e) {
-    handleFirestoreError(e, 'getOutstandingCustomersFromFirestore');
-  }
-}
-
-export async function getCustomerByIdFromFirestore(customerId: string): Promise<Customer | null> {
-  try {
-    const customerRef = doc(db, 'customers', customerId);
-    const customerSnap = await getDoc(customerRef);
-    if (customerSnap.exists()) {
-      const data = customerSnap.data();
-      return {
-        ...data,
-        id: customerSnap.id,
-        createdAt: (data.createdAt as Timestamp).toDate()
-      } as Customer;
-    }
-    return null;
-  } catch (e) {
-    handleFirestoreError(e, `getCustomerByIdFromFirestore for ID ${customerId}`);
-  }
-}
-
-export async function updateCustomerInFirestore(customer: Partial<Customer> & { id: string }): Promise<void> {
-    try {
-        const customerRef = doc(db, 'customers', customer.id);
-        await updateDoc(customerRef, customer);
-    } catch (e) {
-        handleFirestoreError(e, `updateCustomerInFirestore for ID ${customer.id}`);
-    }
-}
-
-export async function deleteCustomerAndRelatedDataFromFirestore(customerId: string): Promise<void> {
-    try {
-        const batch = writeBatch(db);
-
-        const customerRef = doc(db, 'customers', customerId);
-        batch.delete(customerRef);
-
-        const usageQuery = query(collection(db, 'usageRecords'), where('customerId', '==', customerId));
-        const usageSnapshot = await getDocs(usageQuery);
-        usageSnapshot.forEach(doc => batch.delete(doc.ref));
-
-        const paymentsQuery = query(collection(db, 'payments'), where('customerId', '==', customerId));
-        const paymentsSnapshot = await getDocs(paymentsQuery);
-        paymentsSnapshot.forEach(doc => batch.delete(doc.ref));
-        
-        await batch.commit();
-    } catch (e) {
-        handleFirestoreError(e, `deleteCustomerAndRelatedDataFromFirestore for ID ${customerId}`);
-    }
-}
-
-
-// USAGE RECORDS
-export async function addUsageRecordToFirestore(record: WaterUsageRecord): Promise<void> {
-  try {
-    const customerRef = doc(db, 'customers', record.customerId);
-    const usageRecordRef = doc(db, 'usageRecords', record.id);
-    
-    const recordData = {
-      ...record,
-      createdAt: Timestamp.fromDate(record.createdAt),
-      date: Timestamp.fromDate(record.date),
-      startTime: Timestamp.fromDate(record.startTime),
-      endTime: Timestamp.fromDate(record.endTime),
-    };
-
-    const batch = writeBatch(db);
-    batch.set(usageRecordRef, recordData);
-    batch.update(customerRef, { balance: increment(record.cost) });
-    await batch.commit();
-  } catch (e) {
-    handleFirestoreError(e, `addUsageRecordToFirestore for customer ${record.customerId}`);
-  }
-}
-
-export async function getAllUsageRecordsFromFirestore(): Promise<WaterUsageRecord[]> {
-  try {
-    const usageCol = collection(db, 'usageRecords');
-    const q = query(usageCol, orderBy('startTime', 'desc'));
-    const usageSnapshot = await getDocs(q);
-    return usageSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-        date: (data.date as Timestamp).toDate(),
-        startTime: (data.startTime as Timestamp).toDate(),
-        endTime: (data.endTime as Timestamp).toDate(),
-        createdAt: (data.createdAt as Timestamp).toDate(),
-      } as WaterUsageRecord;
-    });
-  } catch (e) {
-    handleFirestoreError(e, 'getAllUsageRecordsFromFirestore');
-  }
-}
-
-export async function getUsageRecordsForDateRangeFromFirestore(startDate: Date, endDate: Date): Promise<WaterUsageRecord[]> {
-    try {
-        const usageCol = collection(db, 'usageRecords');
-        const q = query(usageCol, 
-                        where('date', '>=', Timestamp.fromDate(startDate)), 
-                        where('date', '<=', Timestamp.fromDate(endDate)),
-                        orderBy('date', 'desc'));
-        const usageSnapshot = await getDocs(q);
-        return usageSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                date: (data.date as Timestamp).toDate(),
-                startTime: (data.startTime as Timestamp).toDate(),
-                endTime: (data.endTime as Timestamp).toDate(),
-                createdAt: (data.createdAt as Timestamp).toDate(),
-            } as WaterUsageRecord;
-        });
-    } catch (e) {
-        handleFirestoreError(e, `getUsageRecordsForDateRangeFromFirestore`);
-    }
-}
-
-export async function getUsageRecordsByCustomerIdFromFirestore(customerId: string): Promise<WaterUsageRecord[]> {
-  try {
-    const usageCol = collection(db, 'usageRecords');
-    const q = query(usageCol, where('customerId', '==', customerId), orderBy('startTime', 'desc'));
-    const usageSnapshot = await getDocs(q);
-    return usageSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-        date: (data.date as Timestamp).toDate(),
-        startTime: (data.startTime as Timestamp).toDate(),
-        endTime: (data.endTime as Timestamp).toDate(),
-        createdAt: (data.createdAt as Timestamp).toDate(),
-      } as WaterUsageRecord;
-    });
-  } catch (e) {
-    handleFirestoreError(e, `getUsageRecordsByCustomerIdFromFirestore for ID ${customerId}`);
-  }
-}
-
-export async function updateUsageRecordInFirestore(updatedRecord: WaterUsageRecord): Promise<void> {
-  const usageRecordRef = doc(db, 'usageRecords', updatedRecord.id);
-  const customerRef = doc(db, 'customers', updatedRecord.customerId);
-  try {
-    await runTransaction(db, async (transaction) => {
-      const usageRecordSnap = await transaction.get(usageRecordRef);
-      if (!usageRecordSnap.exists()) {
-        throw `Usage Record ${updatedRecord.id} does not exist!`;
-      }
-      const oldRecordData = usageRecordSnap.data();
-      const oldRecord = {
-          ...oldRecordData,
-          date: (oldRecordData.date as Timestamp).toDate(),
-          startTime: (oldRecordData.startTime as Timestamp).toDate(),
-          endTime: (oldRecordData.endTime as Timestamp).toDate(),
-          createdAt: (oldRecordData.createdAt as Timestamp).toDate(),
-      } as WaterUsageRecord
-      
-      const costDifference = updatedRecord.cost - oldRecord.cost;
-      
-      const recordDataForFirestore = {
-        ...updatedRecord,
-        createdAt: Timestamp.fromDate(updatedRecord.createdAt),
-        date: Timestamp.fromDate(updatedRecord.date),
-        startTime: Timestamp.fromDate(updatedRecord.startTime),
-        endTime: Timestamp.fromDate(updatedRecord.endTime),
-      };
-      
-      transaction.update(customerRef, { balance: increment(costDifference) });
-      transaction.set(usageRecordRef, recordDataForFirestore);
-    });
-  } catch (e) {
-    handleFirestoreError(e, `updateUsageRecordInFirestore for ID ${updatedRecord.id}`);
-  }
-}
-
-// PAYMENTS
-export async function addPaymentToFirestore(payment: Payment): Promise<void> {
-  try {
-    const customerRef = doc(db, 'customers', payment.customerId);
-    const paymentRef = doc(db, 'payments', payment.id);
-
-    const paymentData = {
-      ...payment,
-      createdAt: Timestamp.fromDate(payment.createdAt),
-      paymentDate: Timestamp.fromDate(payment.paymentDate),
-    };
-
-    const batch = writeBatch(db);
-    batch.set(paymentRef, paymentData);
-    batch.update(customerRef, { balance: increment(-payment.amountPaid) });
-    await batch.commit();
-  } catch(e) {
-    handleFirestoreError(e, `addPaymentToFirestore for customer ${payment.customerId}`);
-  }
-}
-
-export async function getAllPaymentsFromFirestore(): Promise<Payment[]> {
-    try {
-        const paymentsCol = collection(db, 'payments');
-        const q = query(paymentsCol, orderBy('paymentDate', 'desc'));
-        const paymentSnapshot = await getDocs(q);
-        return paymentSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                paymentDate: (data.paymentDate as Timestamp).toDate(),
-                createdAt: (data.createdAt as Timestamp).toDate(),
-            } as Payment;
-        });
-    } catch (e) {
-        handleFirestoreError(e, 'getAllPaymentsFromFirestore');
-    }
-}
-
-
-export async function getPaymentsByCustomerIdFromFirestore(customerId: string): Promise<Payment[]> {
-  try {
-    const paymentsCol = collection(db, 'payments');
-    const q = query(paymentsCol, where('customerId', '==', customerId), orderBy('paymentDate', 'desc'));
-    const paymentSnapshot = await getDocs(q);
-    return paymentSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-        paymentDate: (data.paymentDate as Timestamp).toDate(),
-        createdAt: (data.createdAt as Timestamp).toDate(),
-      } as Payment;
-    });
-  } catch (e) {
-    handleFirestoreError(e, `getPaymentsByCustomerIdFromFirestore for ID ${customerId}`);
-  }
-}
-
-export async function updatePaymentRecordInFirestore(updatedPayment: Payment): Promise<void> {
-  const paymentRecordRef = doc(db, 'payments', updatedPayment.id);
-  const customerRef = doc(db, 'customers', updatedPayment.customerId);
-
-  try {
-    await runTransaction(db, async (transaction) => {
-      const paymentRecordSnap = await transaction.get(paymentRecordRef);
-      if (!paymentRecordSnap.exists()) {
-        throw `Payment Record ${updatedPayment.id} does not exist!`;
-      }
-      const oldPaymentData = paymentRecordSnap.data();
-      const oldPayment = {
-          ...oldPaymentData,
-          paymentDate: (oldPaymentData.paymentDate as Timestamp).toDate(),
-          createdAt: (oldPaymentData.createdAt as Timestamp).toDate(),
-      } as Payment;
-
-      const amountDifference = oldPayment.amountPaid - updatedPayment.amountPaid;
-
-      const paymentDataForFirestore = {
-        ...updatedPayment,
-        createdAt: Timestamp.fromDate(updatedPayment.createdAt),
-        paymentDate: Timestamp.fromDate(updatedPayment.paymentDate),
-      };
-
-      transaction.update(customerRef, { balance: increment(amountDifference) });
-      transaction.set(paymentRecordRef, paymentDataForFirestore);
-    });
-  } catch (e) {
-    handleFirestoreError(e, `updatePaymentRecordInFirestore for ID ${updatedPayment.id}`);
-  }
-}
-
-// NOTIFICATIONS
-export async function addNotificationToFirestore(notification: Notification): Promise<void> {
-  try {
-    const notificationRef = doc(db, 'notifications', notification.id);
-    const notificationData = {
-        ...notification,
-        createdAt: Timestamp.fromDate(notification.createdAt),
-    };
-    await setDoc(notificationRef, notificationData);
-  } catch(e) {
-    handleFirestoreError(e, `addNotificationToFirestore for ID ${notification.id}`);
-  }
-}
-
-export async function getNotificationsByUserIdFromFirestore(userId: string, fetchLimit?: number): Promise<Notification[]> {
-    try {
-        const notificationsCol = collection(db, 'notifications');
-        const constraints = [where('userId', '==', userId), orderBy('createdAt', 'desc')];
-        if (fetchLimit) {
-            constraints.push(limit(fetchLimit));
-        }
-        const q = query(notificationsCol, ...constraints);
-        const notificationSnapshot = await getDocs(q);
-        return notificationSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                createdAt: (data.createdAt as Timestamp).toDate(),
-            } as Notification;
-        });
-    } catch (e) {
-        handleFirestoreError(e, `getNotificationsByUserIdFromFirestore for user ${userId}`);
-    }
-}
-
-export async function getAdminNotificationsFromFirestore(fetchLimit?: number): Promise<Notification[]> {
-  return getNotificationsByUserIdFromFirestore('admin001', fetchLimit);
-}
-
-export async function markNotificationAsReadInFirestore(notificationId: string): Promise<void> {
-  try {
-    const notificationRef = doc(db, 'notifications', notificationId);
-    await updateDoc(notificationRef, { isRead: true });
-  } catch (e) {
-    handleFirestoreError(e, `markNotificationAsReadInFirestore for ID ${notificationId}`);
-  }
-}
-
-export async function markAllNotificationsAsReadInFirestore(userId: string): Promise<void> {
-  try {
-    const batch = writeBatch(db);
-    const notificationsCol = collection(db, 'notifications');
-    const q = query(notificationsCol, where('userId', '==', userId), where('isRead', '==', false));
-    const unreadSnapshot = await getDocs(q);
-    
-    if (unreadSnapshot.empty) {
-      return; // Nothing to do
-    }
-
-    unreadSnapshot.forEach(doc => {
-      batch.update(doc.ref, { isRead: true });
-    });
-
-    await batch.commit();
-  } catch (e) {
-    handleFirestoreError(e, `markAllNotificationsAsReadInFirestore for user ${userId}`);
-  }
 }
