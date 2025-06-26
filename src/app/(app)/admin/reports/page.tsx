@@ -1,40 +1,40 @@
 
 "use client"; 
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { format, subMonths, parseISO } from 'date-fns';
-import { getAllMockCustomers, getAllMockUsageRecords, getAllMockPayments } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, Payment } from '@/types';
+import { format, subMonths, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { getAllMockUsageRecords, getAllMockPayments } from '@/lib/mock-data-store';
+import type { WaterUsageRecord, Payment } from '@/types';
 import { formatDurationFromHours } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
-interface MonthlySupply {
+interface MonthlyData {
   month: string; // "YYYY-MM"
-  monthLabel: string; // "MMM yyyy"
+  monthLabel: string; // "MMM yy"
   supply: number;
   revenue: number;
 }
 
 interface CustomerConsumption {
-  id: string;
   name: string;
   consumption: number;
-  bill: number; // total cost from usage for the selected month
-  paid: number; // total amount paid for the selected month
 }
 
 interface MonthlyFinancialSummary {
-  name: string; // e.g., "Aggregate"
-  bill: number; // Total billed for the month
-  paid: number; // Total paid for the month
+  name: string;
+  Billed: number;
+  Paid: number;
 }
 
 export default function AdminReportsPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
-  const [monthlySupplyData, setMonthlySupplyData] = useState<MonthlySupply[]>([]);
-  const [customerConsumptionData, setCustomerConsumptionData] = useState<CustomerConsumption[]>([]);
+  
+  const [historicalData, setHistoricalData] = useState<MonthlyData[]>([]);
+  const [monthlyCustomerData, setMonthlyCustomerData] = useState<CustomerConsumption[]>([]);
   const [monthlyFinancialSummary, setMonthlyFinancialSummary] = useState<MonthlyFinancialSummary[]>([]);
 
   const monthOptions = useMemo(() => {
@@ -50,86 +50,122 @@ export default function AdminReportsPage() {
   }, []);
 
   const loadReportsData = useCallback(() => {
-    const customers = getAllMockCustomers();
+    setIsLoading(true);
+    
     const usageRecords = getAllMockUsageRecords();
     const payments = getAllMockPayments();
 
-    const supplyMap = new Map<string, { supply: number, revenue: number }>();
+    // 1. Process historical data for the 12-month trend chart
+    const historicalMap = new Map<string, { supply: number, revenue: number }>();
+    for (let i = 11; i >= 0; i--) {
+        const date = subMonths(new Date(), i);
+        const monthKey = format(date, 'yyyy-MM');
+        historicalMap.set(monthKey, { supply: 0, revenue: 0 });
+    }
+
     usageRecords.forEach(record => {
-      const recordDate = new Date(record.date);
-      const monthKey = format(recordDate, 'yyyy-MM');
-      const current = supplyMap.get(monthKey) || { supply: 0, revenue: 0 };
-      current.supply += record.durationHours;
-      current.revenue += record.cost;
-      supplyMap.set(monthKey, current);
+        const recordDate = new Date(record.date);
+        const monthKey = format(recordDate, 'yyyy-MM');
+        if (historicalMap.has(monthKey)) {
+            const current = historicalMap.get(monthKey)!;
+            current.supply += record.durationHours;
+            current.revenue += record.cost;
+        }
     });
 
-    const allMonthlyData: MonthlySupply[] = Array.from(supplyMap.entries()).map(([month, data]) => ({
+    const allHistoricalData: MonthlyData[] = Array.from(historicalMap.entries()).map(([month, data]) => ({
       month,
-      monthLabel: format(parseISO(month + '-01'), 'MMM yyyy'),
-      supply: data.supply,
-      revenue: data.revenue,
-    })).sort((a,b) => a.month.localeCompare(b.month));
-    setMonthlySupplyData(allMonthlyData);
+      monthLabel: format(parseISO(month + '-01'), 'MMM yy'),
+      ...data,
+    }));
+    setHistoricalData(allHistoricalData);
 
-    const customerMap = new Map<string, CustomerConsumption>();
-    customers.forEach(customer => {
-      customerMap.set(customer.id, {
-        id: customer.id,
-        name: customer.name,
-        consumption: 0,
-        bill: 0,
-        paid: 0,
-      });
+    // 2. Process data for the selected month
+    const firstDayOfMonth = startOfMonth(parseISO(selectedMonth));
+    const lastDayOfMonth = endOfMonth(parseISO(selectedMonth));
+
+    const usageThisMonth = usageRecords.filter(r => {
+        const recordDate = new Date(r.date);
+        return recordDate >= firstDayOfMonth && recordDate <= lastDayOfMonth;
     });
 
-    let totalBilledThisMonth = 0;
-    let totalPaidThisMonth = 0;
-
-    usageRecords.forEach(record => {
-      const customerEntry = customerMap.get(record.customerId);
-      const recordDate = new Date(record.date);
-      if (format(recordDate, 'yyyy-MM') === selectedMonth) {
-        if (customerEntry) {
-          customerEntry.consumption += record.durationHours;
-          customerEntry.bill += record.cost;
-        }
-        totalBilledThisMonth += record.cost;
-      }
-    });
-    
-    payments.forEach(payment => {
-      const customerEntry = customerMap.get(payment.customerId);
-      const paymentDate = new Date(payment.paymentDate);
-      if (format(paymentDate, 'yyyy-MM') === selectedMonth) {
-        if (customerEntry) {
-           customerEntry.paid += payment.amountPaid;
-        }
-        totalPaidThisMonth += payment.amountPaid;
-      }
+    const paymentsThisMonth = payments.filter(p => {
+        const paymentDate = new Date(p.paymentDate);
+        return paymentDate >= firstDayOfMonth && paymentDate <= lastDayOfMonth;
     });
 
-    setCustomerConsumptionData(Array.from(customerMap.values()));
-    setMonthlyFinancialSummary([{ name: monthOptions.find(m=>m.value === selectedMonth)?.label || "Selected Month", bill: totalBilledThisMonth, paid: totalPaidThisMonth }]);
+    const customerConsumptionMap = new Map<string, number>();
+    usageThisMonth.forEach(record => {
+        const currentConsumption = customerConsumptionMap.get(record.customerName) || 0;
+        customerConsumptionMap.set(record.customerName, currentConsumption + record.durationHours);
+    });
 
-  }, [selectedMonth, monthOptions]);
+    const topCustomers = Array.from(customerConsumptionMap.entries())
+        .map(([name, consumption]) => ({ name, consumption }))
+        .sort((a,b) => b.consumption - a.consumption)
+        .slice(0, 10);
+    setMonthlyCustomerData(topCustomers);
+
+    const totalBilled = usageThisMonth.reduce((sum, r) => sum + r.cost, 0);
+    const totalPaid = paymentsThisMonth.reduce((sum, p) => sum + p.amountPaid, 0);
+
+    setMonthlyFinancialSummary([{ name: 'Summary', Billed: totalBilled, Paid: totalPaid }]);
+
+    setIsLoading(false);
+  }, [selectedMonth]);
 
   useEffect(() => {
     loadReportsData();
   }, [loadReportsData]);
 
-  const filteredSupplyDataForChart = monthlySupplyData.filter(d => d.month === selectedMonth);
-  
-  const topCustomersByConsumption = customerConsumptionData
-    .filter(c => c.consumption > 0)
-    .sort((a,b) => b.consumption - a.consumption)
-    .slice(0,10);
+  const selectedMonthLabel = monthOptions.find(m => m.value === selectedMonth)?.label || "Selected Month";
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center mt-6">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Generating reports...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-6 space-y-6">
-       <div className="flex justify-end">
+    <div className="mt-6 space-y-8">
+      
+      <Card className="shadow-lg glassmorphism-card">
+        <CardHeader>
+          <CardTitle>Historical Supply & Revenue</CardTitle>
+          <CardDescription>Trends over the last 12 months.</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[400px] pr-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={historicalData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+              <XAxis dataKey="monthLabel" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis yAxisId="left" stroke="hsl(var(--chart-1))" tickFormatter={(value) => formatDurationFromHours(value)} />
+              <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" tickFormatter={(value) => `PKR ${Number(value / 1000).toFixed(0)}k`} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  borderColor: 'hsl(var(--border))',
+                }}
+                formatter={(value, name) => {
+                  if (name === 'Revenue') return [`PKR ${Number(value).toLocaleString('en-US')}`, 'Revenue'];
+                  return [formatDurationFromHours(Number(value)), 'Supply'];
+                }}
+              />
+              <Legend />
+              <Line yAxisId="left" type="monotone" dataKey="supply" name="Supply" stroke="hsl(var(--chart-1))" strokeWidth={2} activeDot={{ r: 8 }} />
+              <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--chart-2))" strokeWidth={2} activeDot={{ r: 8 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+      
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 rounded-lg bg-card/50">
+        <h2 className="text-xl font-bold">Monthly Breakdown for:</h2>
          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[240px]">
                 <SelectValue placeholder="Select Month" />
             </SelectTrigger>
             <SelectContent>
@@ -139,25 +175,28 @@ export default function AdminReportsPage() {
             </SelectContent>
         </Select>
       </div>
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+
+      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
         <Card className="shadow-md glassmorphism-card">
           <CardHeader>
-            <CardTitle>Supply & Revenue for {monthOptions.find(m=>m.value === selectedMonth)?.label}</CardTitle>
+            <CardTitle>Top Customers by Consumption</CardTitle>
+            <CardDescription>For {selectedMonthLabel}</CardDescription>
           </CardHeader>
           <CardContent className="h-[400px]">
-            {filteredSupplyDataForChart.length === 0 ? (
-              <p className="text-muted-foreground flex h-full items-center justify-center">No supply data available for {monthOptions.find(m=>m.value === selectedMonth)?.label}.</p>
+            {monthlyCustomerData.length === 0 ? (
+              <p className="text-muted-foreground flex h-full items-center justify-center">No customer consumption data for {selectedMonthLabel}.</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={filteredSupplyDataForChart}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="monthLabel" />
-                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" tickFormatter={(value) => formatDurationFromHours(value)} />
-                  <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
-                  <Tooltip formatter={(value, name) => name === 'revenue' ? `PKR ${Number(value).toLocaleString('en-US')}`: formatDurationFromHours(Number(value))}/>
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="supply" fill="hsl(var(--chart-1))" name="Supply" />
-                  <Bar yAxisId="right" dataKey="revenue" fill="hsl(var(--chart-2))" name="Revenue (PKR)" />
+                <BarChart data={monthlyCustomerData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2}/>
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(value) => formatDurationFromHours(value)} />
+                  <YAxis dataKey="name" type="category" width={100} interval={0} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip
+                    cursor={{fill: 'hsl(var(--muted))'}}
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))'}}
+                    formatter={(value) => [formatDurationFromHours(Number(value)), "Consumption"]}
+                  />
+                  <Bar dataKey="consumption" fill="hsl(var(--chart-3))" name="Consumption" barSize={20} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -166,45 +205,28 @@ export default function AdminReportsPage() {
 
         <Card className="shadow-md glassmorphism-card">
           <CardHeader>
-            <CardTitle>Top Customers by Consumption ({monthOptions.find(m=>m.value === selectedMonth)?.label})</CardTitle>
+            <CardTitle>Financial Summary</CardTitle>
+            <CardDescription>For {selectedMonthLabel}</CardDescription>
           </CardHeader>
           <CardContent className="h-[400px]">
-            {topCustomersByConsumption.length === 0 ? (
-              <p className="text-muted-foreground flex h-full items-center justify-center">No customer consumption data for {monthOptions.find(m=>m.value === selectedMonth)?.label}.</p>
+            {monthlyFinancialSummary[0].Billed === 0 && monthlyFinancialSummary[0].Paid === 0 ? (
+              <p className="text-muted-foreground flex h-full items-center justify-center">No financial data for {selectedMonthLabel}.</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topCustomersByConsumption} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" tickFormatter={(value) => formatDurationFromHours(value)} />
-                  <YAxis dataKey="name" type="category" width={100} interval={0} />
-                  <Tooltip formatter={(value) => formatDurationFromHours(Number(value))}/>
-                  <Legend />
-                  <Bar dataKey="consumption" fill="hsl(var(--chart-3))" name="Consumption" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2 shadow-md glassmorphism-card">
-          <CardHeader>
-            <CardTitle>Monthly Financial Summary ({monthOptions.find(m=>m.value === selectedMonth)?.label})</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[400px]">
-            {monthlyFinancialSummary.length === 0 || (monthlyFinancialSummary[0].bill === 0 && monthlyFinancialSummary[0].paid === 0) ? (
-              <p className="text-muted-foreground flex h-full items-center justify-center">No billing or payment data for this month.</p>
-            ) : (
-            <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyFinancialSummary}> 
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `PKR ${Number(value).toLocaleString('en-US')}`}/>
+                <BarChart data={monthlyFinancialSummary} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(value) => `PKR ${Number(value/1000).toFixed(0)}k`} />
+                    <YAxis dataKey="name" type="category" hide />
+                    <Tooltip 
+                      cursor={{fill: 'hsl(var(--muted))'}}
+                      contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))'}}
+                      formatter={(value) => [`PKR ${Number(value).toLocaleString('en-US')}`, 'Amount']}
+                    />
                     <Legend />
-                    <Line type="monotone" dataKey="bill" stroke="hsl(var(--destructive))" name="Total Billed (PKR)" activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="paid" stroke="hsl(var(--chart-5))" name="Total Paid (PKR)" activeDot={{ r: 6 }} />
-                </LineChart>
-            </ResponsiveContainer>
+                    <Bar dataKey="Billed" fill="hsl(var(--destructive))" name="Total Billed" barSize={30} />
+                    <Bar dataKey="Paid" fill="hsl(var(--chart-5))" name="Total Paid" barSize={30} />
+                </BarChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
@@ -212,3 +234,5 @@ export default function AdminReportsPage() {
     </div>
   );
 }
+
+    
