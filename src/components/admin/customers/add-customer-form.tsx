@@ -12,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -106,9 +105,6 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
               <FormControl>
                 <Input type="email" placeholder="viewer@example.com (optional)" {...field} />
               </FormControl>
-              <FormDescription>
-                If provided, this email will be used by the customer to log into their Viewer Dashboard. Use 'viewerpassword' as the password. This email is case-insensitive for login.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -134,3 +130,4 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     </Form>
   );
 }
+    
