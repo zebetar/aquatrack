@@ -6,11 +6,9 @@ import { Users, Droplets, CreditCard, BarChart3, BellRing, Loader2 } from 'lucid
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
-  getAllCustomersFromFirestore,
-  getUsageRecordsForDateRangeFromFirestore,
-  getOutstandingCustomersFromFirestore,
-  getAdminNotificationsFromFirestore,
-  getTotalCustomerCount,
+  getAllMockCustomers,
+  getAllMockUsageRecords,
+  getAllAdminNotifications,
 } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, Notification as AppNotification, CustomerMonthlyUsage } from '@/types';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
@@ -123,21 +121,25 @@ export default function AdminDashboardPage() {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      // Fetch only essential data for the main view
-      const [count, usageRecords, outstandingCustomers, notifications] = await Promise.all([
-        getTotalCustomerCount(), // More efficient count
-        getUsageRecordsForDateRangeFromFirestore(firstDay, lastDay),
-        getOutstandingCustomersFromFirestore(),
-        getAdminNotificationsFromFirestore(3),
-      ]);
+      // Using mock data to prevent Firestore permission errors
+      const allCustomers = getAllMockCustomers();
+      const allUsageRecords = getAllMockUsageRecords();
+      const allNotifications = getAllAdminNotifications();
+      
+      const usageRecordsThisMonth = allUsageRecords.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate >= firstDay && recordDate <= lastDay;
+      });
 
-      setTotalCustomers(count);
-      setMonthlyUsageRecords(usageRecords); // Store for later use in dialogs
+      const outstandingCustomers = allCustomers.filter(c => c.balance > 0);
+
+      setTotalCustomers(allCustomers.length);
+      setMonthlyUsageRecords(usageRecordsThisMonth);
       setCustomersWithOutstandingBills(outstandingCustomers);
-      setRecentNotifications(notifications);
+      setRecentNotifications(allNotifications.slice(0, 3));
 
-      const currentSupply = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-      const currentRevenue = usageRecords.reduce((sum, record) => sum + record.cost, 0);
+      const currentSupply = usageRecordsThisMonth.reduce((sum, record) => sum + record.durationHours, 0);
+      const currentRevenue = usageRecordsThisMonth.reduce((sum, record) => sum + record.cost, 0);
       setMonthlySupply(currentSupply);
       setMonthlyRevenue(currentRevenue);
 
@@ -145,11 +147,11 @@ export default function AdminDashboardPage() {
       setOutstandingBillsValue(totalDue);
       
     } catch (error) {
-      console.error("Failed to load dashboard data from Firestore", error);
+      console.error("Failed to load dashboard data from mock store", error);
       toast({
         variant: "destructive",
         title: "Error Loading Dashboard",
-        description: "Could not retrieve live data from Firestore. Check console for details.",
+        description: "Could not retrieve data from the mock store. Check console for details.",
       });
     } finally {
       setIsLoading(false);
@@ -164,7 +166,7 @@ export default function AdminDashboardPage() {
       if (isDialogDataLoading) return;
       setIsDialogDataLoading(true);
       try {
-        const customers = await getAllCustomersFromFirestore();
+        const customers = getAllMockCustomers();
         
         const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
         customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
@@ -211,7 +213,7 @@ export default function AdminDashboardPage() {
     return (
       <div className="flex h-full items-center justify-center mt-6">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Loading live dashboard data...</p>
+        <p className="ml-2">Loading dashboard data...</p>
       </div>
     );
   }
@@ -318,4 +320,6 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+    
+
     
