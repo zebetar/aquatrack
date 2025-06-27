@@ -2,14 +2,14 @@
 'use server';
 
 /**
- * @fileOverview An AI flow to project future revenue based on historical data and external factors.
+ * @fileOverview A mock flow to project future revenue based on historical data and simulated factors.
+ * This function simulates an AI projection without making any external API calls.
  * - projectRevenue - A function that projects next month's revenue.
  * - ProjectRevenueInput - The input type for the projectRevenue function.
  * - ProjectedRevenueOutput - The return type for the projectRevenue function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import { z } from 'zod';
 
 export const ProjectRevenueInputSchema = z.object({
   lastMonthRevenue: z.number().describe("The total revenue from the previous month."),
@@ -25,40 +25,49 @@ export const ProjectedRevenueOutputSchema = z.object({
 export type ProjectedRevenueOutput = z.infer<typeof ProjectedRevenueOutputSchema>;
 
 
-const projectRevenuePrompt = ai.definePrompt({
-  name: 'projectRevenuePrompt',
-  input: {schema: ProjectRevenueInputSchema},
-  output: {schema: ProjectedRevenueOutputSchema},
-  prompt: `You are a financial analyst for an agricultural water supply company in Lodhran, Pakistan.
-  Your task is to forecast the next month's revenue.
-
-  Current Date: {{{currentDate}}}
-
-  Historical Data:
-  - Last Month's Revenue: PKR {{{lastMonthRevenue}}}
-  - Current Month's Revenue so far: PKR {{{currentMonthRevenue}}}
-
-  Consider the following factors for your projection:
-  1.  **Seasonality:** Water demand is highest in the hot summer months (April-September) and lowest in the winter (November-February). Harvesting seasons also affect demand.
-  2.  **Weather Patterns:** Base your forecast on typical weather for the upcoming month in Lodhran, Pakistan. Assume that periods of heavy rain will decrease water sales, while dry, hot spells will increase them.
-  3.  **Historical Performance:** Use the provided revenue figures as a baseline for growth or decline.
-
-  Provide a projected revenue amount and a concise justification for your forecast based on these factors.
-  `,
-});
-
-const projectRevenueFlow = ai.defineFlow(
-  {
-    name: 'projectRevenueFlow',
-    inputSchema: ProjectRevenueInputSchema,
-    outputSchema: ProjectedRevenueOutputSchema,
-  },
-  async (input) => {
-    const {output} = await projectRevenuePrompt(input);
-    return output!;
-  }
-);
-
 export async function projectRevenue(input: ProjectRevenueInput): Promise<ProjectedRevenueOutput> {
-  return projectRevenueFlow(input);
+  // Simulate network delay to mimic a real API call
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  
+  const { lastMonthRevenue, currentMonthRevenue, currentDate } = input;
+  const date = new Date(currentDate);
+  const month = date.getMonth(); // 0 = January, 11 = December
+
+  // Use last month's revenue as a baseline, or current month's if last month is zero.
+  const baseline = lastMonthRevenue > 0 ? lastMonthRevenue : currentMonthRevenue;
+  
+  let projectedAmount = baseline;
+  let reasoning = "Based on a trend analysis of recent performance.";
+  
+  // Simulate seasonality for Lodhran, Pakistan
+  // Summer: April (3) to September (8) - High demand
+  if (month >= 3 && month <= 8) {
+      projectedAmount *= 1.15; // 15% increase for summer
+      reasoning = "Projection increased due to high demand expected during the hot summer season in Lodhran.";
+  }
+  // Winter: November (10) to February (1) - Low demand
+  else if (month >= 10 || month <= 1) {
+      projectedAmount *= 0.85; // 15% decrease for winter
+      reasoning = "Projection decreased reflecting lower water demand during the winter months in Lodhran.";
+  }
+  // Shoulder months (March, October) are considered transitional.
+  // We can add a small modifier for harvest seasons (e.g., April/October)
+  if (month === 3 || month === 9) { // April or October
+      projectedAmount *= 0.95; // 5% decrease for harvesting
+      reasoning += " Also adjusted for a potential dip during harvesting season."
+  }
+  
+  // Add a small random factor to make it feel less static
+  const randomFactor = 1 + (Math.random() - 0.5) * 0.1; // +/- 5% variance
+  projectedAmount *= randomFactor;
+
+  // Ensure projection is not negative
+  if (projectedAmount < 0) {
+      projectedAmount = 0;
+  }
+  
+  return {
+    projectedAmount: Math.round(projectedAmount),
+    reasoning: reasoning.trim(),
+  };
 }
