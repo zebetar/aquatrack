@@ -53,28 +53,39 @@ export async function projectRevenue(input: ProjectRevenueInput): Promise<Projec
     const avgTemp = weatherData.daily.temperature_2m_max.reduce((a, b) => a + b, 0) / weatherData.daily.temperature_2m_max.length;
     const totalPrecipitation = weatherData.daily.precipitation_sum.reduce((a, b) => a + b, 0);
 
-    const isHot = avgTemp > 35;
+    const isHot = avgTemp > 35; // Very hot for Lodhran
     const isWarm = avgTemp > 25 && avgTemp <= 35;
     const isCool = avgTemp < 15;
-    const isRainy = totalPrecipitation > 20;
-
+    
+    // Temperature factors
     if (isHot) {
-      weatherModifier *= 1.25; // Strong increase for very hot weather
-      positiveFactors.push("a forecast of very high temperatures");
+      weatherModifier *= 1.25; 
+      positiveFactors.push("a forecast of very hot weather");
     } else if (isWarm) {
-      weatherModifier *= 1.10; // Moderate increase for warm weather
+      weatherModifier *= 1.10;
       positiveFactors.push("a forecast of warm weather");
     }
 
     if (isCool) {
-      weatherModifier *= 0.90; // Decrease for cool weather
+      weatherModifier *= 0.90;
       negativeFactors.push("a forecast of cool weather");
     }
     
-    if (isRainy) {
+    // Precipitation factors - make them more explicit
+    if (totalPrecipitation > 20) {
       weatherModifier *= 0.80; // Strong decrease for significant rain
       negativeFactors.push("an expectation of significant rainfall");
+    } else if (totalPrecipitation > 5) {
+      weatherModifier *= 0.95; // Minor decrease for some rain
+      negativeFactors.push("a forecast for some light rain");
+    } else {
+      // If there's no significant rain, and it's hot, it's a positive factor.
+      if (isHot || isWarm) {
+        weatherModifier *= 1.05; // Minor increase for dry and hot conditions
+        positiveFactors.push("continued dry conditions");
+      }
     }
+    
   } else {
      // Fallback to seasonality if API fails
      const date = new Date(input.currentDate);
