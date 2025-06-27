@@ -15,6 +15,14 @@ import {
 import { Loader2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -96,22 +104,48 @@ export default function AdminCustomersPage() {
     );
   }
 
+  const searchInput = (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <Input 
+        placeholder="Search by name or email..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="pl-10"
+      />
+    </div>
+  );
+
+  const pageActions = (
+    <div className="flex items-center gap-2">
+      <div className="relative hidden md:block">
+        {searchInput}
+      </div>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden">
+            <Search className="h-5 w-5" />
+            <span className="sr-only">Search Customers</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Search Customers</DialogTitle>
+          </DialogHeader>
+          {searchInput}
+        </DialogContent>
+      </Dialog>
+      <AddCustomerDialog onCustomerAdded={handleAddCustomer} />
+    </div>
+  );
+
   return (
     <div className="mt-6">
       <PageHeader 
         title="Customer Management" 
-        actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
+        actions={pageActions}
       />
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input 
-          placeholder="Search by name or email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 w-full max-w-sm"
-        />
-      </div>
-
+      
       {isLoading && customers.length > 0 && ( 
         <div className="my-4 flex items-center justify-center text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
