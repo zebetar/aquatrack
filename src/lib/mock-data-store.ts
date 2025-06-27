@@ -5,6 +5,8 @@ import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types'
 // All data is stored in the browser's localStorage to simulate a database.
 // This is ideal for rapid development and UI testing without needing a live backend.
 
+const STORAGE_KEY = 'aquaTrackMockDataStore';
+
 interface MockDataStore {
   customers: Customer[];
   usageRecords: WaterUsageRecord[];
