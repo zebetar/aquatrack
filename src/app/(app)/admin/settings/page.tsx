@@ -8,7 +8,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, KeyRound } from 'lucide-react';
+import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, KeyRound, Wifi, WifiOff } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,11 +21,45 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Badge } from '@/components/ui/badge';
+import { checkApiKeyStatus } from './actions';
 
 const adminChangeNameSchema = z.object({
   newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
 });
 type AdminChangeNameFormValues = z.infer<typeof adminChangeNameSchema>;
+
+// Diagnostic component to check for the API key on the server
+function ApiKeyStatusChecker() {
+  const [status, setStatus] = useState<'checking' | 'detected' | 'not-detected'>('checking');
+
+  useEffect(() => {
+    checkApiKeyStatus().then(result => {
+      setStatus(result.hasKey ? 'detected' : 'not-detected');
+    });
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-4 rounded-lg border bg-card/50 p-4 sm:flex-row sm:items-center">
+        <div className="flex-1 space-y-1">
+            <h4 className="font-semibold">Server API Key Status</h4>
+            <p className="text-sm text-muted-foreground">
+                Checks if the server can access the key from your `.env.local` file.
+                {status === 'not-detected' && (
+                    <span className="mt-1 block font-medium text-destructive">
+                        Action Required: Please ensure your `.env.local` file is saved in the project root and restart the development server.
+                    </span>
+                )}
+            </p>
+        </div>
+        <div>
+            {status === 'checking' && <Badge variant="secondary" className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Checking...</Badge>}
+            {status === 'detected' && <Badge className="bg-green-600/20 text-green-800 dark:bg-green-500/20 dark:text-green-300 hover:bg-green-600/30 flex items-center gap-2"><Wifi className="h-4 w-4" />Detected</Badge>}
+            {status === 'not-detected' && <Badge variant="destructive" className="flex items-center gap-2"><WifiOff className="h-4 w-4" />Not Detected</Badge>}
+        </div>
+    </div>
+  );
+}
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
@@ -192,7 +226,9 @@ export default function AdminSettingsPage() {
             </div>
           </AccordionTrigger>
           <AccordionContent className="p-4">
-            <div className="space-y-4">
+            <div className="space-y-6">
+              <ApiKeyStatusChecker />
+
               <div className="space-y-2">
                 <Label htmlFor="apiKeyInput">Google AI API Key</Label>
                 <div className="flex items-center gap-2">
@@ -387,4 +423,3 @@ export default function AdminSettingsPage() {
     </>
   );
 }
-
