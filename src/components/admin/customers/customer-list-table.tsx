@@ -109,6 +109,21 @@ export function CustomerListTable({
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">{customer.name}</h3>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        title="Download Statement PDF"
+                        onClick={(e) => handleDownloadPdf(e, customer)}
+                        disabled={generatingPdfId === customer.id}
+                      >
+                        {generatingPdfId === customer.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4 text-primary" />
+                        )}
+                         <span className="sr-only">Download Statement</span>
+                      </Button>
                       <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"} className="text-sm px-3 py-1">
                         {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
                       </Badge>
@@ -125,46 +140,31 @@ export function CustomerListTable({
                       <p className="font-medium">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      title="Download Statement PDF"
-                      onClick={(e) => handleDownloadPdf(e, customer)}
-                      disabled={generatingPdfId === customer.id}
-                    >
-                      {generatingPdfId === customer.id ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Download className="mr-2 h-4 w-4 text-primary" />
-                      )}
-                      Statement
-                    </Button>
-                     {enableActions && onCustomerUpdated && (
-                        <div className="flex justify-end gap-1">
-                          <EditCustomerDialog
-                            customer={customer}
-                            onCustomerUpdated={onCustomerUpdated}
-                            triggerButton={
-                              <Button variant="outline" size="sm" className="w-full" onClick={handleActionClick}>
-                                  <Pencil className="mr-2 h-4 w-4 text-primary" /> Edit
+                  {enableActions && onCustomerUpdated && (
+                    <div className="flex items-center justify-end gap-2 pt-2">
+                       <EditCustomerDialog
+                          customer={customer}
+                          onCustomerUpdated={onCustomerUpdated}
+                          triggerButton={
+                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleActionClick}>
+                                <Pencil className="h-4 w-4 text-primary" />
+                                <span className="sr-only">Edit</span>
                               </Button>
-                            }
-                          />
-                          <DeleteCustomerDialog
-                            customer={customer}
-                            onDeleteConfirm={() => onCustomerDeleted(customer.id)}
-                            isDeleting={deletingCustomerId === customer.id}
-                             triggerButton={
-                              <Button variant="destructive" size="icon" onClick={handleActionClick}>
-                                {deletingCustomerId === customer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                              </Button>
-                            }
-                          />
-                        </div>
-                      )}
-                  </div>
+                          }
+                        />
+                        <DeleteCustomerDialog
+                          customer={customer}
+                          onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                          isDeleting={deletingCustomerId === customer.id}
+                           triggerButton={
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleActionClick}>
+                              {deletingCustomerId === customer.id ? <Loader2 className="h-4 h-4 animate-spin" /> : <Trash2 className="h-4 h-4 text-destructive" />}
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          }
+                        />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </Link>

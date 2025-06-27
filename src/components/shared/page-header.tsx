@@ -10,7 +10,7 @@ interface PageHeaderProps {
 
 export const PageHeader = memo(({ title, description, actions }: PageHeaderProps) => { // Wrapped with memo
   return (
-    <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-6">
+    <div className="mb-6 flex flex-row items-center justify-between gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
