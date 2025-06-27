@@ -7,7 +7,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle } from 'lucide-react';
+import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, KeyRound } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -37,6 +37,26 @@ export default function AdminSettingsPage() {
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [apiKey, setApiKey] = useState('');
+  const [isSavingApiKey, setIsSavingApiKey] = useState(false);
+
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem('googleApiKey');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+    }
+  }, []);
+
+  const handleSaveApiKey = () => {
+    setIsSavingApiKey(true);
+    localStorage.setItem('googleApiKey', apiKey);
+    toast({
+      title: 'API Key Saved',
+      description: "Your API key has been saved to your browser's local storage.",
+    });
+    setIsSavingApiKey(false);
+  };
 
 
   useEffect(() => {
@@ -162,6 +182,53 @@ export default function AdminSettingsPage() {
   return (
     <>
       <Accordion type="multiple" defaultValue={['admin-account']} className="w-full space-y-4 mt-6">
+        {/* API Key Management Section */}
+        <AccordionItem value="api-key" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
+          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              <h3 className="text-lg font-semibold">API Key Management</h3>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="p-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="apiKeyInput">Google AI API Key</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="apiKeyInput"
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="Enter your Google AI API key"
+                  />
+                  <Button onClick={handleSaveApiKey} disabled={isSavingApiKey}>
+                    {isSavingApiKey && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Key
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  The key is stored in your browser's local storage for your convenience.
+                </p>
+              </div>
+
+              <div className="space-y-2 rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-amber-900 dark:text-amber-200">
+                <h4 className="font-semibold">Important: Server-Side AI Features</h4>
+                <p className="text-sm">
+                  To enable server-side features like AI dashboard insights, you must also add your API key to a
+                  <code className="mx-1 font-mono text-sm font-semibold rounded-sm bg-amber-500/20 px-1 py-0.5">.env.local</code>
+                  file in the project's root directory.
+                </p>
+                <p className="text-sm">Create the file if it doesn't exist and add the following line:</p>
+                <pre className="mt-2 rounded-md bg-amber-500/20 p-3 text-sm">
+                  <code>GOOGLE_API_KEY={apiKey || 'YOUR_API_KEY_HERE'}</code>
+                </pre>
+                <p className="text-sm font-medium">You will need to restart the development server after creating or updating this file.</p>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
         {/* Water Rate Section */}
         <AccordionItem value="water-rate" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
           <AccordionTrigger className="p-4 hover:no-underline w-full text-left">

@@ -5,10 +5,12 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 
+// This configuration explicitly uses the GOOGLE_API_KEY from your .env.local file.
+// This is required for server-side AI features to work correctly.
 export const ai = genkit({
    plugins: [
     googleAI({
-      // To use this, set the GOOGLE_API_KEY environment variable.
+      apiKey: process.env.GOOGLE_API_KEY,
     }),
   ],
   logLevel: 'debug',
