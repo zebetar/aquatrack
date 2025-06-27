@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CustomerMonthlyUsage } from "@/types";
 import { format } from "date-fns";
 import { formatDurationFromHours } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Droplets } from "lucide-react";
 
 interface MonthlySupplyDetailsDialogProps {
   isOpen: boolean;
@@ -29,7 +29,7 @@ export function MonthlySupplyDetailsDialog({ isOpen, onClose, data, isLoading }:
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-full min-h-[200px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
           <p className="ml-2">Loading customer details...</p>
         </div>
       );
@@ -74,3 +74,5 @@ export function MonthlySupplyDetailsDialog({ isOpen, onClose, data, isLoading }:
     </Dialog>
   );
 }
+
+    
