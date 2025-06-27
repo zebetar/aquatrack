@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from 'react';
@@ -111,7 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
         
-        <main className="main-content-area flex-1 p-4 pt-16 sm:p-6 md:pt-6">
+        <main className="main-content-area flex-1 p-6 pt-20 md:pt-6">
           {children}
         </main>
       </div>
