@@ -4,14 +4,14 @@
  * @fileOverview An AI flow to generate a summary of admin dashboard metrics.
  *
  * - summarizeDashboard - A function that generates an insightful summary from key metrics.
- * - DashboardMetricsSchema - The Zod schema for the input metrics.
+ * - DashboardMetrics - The type for the input metrics.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Input schema for the dashboard metrics.
-export const DashboardMetricsSchema = z.object({
+// Input schema for the dashboard metrics. This is not exported to avoid "use server" errors.
+const DashboardMetricsSchema = z.object({
   totalCustomers: z.number().describe('The total number of customers.'),
   monthlySupply: z.string().describe('The total water supplied this month (e.g., "150 hrs 30 min").'),
   monthlyRevenue: z.number().describe('The total revenue generated this month (in PKR).'),
