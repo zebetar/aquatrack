@@ -60,6 +60,10 @@
     --gradient-body-via-light: 211 90% 92%;     /* via-blue-100 */
     --gradient-body-end-light: 206 100% 97%;     /* to-sky-50 */
 
+    /* Dialog gradient for light theme */
+    --dialog-gradient-start-light: 0 0% 100%;
+    --dialog-gradient-end-light: 210 40% 98%;
+
     /* Sidebar Light Theme - Aesthetic Blue */
     --sidebar-gradient-start-light: 205 75% 88% / 1; /* Aesthetic light blue - right side of "to left" gradient */
     --sidebar-gradient-end-light: 210 70% 90% / 1;   /* Slightly softer aesthetic light blue - left side */
@@ -107,6 +111,10 @@
     /* Auth Page Gradient Dark */
     --auth-gradient-start-dark: 220 25% 18%;
     --auth-gradient-end-dark: 230 30% 22%;
+
+    /* Dialog gradient for dark theme */
+    --dialog-gradient-start-dark: 222 40% 18%;
+    --dialog-gradient-end-dark: 222 40% 15%;
 
     /* Sidebar Dark Theme - Richer, Contrasting */
     --sidebar-gradient-start-dark: 220 50% 8% / 1; /* Very dark rich blue for the right side */
@@ -293,6 +301,46 @@
   border-color: hsla(var(--primary), 0.6);
   box-shadow: 0 4px 20px hsla(var(--primary), 0.25);
   transform: translateY(-2px);
+}
+
+/* New AI Summary Card Style */
+.ai-summary-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid hsl(var(--primary) / 0.2);
+  background: hsl(var(--card));
+  box-shadow: 0 4px 15px hsl(var(--primary) / 0.05);
+}
+
+.dark .ai-summary-card {
+  background: radial-gradient(ellipse at top, hsl(var(--primary) / 0.1), transparent 70%), hsl(var(--card-dark));
+  border: 1px solid hsl(var(--primary) / 0.3);
+  box-shadow: 0 0 30px hsl(var(--primary) / 0.1);
+}
+
+.ai-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+  animation: beam-animate 4s infinite linear;
+}
+
+@keyframes beam-animate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+
+/* New Dialog Background */
+.dialog-gradient-background {
+    background: linear-gradient(145deg, hsl(var(--dialog-gradient-start-light)), hsl(var(--dialog-gradient-end-light)));
+}
+.dark .dialog-gradient-background {
+    background: linear-gradient(145deg, hsl(var(--dialog-gradient-start-dark)), hsl(var(--dialog-gradient-end-dark)));
 }
 
 

@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { summarizeDashboard } from '@/ai/flows/summarize-dashboard-flow';
 
 interface ChartDataPoint {
   label: string;
@@ -146,6 +147,10 @@ export default function AdminDashboardPage() {
   const [revenueChartData, setRevenueChartData] = useState<ChartDataPoint[]>([]);
   const [supplyChange, setSupplyChange] = useState(0);
   const [revenueChange, setRevenueChange] = useState(0);
+
+  // AI Summary State
+  const [aiSummary, setAiSummary] = useState('');
+  const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
@@ -354,6 +359,32 @@ export default function AdminDashboardPage() {
     }
   };
   
+  const handleGenerateSummary = async () => {
+    setIsAiSummaryLoading(true);
+    setAiSummary('');
+    try {
+        const result = await summarizeDashboard({
+            totalCustomers,
+            monthlySupply,
+            monthlyRevenue,
+            outstandingBillsValue,
+            supplyChange,
+            revenueChange,
+        });
+        setAiSummary(result);
+    } catch (error) {
+        console.error("AI summary failed:", error);
+        toast({
+            variant: "destructive",
+            title: "AI Summary Error",
+            description: "Could not generate insights. Please ensure your API key is configured.",
+        });
+    } finally {
+        setIsAiSummaryLoading(false);
+    }
+  };
+
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center mt-6">
@@ -410,6 +441,35 @@ export default function AdminDashboardPage() {
             onClick={metric.onClick}
           />
         ))}
+      </div>
+
+       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.1s'}}>
+          <Card className="ai-summary-card">
+              <CardHeader className="flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-3">
+                      <Sparkles className="h-6 w-6 text-accent" />
+                      <CardTitle className="text-lg">AI-Powered Insights</CardTitle>
+                  </div>
+                  <Button onClick={handleGenerateSummary} disabled={isAiSummaryLoading} size="sm">
+                      {isAiSummaryLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                      Generate Summary
+                  </Button>
+              </CardHeader>
+              <CardContent>
+                  {isAiSummaryLoading && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Generating analysis...</span>
+                      </div>
+                  )}
+                  {aiSummary && !isAiSummaryLoading && (
+                      <p className="text-foreground/90">{aiSummary}</p>
+                  )}
+                  {!aiSummary && !isAiSummaryLoading && (
+                      <p className="text-muted-foreground">Click "Generate Summary" to get an AI-powered analysis of this month's performance.</p>
+                  )}
+              </CardContent>
+          </Card>
       </div>
 
       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.2s'}}>

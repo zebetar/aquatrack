@@ -5,15 +5,16 @@ import { PageHeader } from '@/components/shared/page-header';
 import { AddCustomerDialog } from '@/components/admin/customers/add-customer-dialog';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer, Notification, WaterUsageRecord } from '@/types';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   getAllMockCustomers, 
   addMockCustomer,
   addMockNotification,
   getAllMockUsageRecords 
 } from '@/lib/mock-data-store';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -21,6 +22,7 @@ export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
   
   const fetchCustomers = useCallback(() => {
     setIsLoading(true);
@@ -77,6 +79,14 @@ export default function AdminCustomersPage() {
     }
   };
 
+  const filteredCustomers = useMemo(() => {
+    if (!searchTerm) return customers;
+    return customers.filter(customer => 
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [customers, searchTerm]);
+
   if (isLoading && customers.length === 0) { 
     return (
         <div className="flex h-full items-center justify-center">
@@ -92,6 +102,16 @@ export default function AdminCustomersPage() {
         title="Customer Management" 
         actions={<AddCustomerDialog onCustomerAdded={handleAddCustomer} />}
       />
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input 
+          placeholder="Search by name or email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 w-full max-w-sm"
+        />
+      </div>
+
       {isLoading && customers.length > 0 && ( 
         <div className="my-4 flex items-center justify-center text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -99,7 +119,7 @@ export default function AdminCustomersPage() {
         </div>
       )}
       <CustomerListTable 
-        customers={customers} 
+        customers={filteredCustomers} 
         onCustomerDeleted={() => { /* Deletion handled on User Management page or elsewhere */ }}
         deletingCustomerId={null} 
         enableActions={false}
