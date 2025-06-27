@@ -29,8 +29,11 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Customer
+        {/* On mobile, this becomes an icon button. On desktop, it has text. */}
+        <Button className="w-10 h-10 p-0 md:w-auto md:h-auto md:px-4 md:py-2 relative">
+          <PlusCircle className="h-4 w-4" />
+          <span className="hidden md:inline md:ml-2">Add New Customer</span>
+          <span className="sr-only">Add New Customer</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
