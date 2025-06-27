@@ -35,10 +35,6 @@ export default function AdminSettingsPage() {
   const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
   const [isSavingRate, setIsSavingRate] = useState(false);
 
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [smsNotifications, setSmsNotifications] = useState(false);
-  const [pushNotifications, setPushNotifications] = useState(true);
-
   const [isSavingName, setIsSavingName] = useState(false);
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
@@ -177,50 +173,6 @@ export default function AdminSettingsPage() {
               <p className="text-xs text-muted-foreground">
                 Current effective rate: PKR {currentRate}/hour.
               </p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Notification Preferences Section */}
-        <AccordionItem value="notification-prefs" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
-          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
-            <h3 className="text-lg font-semibold">Notification Preferences</h3>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-                <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
-                  <span>Email Notifications</span>
-                </Label>
-                <Switch
-                  id="email-notifications"
-                  checked={emailNotifications}
-                  onCheckedChange={setEmailNotifications}
-                  aria-label="Toggle email notifications"
-                />
-              </div>
-              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-                <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
-                  <span>SMS Alerts</span>
-                </Label>
-                <Switch
-                  id="sms-notifications"
-                  checked={smsNotifications}
-                  onCheckedChange={setSmsNotifications}
-                  aria-label="Toggle SMS alerts"
-                />
-              </div>
-              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-                <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
-                  <span>Push Notifications</span>
-                </Label>
-                <Switch
-                  id="push-notifications"
-                  checked={pushNotifications}
-                  onCheckedChange={setPushNotifications}
-                  aria-label="Toggle push notifications"
-                />
-              </div>
             </div>
           </AccordionContent>
         </AccordionItem>
