@@ -258,8 +258,8 @@ export default function CustomerDetailPage() {
   return (
     <div className="mt-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <div className="flex items-center gap-3 self-start">
-            <Button asChild variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-muted">
+        <div className="relative w-full flex justify-center items-center sm:w-auto sm:justify-start sm:gap-3">
+            <Button asChild variant="ghost" size="icon" className="absolute left-0 sm:static rounded-full h-10 w-10 hover:bg-muted">
               <Link href="/admin/customers" aria-label="Back to Customers List">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
