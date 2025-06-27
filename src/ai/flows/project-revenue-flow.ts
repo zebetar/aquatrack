@@ -38,59 +38,102 @@ async function getLiveWeatherForecast(): Promise<WeatherData | null> {
 export async function projectRevenue(input: ProjectRevenueInput): Promise<ProjectedRevenueOutput> {
   const { lastMonthRevenue, currentMonthRevenue } = input;
 
-  // Fetch live weather data
-  const weatherData = await getLiveWeatherForecast();
-
   const baseline = lastMonthRevenue > 0 ? lastMonthRevenue : currentMonthRevenue;
   let projectedAmount = baseline;
-  const reasoningParts: string[] = [];
+  
+  const positiveFactors: string[] = [];
+  const negativeFactors: string[] = [];
+  let finalReasoning = "";
 
-  // 1. Analyze Weather Data
+  // 1. Analyze Weather Data from API
+  const weatherData = await getLiveWeatherForecast();
   let weatherModifier = 1.0;
+
   if (weatherData && weatherData.daily) {
     const avgTemp = weatherData.daily.temperature_2m_max.reduce((a, b) => a + b, 0) / weatherData.daily.temperature_2m_max.length;
     const totalPrecipitation = weatherData.daily.precipitation_sum.reduce((a, b) => a + b, 0);
 
     const isHot = avgTemp > 35;
-    const isDry = totalPrecipitation < 5; // Less than 5mm rain over 14 days is very dry
+    const isWarm = avgTemp > 25 && avgTemp <= 35;
+    const isCool = avgTemp < 15;
     const isRainy = totalPrecipitation > 20;
 
-    if (isHot && isDry) {
-      weatherModifier *= 1.20; // 20% increase for hot and dry
-      reasoningParts.push("hot and dry weather forecast");
-    } else if (isHot) {
-      weatherModifier *= 1.10; // 10% increase just for heat
-      reasoningParts.push("high temperatures");
+    if (isHot) {
+      weatherModifier *= 1.25; // Strong increase for very hot weather
+      positiveFactors.push("a forecast of very high temperatures");
+    } else if (isWarm) {
+      weatherModifier *= 1.10; // Moderate increase for warm weather
+      positiveFactors.push("a forecast of warm weather");
     }
 
+    if (isCool) {
+      weatherModifier *= 0.90; // Decrease for cool weather
+      negativeFactors.push("a forecast of cool weather");
+    }
+    
     if (isRainy) {
-      weatherModifier *= 0.80; // 20% decrease for significant rain
-      reasoningParts.push("expected rainfall");
+      weatherModifier *= 0.80; // Strong decrease for significant rain
+      negativeFactors.push("an expectation of significant rainfall");
     }
   } else {
-    reasoningParts.push("could not fetch live weather, using seasonal estimate");
-  }
-  
-  projectedAmount *= weatherModifier;
-  
-  // 2. Analyze Seasonality (as a fallback or supplement)
-  const date = new Date(input.currentDate);
-  const month = date.getMonth(); // 0 = January
-  const isHarvestSeason = month === 3 || month === 9; // April or October
-  if(isHarvestSeason) {
-    projectedAmount *= 0.95; // 5% decrease for harvesting
-    reasoningParts.push("harvest season adjustment");
+     // Fallback to seasonality if API fails
+     const date = new Date(input.currentDate);
+     const month = date.getMonth(); // 0 = January
+     
+     // Summer months in Lodhran: April (3) to September (8)
+     if (month >= 3 && month <= 8) {
+        weatherModifier *= 1.15;
+        positiveFactors.push("typical hot summer conditions");
+     }
+     // Winter months: November (10) to February (1)
+     if (month >= 10 || month <= 1) {
+        weatherModifier *= 0.85;
+        negativeFactors.push("typical cool winter conditions");
+     }
   }
 
+  // 2. Analyze Seasonality (specifically harvesting)
+  const date = new Date(input.currentDate);
+  const month = date.getMonth(); // April or October for Wheat/Cotton
+  const isHarvestSeason = month === 3 || month === 9;
+  if(isHarvestSeason) {
+    weatherModifier *= 0.95; // 5% decrease for harvesting
+    negativeFactors.push("the ongoing harvest season");
+  }
+
+  // Apply the modifier
+  projectedAmount *= weatherModifier;
+  
   // Add a small random factor to make it feel less static
   const randomFactor = 1 + (Math.random() - 0.5) * 0.05; // +/- 2.5% variance
   projectedAmount *= randomFactor;
 
   // Construct final reasoning string
-  let finalReasoning = "Projection based on ";
-  if (reasoningParts.length > 0) {
-    finalReasoning += reasoningParts.join(', ') + ".";
+  const isIncrease = projectedAmount > baseline * 1.02; // Use a small threshold to avoid "increase" for tiny changes
+  const isDecrease = projectedAmount < baseline * 0.98; // Use a small threshold
+  
+  if (isIncrease) {
+    finalReasoning = "Revenue is projected to increase this month. ";
+    if (positiveFactors.length > 0) {
+      finalReasoning += `This is primarily due to ${positiveFactors.join(' and ')}. `;
+    }
+    if (negativeFactors.length > 0) {
+      finalReasoning += `However, this growth is tempered by ${negativeFactors.join(' and ')}.`;
+    }
+  } else if (isDecrease) {
+    finalReasoning = "Revenue is projected to decrease this month. ";
+    if (negativeFactors.length > 0) {
+      finalReasoning += `This is primarily due to ${negativeFactors.join(' and ')}. `;
+    }
+    if (positiveFactors.length > 0) {
+      finalReasoning += `This decrease is partially offset by ${positiveFactors.join(' and ')}.`;
+    }
   } else {
+     finalReasoning = "Revenue is expected to remain stable, based on historical performance and a balance of current factors.";
+  }
+
+  // Fallback for empty reasoning
+  if (positiveFactors.length === 0 && negativeFactors.length === 0) {
     finalReasoning = "Projection based on historical performance.";
   }
 
@@ -101,6 +144,6 @@ export async function projectRevenue(input: ProjectRevenueInput): Promise<Projec
   
   return {
     projectedAmount: Math.round(projectedAmount),
-    reasoning: finalReasoning,
+    reasoning: finalReasoning.trim(),
   };
 }
