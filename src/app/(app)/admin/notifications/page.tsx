@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Loader2, Palette } from 'lucide-react';
+import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Palette } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import type { Notification } from '@/types';
@@ -76,7 +76,7 @@ export default function AdminNotificationsPage() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading notifications...</p>
       </div>
     );

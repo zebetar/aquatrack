@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Loader2, Eye, EyeOff, UploadCloud } from 'lucide-react';
+import { Droplets, Eye, EyeOff, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
@@ -60,7 +60,7 @@ export default function ViewerProfilePage() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
       </div>
     );
   }
@@ -192,7 +192,7 @@ export default function ViewerProfilePage() {
            <p className="text-sm text-muted-foreground">Select a PNG, JPG, or GIF image (max 2MB).</p>
           <div className="flex gap-2">
               <Button onClick={handleAvatarChange} disabled={isAvatarSaving}>
-                  {isAvatarSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isAvatarSaving && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                   <UploadCloud className="mr-2 h-4 w-4" />
                   Save Avatar
               </Button>
@@ -227,7 +227,7 @@ export default function ViewerProfilePage() {
                 )}
               />
               <Button type="submit" disabled={isEmailSaving}>
-                {isEmailSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEmailSaving && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                 Change Email
               </Button>
             </form>
@@ -292,7 +292,7 @@ export default function ViewerProfilePage() {
                 )}
               />
               <Button type="submit" disabled={isPasswordSaving}>
-                {isPasswordSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isPasswordSaving && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                 Change Password
               </Button>
             </form>

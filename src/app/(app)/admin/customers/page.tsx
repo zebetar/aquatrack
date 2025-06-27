@@ -12,7 +12,7 @@ import {
   addMockNotification,
   getAllMockUsageRecords 
 } from '@/lib/mock-data-store';
-import { Loader2, Search } from 'lucide-react';
+import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import {
@@ -197,7 +197,7 @@ export default function AdminCustomersPage() {
       
       {isLoading && customers.length > 0 && ( 
         <div className="my-4 flex items-center justify-center text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />
           <span>Refreshing customer list...</span>
         </div>
       )}

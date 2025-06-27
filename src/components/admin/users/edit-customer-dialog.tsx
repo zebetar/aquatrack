@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Pencil, Loader2 } from "lucide-react";
+import { Pencil, Droplets } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { Customer } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -150,7 +150,7 @@ export function EditCustomerDialog({ customer, onCustomerUpdated, triggerButton 
               )}
             />
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
               Save Changes
             </Button>
           </form>

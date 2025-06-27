@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Droplets } from "lucide-react";
 import { useState } from "react";
 import type { Customer } from "@/types";
 
@@ -123,7 +123,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
           )}
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
           Add Customer
         </Button>
       </form>

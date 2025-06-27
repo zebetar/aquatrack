@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Droplets } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -130,7 +130,7 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
             Current Balance: PKR {customer.balance.toLocaleString('en-US')}
         </p>
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
           Record Payment
         </Button>
       </form>

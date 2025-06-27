@@ -5,7 +5,7 @@ import { CustomerListTable } from '@/components/admin/customers/customer-list-ta
 import type { Customer } from '@/types'; 
 import { useState, useEffect, useCallback } from 'react';
 import { getMockOutstandingCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store'; 
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Droplets, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -50,7 +50,7 @@ export default function OutstandingBillsPage() {
   if (isLoading && outstandingCustomers.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading customers with outstanding bills...</p>
       </div>
     );
@@ -67,7 +67,7 @@ export default function OutstandingBillsPage() {
 
       {isLoading && outstandingCustomers.length > 0 && (
         <div className="my-4 flex items-center justify-center text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />
           <span>Refreshing list...</span>
         </div>
       )}

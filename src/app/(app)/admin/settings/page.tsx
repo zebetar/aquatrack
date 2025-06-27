@@ -8,7 +8,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot, FileUp } from 'lucide-react';
+import { Droplets, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot, FileUp } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -273,7 +273,7 @@ export default function AdminSettingsPage() {
                   placeholder="e.g., 1200"
                 />
                 <Button onClick={handleSaveWaterRate} disabled={isSavingRate}>
-                  {isSavingRate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSavingRate && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                   Save Rate
                 </Button>
               </div>
@@ -338,7 +338,7 @@ export default function AdminSettingsPage() {
                           )}
                         />
                         <Button type="submit" disabled={isSavingName} className="w-full sm:w-auto">
-                          {isSavingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {isSavingName && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                           Save Name
                         </Button>
                       </form>
@@ -368,7 +368,7 @@ export default function AdminSettingsPage() {
                       />
                       <div className="flex flex-wrap gap-2">
                           <Button onClick={handleAdminAvatarChange} disabled={isSavingAvatar}>
-                              {isSavingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              {isSavingAvatar && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                               <UploadCloud className="mr-2 h-4 w-4" />
                               Save Avatar
                           </Button>
@@ -432,7 +432,7 @@ export default function AdminSettingsPage() {
                 <div className='flex items-center gap-2'>
                   <Button variant="outline" onClick={handleDownloadAllData}><FileDown className="mr-2 h-4 w-4" />Backup</Button>
                   <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={isImporting}>
-                    {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                    {isImporting ? <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" /> : <FileUp className="mr-2 h-4 w-4" />}
                     Restore
                   </Button>
                   <Input type="file" ref={importFileRef} className="hidden" accept=".json" onChange={handleImportData} />

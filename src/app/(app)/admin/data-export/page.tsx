@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, CalendarIcon, Search, Download, Loader2 } from 'lucide-react'; // Removed unused icons
+import { FileDown, CalendarIcon, Search, Download, Droplets } from 'lucide-react'; // Removed unused icons
 import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
@@ -246,7 +246,7 @@ export default function DataExportPage() {
             </div>
             <div>
                 <Button onClick={handlePreviewFilteredData} disabled={isPreviewing || !selectedCustomerId || !startDate || !endDate} className="w-full sm:w-auto">
-                    {isPreviewing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isPreviewing && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                     <Search className="mr-2 h-4 w-4" /> Preview Data
                 </Button>
             </div>
@@ -297,7 +297,7 @@ export default function DataExportPage() {
                 ) : <p className="text-sm text-muted-foreground">No payment records found for this period.</p>}
               </div>
               <Button onClick={handleDownloadFilteredPdf} disabled={isDownloading || (!filteredUsage.length && !filteredPayments.length) || !selectedCustomerId || !startDate || !endDate} className="w-full sm:w-auto">
-                {isDownloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isDownloading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
                 <Download className="mr-2 h-4 w-4" /> Download Filtered PDF
               </Button>
             </div>

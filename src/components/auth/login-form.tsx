@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Droplets, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const loginFormSchema = z.object({
@@ -136,7 +136,7 @@ export function LoginForm() {
         />
         {/* Removed div with pt-2 around the button to rely on form's space-y-8 */}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
           Login
         </Button>
       </form>

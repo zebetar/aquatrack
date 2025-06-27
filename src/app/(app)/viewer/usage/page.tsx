@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
-import { Loader2 } from 'lucide-react';
+import { Droplets } from 'lucide-react';
 import { formatDurationFromHours } from '@/lib/utils';
 
 export default function ViewerUsagePage() {
@@ -39,7 +39,7 @@ export default function ViewerUsagePage() {
   if (isLoading || authLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading usage history...</p>
       </div>
     );

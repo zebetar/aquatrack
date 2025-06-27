@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { getMockPaymentsByCustomerId, getMockCustomerById } from '@/lib/mock-data-store';
-import { Loader2 } from 'lucide-react';
+import { Droplets } from 'lucide-react';
 
 export default function ViewerBillingPage() {
   const { user, loading: authLoading } = useAuth();
@@ -40,7 +40,7 @@ export default function ViewerBillingPage() {
   if (isLoading || authLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading billing information...</p>
       </div>
     );

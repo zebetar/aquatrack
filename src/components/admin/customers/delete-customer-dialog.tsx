@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Droplets } from "lucide-react";
 import type { Customer } from "@/types";
 
 interface DeleteCustomerDialogProps {
@@ -39,7 +39,7 @@ export function DeleteCustomerDialog({
       <AlertDialogTrigger asChild>
         {triggerButton ? triggerButton : (
           <Button variant="ghost" size="icon" title="Delete Customer" disabled={isDeleting} onClick={(e) => e.stopPropagation()}>
-            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+            {isDeleting ? <Droplets className="h-4 w-4 animate-pulse-subtle" /> : <Trash2 className="h-4 w-4 text-destructive" />}
           </Button>
         )}
       </AlertDialogTrigger>
@@ -58,7 +58,7 @@ export function DeleteCustomerDialog({
             disabled={isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isDeleting && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>

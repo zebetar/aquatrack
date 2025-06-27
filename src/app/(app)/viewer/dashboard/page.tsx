@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, DollarSign, Clock, Loader2, BellRing } from 'lucide-react';
+import { FileText, DollarSign, Clock, Droplets, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, memo } from 'react'; 
@@ -102,7 +102,7 @@ export default function ViewerDashboardPage() {
   if (isLoading || authLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading dashboard...</p>
       </div>
     );

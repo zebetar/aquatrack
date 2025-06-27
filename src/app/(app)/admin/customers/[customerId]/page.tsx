@@ -7,7 +7,7 @@ import { LogUsageDialog } from '@/components/admin/customers/log-usage-dialog';
 import { RecordPaymentDialog } from '@/components/admin/customers/record-payment-dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Droplets } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
@@ -156,7 +156,7 @@ export default function CustomerDetailPage() {
   if (isLoading && !customer) { 
     return (
       <div className="flex h-full items-center justify-center mt-6">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading customer details...</p>
       </div>
     );
@@ -206,7 +206,7 @@ export default function CustomerDetailPage() {
       
       {showInlineLoader && (
         <div className="my-4 flex items-center justify-center text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />
           <span>Refreshing data...</span>
         </div>
       )}

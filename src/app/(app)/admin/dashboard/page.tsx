@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertTriangle, TrendingUp, BellRing } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertTriangle, TrendingUp, BellRing } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -608,7 +608,7 @@ export default function AdminDashboardPage() {
                 </CardTitle>
                 <Button onClick={handleGenerateSummary} disabled={isSummaryLoading} size="sm">
                     {isSummaryLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />
                     ) : (
                         <Sparkles className="mr-2 h-4 w-4" />
                     )}

@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import type { WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getAllMockUsageRecords } from '@/lib/mock-data-store';
-import { Loader2, Search } from 'lucide-react';
+import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UsageList } from '@/components/admin/usage/usage-list';
 import { Input } from '@/components/ui/input';
@@ -53,7 +53,7 @@ export default function AdminUsagePage() {
   if (isLoading) {
     return (
         <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
             <p className="ml-2">Loading usage records...</p>
         </div>
     );

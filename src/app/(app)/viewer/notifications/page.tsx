@@ -5,7 +5,7 @@ import type { Notification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BellRing, CheckCircle2, Droplets, CreditCard, UserCog, Palette, Loader2 } from 'lucide-react'; 
+import { BellRing, CheckCircle2, Droplets, CreditCard, UserCog, Palette } from 'lucide-react'; 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
@@ -66,7 +66,7 @@ export default function ViewerNotificationsPage() {
   if (isLoading || authLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading notifications...</p>
       </div>
     );

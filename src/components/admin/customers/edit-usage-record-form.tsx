@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Droplets } from "lucide-react";
 import { cn, formatDurationFromHours } from "@/lib/utils";
 import { format, differenceInMinutes, set, parse, addDays } from "date-fns";
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
@@ -218,7 +218,7 @@ export function EditUsageRecordForm({ existingRecord, onSuccess }: EditUsageForm
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading || !isFormCurrentlyValid}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
           Save Changes
         </Button>
       </form>

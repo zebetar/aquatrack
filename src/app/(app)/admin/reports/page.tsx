@@ -9,7 +9,7 @@ import { format, subMonths, startOfMonth, endOfMonth, parseISO, getDaysInMonth }
 import { getAllMockUsageRecords, getAllMockCustomers } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord } from '@/types';
 import { formatDurationFromHours, cn } from '@/lib/utils';
-import { Loader2, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert, Droplets } from 'lucide-react';
+import { Droplets, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -234,7 +234,7 @@ export default function AdminReportsPage() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center mt-6">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Generating reports...</p>
       </div>
     );

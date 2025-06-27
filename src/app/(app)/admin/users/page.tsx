@@ -15,7 +15,7 @@ import {
   addMockNotification,
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { Loader2 } from 'lucide-react';
+import { Droplets } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -206,7 +206,7 @@ export default function AdminUsersPage() {
     <div className="mt-6">
       {isLoading && customers.length > 0 && (
         <div className="my-4 flex items-center justify-center text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />
           <span>Refreshing user list...</span>
         </div>
       )}

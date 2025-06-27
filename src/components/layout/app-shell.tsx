@@ -7,7 +7,7 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { adminNavItems, viewerNavItems } from '@/config/nav-config';
 import { useAuth } from '@/contexts/auth-context';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Droplets, Loader2 } from 'lucide-react';
+import { Droplets } from 'lucide-react';
 import Link from 'next/link';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <Droplets className="h-12 w-12 animate-pulse-subtle text-primary" />
       </div>
     );
   }

@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { Download, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Download, Droplets, Pencil, Trash2 } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
@@ -118,7 +118,7 @@ export function CustomerListTable({
                         disabled={generatingPdfId === customer.id}
                       >
                         {generatingPdfId === customer.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Droplets className="h-4 w-4 animate-pulse-subtle" />
                         ) : (
                           <Download className="h-4 w-4 text-primary" />
                         )}
@@ -158,7 +158,7 @@ export function CustomerListTable({
                           isDeleting={deletingCustomerId === customer.id}
                            triggerButton={
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleActionClick}>
-                              {deletingCustomerId === customer.id ? <Loader2 className="h-4 h-4 animate-spin" /> : <Trash2 className="h-4 h-4 text-destructive" />}
+                              {deletingCustomerId === customer.id ? <Droplets className="h-4 h-4 animate-pulse-subtle" /> : <Trash2 className="h-4 h-4 text-destructive" />}
                               <span className="sr-only">Delete</span>
                             </Button>
                           }
@@ -222,7 +222,7 @@ export function CustomerListTable({
                       className="hover:bg-primary/20"
                     >
                       {generatingPdfId === customer.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Droplets className="h-4 w-4 animate-pulse-subtle" />
                       ) : (
                         <Download className="h-4 w-4 text-primary" />
                       )}

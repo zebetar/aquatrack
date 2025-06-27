@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import type { Payment } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getAllMockPayments } from '@/lib/mock-data-store';
-import { Loader2, Search } from 'lucide-react';
+import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentList } from '@/components/admin/payments/payment-list';
 import { Input } from '@/components/ui/input';
@@ -53,7 +53,7 @@ export default function AdminPaymentsPage() {
   if (isLoading) {
     return (
         <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
             <p className="ml-2">Loading payment records...</p>
         </div>
     );
