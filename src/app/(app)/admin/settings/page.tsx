@@ -8,7 +8,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle } from 'lucide-react';
+import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, WandSparkles, CheckCircle2, XCircle } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,11 +21,79 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { checkApiKeyStatus } from './actions';
 
 const adminChangeNameSchema = z.object({
   newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
 });
 type AdminChangeNameFormValues = z.infer<typeof adminChangeNameSchema>;
+
+
+const ApiKeyManager = () => {
+  const [status, setStatus] = useState<'checking' | 'configured' | 'unconfigured'>('checking');
+
+  useEffect(() => {
+    checkApiKeyStatus().then(({ isConfigured }) => {
+      setStatus(isConfigured ? 'configured' : 'unconfigured');
+    });
+  }, []);
+
+  const renderStatus = () => {
+    switch (status) {
+      case 'checking':
+        return (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Checking server configuration...
+          </div>
+        );
+      case 'configured':
+        return (
+          <div className="flex items-center text-sm font-medium text-green-600 dark:text-green-500">
+            <CheckCircle2 className="mr-2 h-5 w-5" />
+            Server API Key is configured correctly. AI features are enabled.
+          </div>
+        );
+      case 'unconfigured':
+        return (
+          <div className="flex items-center text-sm font-medium text-destructive">
+            <XCircle className="mr-2 h-5 w-5" />
+            Server API Key not detected. AI features are disabled.
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="space-y-4 rounded-lg border bg-card/50 p-4">
+      <div className="flex-1 space-y-1">
+        <h4 className="font-semibold">Server API Key Status</h4>
+        <div className="pt-2">{renderStatus()}</div>
+      </div>
+      {status === 'unconfigured' && (
+        <Alert>
+          <AlertTitle className="font-bold">Action Required: Configure API Key</AlertTitle>
+          <AlertDescription className="space-y-3 mt-2">
+            <p>
+              To enable AI features, you must create a file named <code className="font-semibold bg-muted px-1 py-0.5 rounded-sm">.env.local</code> in the root directory of your project (the same folder as `package.json`).
+            </p>
+            <div>
+                <p>Add the following line to the file, replacing the placeholder with your actual key:</p>
+                <pre className="mt-2 p-2 rounded-md bg-muted text-sm">
+                  <code>GOOGLE_API_KEY=AIzaSy...Your...Key...Here</code>
+                </pre>
+            </div>
+             <p className="font-bold text-destructive">
+              IMPORTANT: After creating or editing the <code className="font-semibold bg-muted px-1 py-0.5 rounded-sm">.env.local</code> file, you MUST restart the development server for the changes to take effect.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+};
+
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
@@ -162,6 +230,20 @@ export default function AdminSettingsPage() {
   return (
     <>
       <Accordion type="multiple" defaultValue={['admin-account']} className="w-full space-y-4 mt-6">
+        
+        {/* AI Settings Section */}
+        <AccordionItem value="ai-settings" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
+          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
+            <div className="flex items-center gap-2">
+              <WandSparkles className="h-5 w-5 text-accent" />
+              <h3 className="text-lg font-semibold">AI & API Key Management</h3>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <ApiKeyManager />
+          </AccordionContent>
+        </AccordionItem>
+
         {/* Water Rate Section */}
         <AccordionItem value="water-rate" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
           <AccordionTrigger className="p-4 hover:no-underline w-full text-left">

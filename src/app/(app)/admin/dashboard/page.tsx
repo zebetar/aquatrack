@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { summarizeDashboard, type DashboardMetrics } from '@/ai/flows/summarize-dashboard-flow';
 
 interface ChartDataPoint {
   label: string;
@@ -117,21 +118,98 @@ const KeyMetricCard = memo(({
 KeyMetricCard.displayName = 'KeyMetricCard'; 
 
 
+const AiSummaryCard = ({ metrics }: { metrics: DashboardMetrics | null }) => {
+  const [summary, setSummary] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerateSummary = async () => {
+    if (!metrics) {
+      setError("Dashboard data not available to generate a summary.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    setSummary('');
+
+    try {
+      const result = await summarizeDashboard(metrics);
+      setSummary(result);
+    } catch (e: any) {
+      console.error("AI Summary Error:", e.message);
+      setError(e.message || "An unknown error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-24">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="ml-3 text-muted-foreground">Generating analysis...</p>
+        </div>
+      );
+    }
+    if (error) {
+      const isApiKeyError = error.includes("API key");
+      return (
+        <div className="flex flex-col items-center justify-center text-center p-4">
+          <AlertCircle className="h-8 w-8 text-destructive mb-2" />
+          <p className="font-semibold text-destructive">Analysis Failed</p>
+          <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          {isApiKeyError && (
+            <Button variant="link" asChild className="mt-2">
+              <Link href="/admin/settings">Configure API Key</Link>
+            </Button>
+          )}
+        </div>
+      );
+    }
+    if (summary) {
+      return <p className="text-sm md:text-base text-foreground leading-relaxed">{summary}</p>;
+    }
+    return (
+      <div className="text-center">
+        <p className="text-muted-foreground mb-4">Get an AI-powered summary of your monthly performance.</p>
+        <Button onClick={handleGenerateSummary}>
+          <Sparkles className="mr-2 h-4 w-4" />
+          Generate Summary
+        </Button>
+      </div>
+    );
+  };
+
+  return (
+    <Card className="ai-summary-card">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Sparkles className="h-5 w-5 text-accent" />
+          <span>AI-Powered Insights</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {renderContent()}
+      </CardContent>
+    </Card>
+  );
+};
+
+
 export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const [totalCustomers, setTotalCustomers] = useState(0);
-  const [monthlySupply, setMonthlySupply] = useState(0);
-  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
-  const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
-  const [topOutstandingCustomers, setTopOutstandingCustomers] = useState<Customer[]>([]);
+  // Dashboard Metrics
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
   
   // Data for dialogs
   const [isDialogDataLoading, setIsDialogDataLoading] = useState(false);
   const [customersWithMonthlyUsageData, setCustomersWithMonthlyUsageData] = useState<CustomerMonthlyUsage[]>([]);
   const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]);
   const [monthlyUsageRecords, setMonthlyUsageRecords] = useState<WaterUsageRecord[]>([]);
+  const [topOutstandingCustomers, setTopOutstandingCustomers] = useState<Customer[]>([]);
 
   // Dialog open states
   const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
@@ -177,7 +255,6 @@ export default function AdminDashboardPage() {
 
       const outstandingCustomers = allCustomers.filter(c => c.balance > 0);
 
-      setTotalCustomers(allCustomers.length);
       setMonthlyUsageRecords(usageRecordsThisMonth);
       setCustomersWithOutstandingBills(outstandingCustomers);
       
@@ -186,12 +263,16 @@ export default function AdminDashboardPage() {
 
       const currentSupply = usageRecordsThisMonth.reduce((sum, record) => sum + record.durationHours, 0);
       const currentRevenue = usageRecordsThisMonth.reduce((sum, record) => sum + record.cost, 0);
-      setMonthlySupply(currentSupply);
-      setMonthlyRevenue(currentRevenue);
-
-      const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
-      setOutstandingBillsValue(totalDue);
       
+      const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
+      
+      setDashboardMetrics({
+        totalCustomers: allCustomers.length,
+        monthlySupply: formatDurationFromHours(currentSupply),
+        monthlyRevenue: currentRevenue,
+        outstandingBillsValue: totalDue,
+      });
+
       // Calculate changes for cards
       const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
       const lastMonthRevenue = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
@@ -214,57 +295,13 @@ export default function AdminDashboardPage() {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Effect for Supply Chart Data
+  // Effect for Chart Data (Combined)
   useEffect(() => {
     if (allUsageRecords.length === 0) return;
     const today = new Date();
-    if (supplyChartView === 'monthly') {
-        const historicalMap = new Map<string, { supply: number; revenue: number }>();
-        for (let i = 5; i >= 0; i--) {
-            const date = subMonths(today, i);
-            const monthKey = format(date, 'yyyy-MM');
-            historicalMap.set(monthKey, { supply: 0, revenue: 0 });
-        }
-        allUsageRecords.forEach(record => {
-            const recordDate = new Date(record.date);
-            const monthKey = format(recordDate, 'yyyy-MM');
-            if (historicalMap.has(monthKey)) {
-                const current = historicalMap.get(monthKey)!;
-                current.supply += record.durationHours;
-                current.revenue += record.cost;
-            }
-        });
-        setSupplyChartData(Array.from(historicalMap.entries()).map(([month, data]) => ({
-            label: format(parseISO(month + '-01'), 'MMM'), ...data
-        })));
-    } else { // daily view
-        const dailyMap = new Map<string, { supply: number; revenue: number }>();
-        const daysToShow = 30;
-        for (let i = daysToShow - 1; i >= 0; i--) {
-            const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-            const dayKey = format(date, 'yyyy-MM-dd');
-            dailyMap.set(dayKey, { supply: 0, revenue: 0 });
-        }
-        allUsageRecords.forEach(record => {
-            const recordDate = new Date(record.date);
-            const dayKey = format(recordDate, 'yyyy-MM-dd');
-            if (dailyMap.has(dayKey)) {
-                const current = dailyMap.get(dayKey)!;
-                current.supply += record.durationHours;
-                current.revenue += record.cost;
-            }
-        });
-        setSupplyChartData(Array.from(dailyMap.entries()).map(([day, data]) => ({
-            label: format(parseISO(day), 'd'), ...data
-        })));
-    }
-  }, [allUsageRecords, supplyChartView]);
 
-  // Effect for Revenue Chart Data
-  useEffect(() => {
-    if (allUsageRecords.length === 0) return;
-    const today = new Date();
-    if (revenueChartView === 'monthly') {
+    const processData = (view: 'monthly' | 'daily') => {
+      if (view === 'monthly') {
         const historicalMap = new Map<string, { supply: number; revenue: number }>();
         for (let i = 5; i >= 0; i--) {
             const date = subMonths(today, i);
@@ -280,10 +317,10 @@ export default function AdminDashboardPage() {
                 current.revenue += record.cost;
             }
         });
-        setRevenueChartData(Array.from(historicalMap.entries()).map(([month, data]) => ({
+        return Array.from(historicalMap.entries()).map(([month, data]) => ({
             label: format(parseISO(month + '-01'), 'MMM'), ...data
-        })));
-    } else { // daily view
+        }));
+      } else { // daily view
         const dailyMap = new Map<string, { supply: number; revenue: number }>();
         const daysToShow = 30;
         for (let i = daysToShow - 1; i >= 0; i--) {
@@ -300,11 +337,16 @@ export default function AdminDashboardPage() {
                 current.revenue += record.cost;
             }
         });
-        setRevenueChartData(Array.from(dailyMap.entries()).map(([day, data]) => ({
+        return Array.from(dailyMap.entries()).map(([day, data]) => ({
             label: format(parseISO(day), 'd'), ...data
-        })));
-    }
-  }, [allUsageRecords, revenueChartView]);
+        }));
+      }
+    };
+    
+    setSupplyChartData(processData(supplyChartView));
+    setRevenueChartData(processData(revenueChartView));
+
+  }, [allUsageRecords, supplyChartView, revenueChartView]);
 
 
   const loadAndProcessDialogData = useCallback(async () => {
@@ -354,7 +396,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !dashboardMetrics) {
     return (
       <div className="flex h-full items-center justify-center mt-6">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -366,28 +408,28 @@ export default function AdminDashboardPage() {
   const metrics = [
     { 
       title: 'Total Customers', 
-      value: totalCustomers.toString(), 
+      value: dashboardMetrics.totalCustomers.toString(), 
       icon: Users, 
-      description: `${totalCustomers} active`,
+      description: `${dashboardMetrics.totalCustomers} active`,
       href: '/admin/customers'
     },
     { 
       title: 'Monthly Supply', 
-      value: formatDurationFromHours(monthlySupply), 
+      value: dashboardMetrics.monthlySupply, 
       icon: Droplets, 
       description: 'Current month',
       onClick: handleOpenSupplyDialog
     },
     { 
       title: 'Monthly Revenue', 
-      value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, 
+      value: `PKR ${dashboardMetrics.monthlyRevenue.toLocaleString('en-US')}`, 
       icon: CreditCard, 
       description: 'Current month',
       onClick: handleOpenRevenueDialog
     },
     { 
       title: 'Outstanding Bills', 
-      value: `PKR ${outstandingBillsValue.toLocaleString('en-US')}`, 
+      value: `PKR ${dashboardMetrics.outstandingBillsValue.toLocaleString('en-US')}`, 
       icon: BarChart3, 
       description: 'Total amount due',
       onClick: () => setIsOutstandingBillsDialogOpen(true)
@@ -412,6 +454,10 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
+      <div className="mt-8 animate-fade-in" style={{animationDelay: '0.1s'}}>
+        <AiSummaryCard metrics={dashboardMetrics} />
+      </div>
+
       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="glassmorphism-card">
@@ -429,7 +475,7 @@ export default function AdminDashboardPage() {
               </Tabs>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{formatDurationFromHours(monthlySupply)}</div>
+              <div className="text-3xl font-bold">{dashboardMetrics.monthlySupply}</div>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
                 <StatChangeIndicator value={supplyChange} />
@@ -461,7 +507,7 @@ export default function AdminDashboardPage() {
               </Tabs>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+              <div className="text-3xl font-bold">PKR {dashboardMetrics.monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
                <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
                 <StatChangeIndicator value={revenueChange} />
@@ -546,4 +592,3 @@ export default function AdminDashboardPage() {
     
 
     
-
