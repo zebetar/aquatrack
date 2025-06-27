@@ -6,9 +6,8 @@ import { UserNav } from '@/components/layout/user-nav';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { adminNavItems, viewerNavItems } from '@/config/nav-config';
 import { useAuth } from '@/contexts/auth-context';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Menu, Droplets, Loader2 } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Droplets, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -94,24 +93,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           "overflow-x-hidden" 
         )}
       >
-        <main className="main-content-area flex-1 p-6 md:pb-6 pb-24">
+        <main className="main-content-area flex-1 p-6 md:pb-6">
           {children}
         </main>
       </div>
 
-      {/* Mobile Floating Action Button (FAB) for Menu */}
+      {/* Mobile Sidebar (no trigger, controlled by state) */}
       {isMobile && (
         <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-          <SheetTrigger asChild>
-            <Button
-              variant="default"
-              size="icon"
-              className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg md:hidden animate-fade-in"
-            >
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
           <SheetContent
             side="left"
             className={cn(
