@@ -8,7 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 // Input schema for the dashboard metrics. This is not exported to avoid "use server" errors.
 const DashboardMetricsSchema = z.object({
@@ -46,7 +46,7 @@ const summaryPrompt = ai.definePrompt({
   `,
   
   // Model configuration
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'gemini-pro',
   config: {
     temperature: 0.7, // A little creativity
   },
@@ -80,7 +80,7 @@ export async function summarizeDashboard(metrics: DashboardMetrics): Promise<str
         if (e.message.includes('API key')) {
             throw new Error("The AI feature requires a valid API key. Please configure it in Admin Settings.");
         }
-        if (e.message.includes('NOT_FOUND')) {
+        if (e.message.includes('NOT_FOUND') || e.message.includes('model')) {
              throw new Error("The specified AI model was not found. This might be a region or project configuration issue in your Google Cloud account.");
         }
         
