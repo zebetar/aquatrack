@@ -94,7 +94,7 @@ export function CustomerListTable({
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">{customer.name}</h3>
                   <div className="flex items-center gap-2">
-                    <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
+                    <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"} className="text-sm px-3 py-1">
                       {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
                     </Badge>
                     {enableActions && (
