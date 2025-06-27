@@ -314,44 +314,44 @@ export default function DataExportPage() {
                 </AccordionTrigger>
             </CardHeader>
             <AccordionContent>
-              <CardContent className="space-y-6 p-4 pt-0">
-                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+              <CardContent className="space-y-4 p-4 pt-0">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80 hover:bg-muted/50 transition-colors">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Customer Data</h3>
                     <p className="text-sm text-muted-foreground">Export a list of all customers and their details.</p>
                   </div>
                   <Button onClick={() => handleDataExport("All Customer", "CSV")} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV
+                    Export as CSV
                   </Button>
                 </div>
 
-                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80 hover:bg-muted/50 transition-colors">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Water Usage Records</h3>
                     <p className="text-sm text-muted-foreground">Export all logged water usage records.</p>
                   </div>
                   <Button onClick={() => handleDataExport("All Water Usage", "CSV")} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV
+                    Export as CSV
                   </Button>
                 </div>
 
-                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80 hover:bg-muted/50 transition-colors">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Payment Histories</h3>
                     <p className="text-sm text-muted-foreground">Export all recorded payment transactions.</p>
                   </div>
                   <Button onClick={() => handleDataExport("All Payment Histories", "CSV")} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV
+                    Export as CSV
                   </Button>
                 </div>
 
-                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80">
+                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80 hover:bg-muted/50 transition-colors">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Download Data Backup</h3>
                     <p className="text-sm text-muted-foreground">Download all current data from localStorage as a single JSON file. This is useful for backup or migration.</p>
                   </div>
                   <Button onClick={handleDownloadAllData} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" /> Download All Data (JSON)
+                    Download All Data (JSON)
                   </Button>
                 </div>
               </CardContent>

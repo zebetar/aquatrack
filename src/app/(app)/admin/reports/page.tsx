@@ -248,12 +248,12 @@ export default function AdminReportsPage() {
                         <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person avatar"/>
                         <AvatarFallback>{customer.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-semibold">{customer.name}</p>
-                        <p className="text-sm text-muted-foreground">{formatDurationFromHours(customer.consumption)}</p>
-                      </div>
+                      <p className="font-semibold">{customer.name}</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                     <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm text-primary">{formatDurationFromHours(customer.consumption)}</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
                   </Link>
                 </li>
               ))}
