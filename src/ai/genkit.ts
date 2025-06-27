@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview This file initializes the Genkit AI instance.
  * It configures the necessary plugins, such as Google AI, and handles
@@ -7,11 +8,11 @@
 
 import { genkit, type GenkitPlugin } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { firebase } from '@genkit-ai/firebase';
+import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
 
 const apiKey = process.env.GOOGLE_API_KEY;
 
-const plugins: GenkitPlugin[] = [firebase()];
+const plugins: GenkitPlugin[] = [enableFirebaseTelemetry()];
 
 if (apiKey) {
   // Only add the Google AI plugin if the API key is available.
