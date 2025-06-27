@@ -9,7 +9,7 @@ import {
   getAllMockCustomers,
   getAllMockUsageRecords,
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, CustomerMonthlyUsage } from '@/types';
+import type { Customer, WaterUsageRecord, CustomerMonthlyUsage, DashboardMetrics } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -151,6 +151,8 @@ export default function AdminDashboardPage() {
   // AI Summary State
   const [aiSummary, setAiSummary] = useState('');
   const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
+  const [aiSummaryError, setAiSummaryError] = useState('');
+
 
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
@@ -362,22 +364,33 @@ export default function AdminDashboardPage() {
   const handleGenerateSummary = async () => {
     setIsAiSummaryLoading(true);
     setAiSummary('');
+    setAiSummaryError(''); // Clear previous errors
     try {
-        const result = await summarizeDashboard({
+        const metrics: DashboardMetrics = {
             totalCustomers,
             monthlySupply,
             monthlyRevenue,
             outstandingBillsValue,
             supplyChange,
             revenueChange,
-        });
+        };
+        const result = await summarizeDashboard(metrics);
         setAiSummary(result);
-    } catch (error) {
+    } catch (error: any) {
         console.error("AI summary failed:", error);
+        
+        let detailedError = "An unknown error occurred while generating the summary.";
+        if (error.message && error.message.includes('FAILED_PRECONDITION')) {
+            detailedError = "The AI feature failed because the server is missing the required API key. Please go to Admin Settings, copy the instructions from the 'API Key Management' section to create a `.env.local` file, and then restart the development server.";
+        } else {
+            detailedError = "Could not generate summary. Please check the server logs for more details."
+        }
+
+        setAiSummaryError(detailedError);
         toast({
             variant: "destructive",
             title: "AI Summary Error",
-            description: "API key is missing or invalid. Please ensure it's set correctly in your .env.local file and that you've restarted the server.",
+            description: "Could not generate summary. See details on the dashboard.",
         });
     } finally {
         setIsAiSummaryLoading(false);
@@ -462,10 +475,16 @@ export default function AdminDashboardPage() {
                           <span>Generating analysis...</span>
                       </div>
                   )}
+                  {aiSummaryError && !isAiSummaryLoading && (
+                      <div className="text-sm text-destructive border border-destructive/50 bg-destructive/10 p-4 rounded-md space-y-2">
+                          <h4 className="font-bold">Could not generate insights</h4>
+                          <p>{aiSummaryError}</p>
+                      </div>
+                  )}
                   {aiSummary && !isAiSummaryLoading && (
                       <p className="text-foreground/90">{aiSummary}</p>
                   )}
-                  {!aiSummary && !isAiSummaryLoading && (
+                  {!aiSummary && !isAiSummaryLoading && !aiSummaryError && (
                       <p className="text-muted-foreground">Click "Generate Summary" to get an AI-powered analysis of this month's performance.</p>
                   )}
               </CardContent>
