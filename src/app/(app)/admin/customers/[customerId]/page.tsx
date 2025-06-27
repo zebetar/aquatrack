@@ -265,7 +265,7 @@ export default function CustomerDetailPage() {
           {!isEditing && <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />}
         </div>
       </div>
-      <Button variant="outline" asChild className="mb-6">
+      <Button variant="link" asChild className="mb-6 px-0 h-auto -ml-1">
           <Link href="/admin/customers"><ArrowLeft className="mr-2 h-4 w-4" />Back to Customers List</Link>
       </Button>
       
