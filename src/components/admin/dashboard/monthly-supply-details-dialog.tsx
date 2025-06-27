@@ -9,7 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CustomerMonthlyUsage } from "@/types";
 import { format } from "date-fns";
@@ -37,24 +36,17 @@ export function MonthlySupplyDetailsDialog({ isOpen, onClose, data, isLoading }:
     }
     if (data.length > 0) {
       return (
-        <Table className="w-full table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Customer Name</TableHead>
-              <TableHead className="w-[100px] text-right">Usage</TableHead>
-              <TableHead className="w-[120px] text-right">Cost (PKR)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium truncate">{item.name}</TableCell>
-                <TableCell className="text-right">{formatDurationFromHours(item.usageHours)}</TableCell>
-                <TableCell className="text-right">{item.cost.toLocaleString('en-US')}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="space-y-3">
+          {data.map((item) => (
+            <div key={item.id} className="flex items-center justify-between rounded-lg bg-muted/40 p-3 hover:bg-muted/60 transition-colors">
+              <div className="truncate pr-4">
+                <p className="font-medium">{item.name}</p>
+                <p className="text-xs text-muted-foreground">{formatDurationFromHours(item.usageHours)}</p>
+              </div>
+              <p className="font-semibold text-primary whitespace-nowrap">PKR {item.cost.toLocaleString('en-US')}</p>
+            </div>
+          ))}
+        </div>
       );
     }
     return (

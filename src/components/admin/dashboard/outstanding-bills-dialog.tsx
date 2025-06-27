@@ -9,7 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Customer } from "@/types";
 import Link from "next/link";
@@ -30,22 +29,14 @@ export function OutstandingBillsDialog({ isOpen, onClose, data }: OutstandingBil
         
         <ScrollArea className="h-[400px] w-full pr-4 mt-4">
           {data.length > 0 ? (
-            <Table className="min-w-[400px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead className="text-right">Balance (PKR)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell className="text-right">{customer.balance.toLocaleString('en-US')}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+             <div className="space-y-2">
+              {data.map((customer) => (
+                <div key={customer.id} className="flex items-center justify-between rounded-lg bg-muted/40 p-3 hover:bg-muted/60 transition-colors">
+                  <p className="font-medium truncate pr-4">{customer.name}</p>
+                  <p className="font-semibold text-destructive whitespace-nowrap">PKR {customer.balance.toLocaleString('en-US')}</p>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="text-center text-muted-foreground py-4">
               No customers currently have outstanding bills.
