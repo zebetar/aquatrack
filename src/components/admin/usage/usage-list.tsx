@@ -14,7 +14,6 @@ import { format } from 'date-fns';
 import { formatDurationFromHours } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 interface UsageListProps {
   usageRecords: WaterUsageRecord[];
@@ -37,25 +36,18 @@ export function UsageList({ usageRecords }: UsageListProps) {
       <div className="space-y-4 md:hidden">
         {usageRecords.map((record) => (
           <Card key={record.id} className="glassmorphism-card">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-semibold">{record.customerName}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {`${format(new Date(record.date), 'PP')} at ${format(new Date(record.startTime), 'p')}`}
-                  </p>
-                </div>
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-lg font-semibold truncate">{record.customerName}</h3>
+                <p className="font-semibold text-lg text-primary whitespace-nowrap">
+                  PKR {record.cost.toLocaleString('en-US')}
+                </p>
               </div>
-              <Separator />
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Duration</p>
-                  <p className="font-medium">{formatDurationFromHours(record.durationHours)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Cost</p>
-                  <p className="font-medium">PKR {record.cost.toLocaleString('en-US')}</p>
-                </div>
+              <div className="flex items-baseline justify-between gap-4 text-sm">
+                <p className="text-muted-foreground truncate">
+                  {`${format(new Date(record.date), 'PP')} at ${format(new Date(record.startTime), 'p')}`}
+                </p>
+                <p className="font-medium whitespace-nowrap">{formatDurationFromHours(record.durationHours)}</p>
               </div>
             </CardContent>
           </Card>

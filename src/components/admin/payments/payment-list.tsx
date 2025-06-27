@@ -36,16 +36,14 @@ export function PaymentList({ payments }: PaymentListProps) {
         {payments.map((payment) => (
           <Card key={payment.id} className="glassmorphism-card">
             <CardContent className="p-4">
-              <div className="flex items-start justify-between">
+              <div className="flex items-baseline justify-between gap-4">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold">{payment.customerName}</h3>
+                  <h3 className="text-lg font-semibold truncate">{payment.customerName}</h3>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(payment.paymentDate), 'PP p')}
                   </p>
                 </div>
-                 <div className="text-right">
-                    <p className="font-semibold text-lg text-primary">PKR {payment.amountPaid.toLocaleString('en-US')}</p>
-                 </div>
+                <p className="font-semibold text-lg text-primary whitespace-nowrap">PKR {payment.amountPaid.toLocaleString('en-US')}</p>
               </div>
             </CardContent>
           </Card>
