@@ -181,7 +181,7 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <Accordion type="multiple" defaultValue={['admin-account']} className="w-full space-y-4 mt-6">
+      <Accordion type="multiple" defaultValue={['api-key', 'admin-account']} className="w-full space-y-4 mt-6">
         {/* API Key Management Section */}
         <AccordionItem value="api-key" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
           <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
