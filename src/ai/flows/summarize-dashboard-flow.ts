@@ -33,37 +33,41 @@ export async function summarizeDashboardMetrics(
   const improvementSuggestions: string[] = [];
   let score = 0;
 
-  // Analyze metrics to build a dynamic, statistical summary
+  // --- Enhanced & Futuristic Analysis ---
   if (metrics.totalCustomers > 0) {
-      keyTakeaways.push(`Active customers: ${metrics.totalCustomers}.`);
+      keyTakeaways.push(`Customer Base: ${metrics.totalCustomers} active clients.`);
+      if (metrics.totalCustomers < 5) {
+        improvementSuggestions.push(`Growth Vector: Onboard new clients to expand revenue streams and diversify risk.`);
+      } else {
+        improvementSuggestions.push(`Operational Insight: With ${metrics.totalCustomers} customers, usage data can be analyzed to predict future demand.`);
+      }
   } else {
-      keyTakeaways.push("Active customers: 0.");
-      improvementSuggestions.push("Action: Add first customer to begin tracking.");
+      keyTakeaways.push("System Initialized: 0 active clients.");
+      improvementSuggestions.push("Initiate Growth: Add first customer to activate revenue and data tracking.");
       score -= 1;
   }
   
-  keyTakeaways.push(`Revenue (This Month): PKR ${metrics.monthlyRevenue.toLocaleString()}.`);
+  keyTakeaways.push(`Revenue Stream: PKR ${metrics.monthlyRevenue.toLocaleString()} this period.`);
   if (metrics.monthlyRevenue > 5000) {
       score += 1;
+  } else if (metrics.monthlyRevenue === 0 && metrics.totalCustomers > 0) {
+      improvementSuggestions.push("Revenue Alert: No revenue recorded this month despite active customers. Review usage logging.");
   }
   
   if (metrics.outstandingBillsValue > 0) {
       const numOutstanding = metrics.topOutstandingCustomers.length;
-      keyTakeaways.push(`Outstanding Balance: PKR ${metrics.outstandingBillsValue.toLocaleString()} from ${numOutstanding} customer(s).`);
-      improvementSuggestions.push(`Action: Prioritize collecting PKR ${metrics.outstandingBillsValue.toLocaleString()} in outstanding payments.`);
+      keyTakeaways.push(`Outstanding Receivables: PKR ${metrics.outstandingBillsValue.toLocaleString()} across ${numOutstanding} accounts.`);
+      improvementSuggestions.push(`Financial Health: Prioritize collection of PKR ${metrics.outstandingBillsValue.toLocaleString()} to improve cash flow.`);
       score -= 1;
   } else {
-      keyTakeaways.push("Outstanding Balance: PKR 0. All accounts are settled.");
+      keyTakeaways.push("Financial Status: Zero outstanding balance maintained.");
+      improvementSuggestions.push("System Health: All accounts settled. Monitor new usage closely to maintain positive cash flow.");
       score +=1;
-  }
-  
-  if (metrics.totalCustomers > 5) {
-      improvementSuggestions.push(`Analysis: Evaluate usage patterns for ${metrics.totalCustomers} customers to identify optimization opportunities.`);
   }
   
   const topDebtor = metrics.topOutstandingCustomers[0];
   if (topDebtor) {
-      improvementSuggestions.push(`Focus: Top debtor (${topDebtor.name}) owes PKR ${topDebtor.balance.toLocaleString()}.`);
+      improvementSuggestions.push(`Strategic Priority: Target top debtor (${topDebtor.name}) with a balance of PKR ${topDebtor.balance.toLocaleString()}.`);
   }
   
   let overallStatus: 'positive' | 'negative' | 'neutral' = 'neutral';
@@ -75,10 +79,9 @@ export async function summarizeDashboardMetrics(
 
   // Ensure there are always some default suggestions if none are generated
   if (improvementSuggestions.length === 0) {
-      improvementSuggestions.push("Review monthly reports to identify trends in water consumption.");
-      improvementSuggestions.push("Ensure all customer information is up-to-date for accurate billing.");
+      improvementSuggestions.push("Continuously monitor real-time data to identify emerging trends.");
+      improvementSuggestions.push("Maintain data integrity for accurate forecasting and billing.");
   }
-
 
   // Return a dynamic summary based on the data.
   return {
