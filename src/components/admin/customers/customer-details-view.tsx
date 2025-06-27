@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
@@ -78,7 +77,7 @@ export function CustomerDetailsView({
   return (
     <div className="space-y-6">
       <Card className="glassmorphism-card">
-        <Accordion type="single" collapsible defaultValue="customer-info">
+        <Accordion type="single" collapsible>
           <AccordionItem value="customer-info" className="border-none">
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <AccordionTrigger className="flex-1 py-0 hover:no-underline">
