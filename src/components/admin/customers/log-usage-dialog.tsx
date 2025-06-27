@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -36,11 +35,8 @@ export function LogUsageDialog({ customer, onUsageLogged }: LogUsageDialogProps)
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader className="sm:text-center">
           <DialogTitle>Log Water Usage for {customer.name}</DialogTitle>
-          <DialogDescription>
-            Enter the date, start time, and end time of water supply.
-          </DialogDescription>
         </DialogHeader>
         <LogUsageForm customer={customer} onSuccess={handleSuccess} />
       </DialogContent>

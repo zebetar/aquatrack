@@ -161,7 +161,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date (Start Date of Usage)</FormLabel>
+              <FormLabel>Date</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -197,7 +197,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
             name="startTime"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Start Time (HH:MM)</FormLabel>
+                <FormLabel>Start Time</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />
                 </FormControl>
@@ -210,7 +210,7 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
             name="endTime"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>End Time (HH:MM)</FormLabel>
+                <FormLabel>End Time</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />
                 </FormControl>
@@ -239,5 +239,3 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     </Form>
   );
 }
-
-    
