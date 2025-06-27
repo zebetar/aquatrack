@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertTriangle, TrendingUp, BellRing } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertTriangle, TrendingUp, BellRing, Info } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -23,8 +23,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { summarizeDashboardMetrics, type DashboardMetricsSummary } from '@/ai/flows/summarize-dashboard-flow';
+import { projectRevenue, type ProjectedRevenueOutput } from '@/ai/flows/project-revenue-flow';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TooltipProvider, Tooltip as UITooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -90,9 +92,9 @@ const KeyMetricCard = memo(({
   onClick,
 }: { 
   title: string, 
-  value: string, 
+  value: React.ReactNode, 
   icon: React.ElementType, 
-  description?: string, 
+  description?: React.ReactNode, 
   className?: string,
   href?: string,
   onClick?: () => void;
@@ -107,7 +109,7 @@ const KeyMetricCard = memo(({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {description && <div className="text-xs text-muted-foreground">{description}</div>}
       </CardContent>
     </>
   );
@@ -155,8 +157,10 @@ export default function AdminDashboardPage() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [monthlySupply, setMonthlySupply] = useState("0 min");
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+  const [lastMonthRevenue, setLastMonthRevenue] = useState(0);
   const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
-  const [projectedRevenue, setProjectedRevenue] = useState(0);
+  const [projection, setProjection] = useState<ProjectedRevenueOutput | null>(null);
+  const [isProjectionLoading, setIsProjectionLoading] = useState(true);
   
   // Data for dialogs
   const [isDialogDataLoading, setIsDialogDataLoading] = useState(false);
@@ -227,6 +231,35 @@ export default function AdminDashboardPage() {
     topOutstandingCustomers,
   ]);
 
+  const handleGenerateProjection = useCallback(async () => {
+    if (!lastMonthRevenue && !monthlyRevenue) return;
+
+    setIsProjectionLoading(true);
+    setProjection(null);
+
+    try {
+      const result = await projectRevenue({
+        lastMonthRevenue: lastMonthRevenue,
+        currentMonthRevenue: monthlyRevenue,
+        currentDate: new Date().toISOString(),
+      });
+      setProjection(result);
+    } catch (e) {
+      console.error("AI Projection Error:", e);
+      setProjection({
+          projectedAmount: lastMonthRevenue > 0 ? lastMonthRevenue * 1.05 : monthlyRevenue > 0 ? monthlyRevenue * 1.1 : 5000,
+          reasoning: "AI projection failed. Showing a basic forecast."
+      });
+      toast({
+        variant: "destructive",
+        title: "AI Projection Failed",
+        description: "Could not generate AI-powered revenue projection.",
+      });
+    } finally {
+      setIsProjectionLoading(false);
+    }
+  }, [lastMonthRevenue, monthlyRevenue, toast]);
+
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -267,15 +300,12 @@ export default function AdminDashboardPage() {
       setOutstandingBillsValue(totalDue);
 
       // Calculate changes for cards
+      const lastMonthRevenueCalc = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
+      setLastMonthRevenue(lastMonthRevenueCalc);
       const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
-      const lastMonthRevenue = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
       setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
-      setRevenueChange(lastMonthRevenue > 0 ? ((currentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : (currentRevenue > 0 ? 100 : 0));
+      setRevenueChange(lastMonthRevenueCalc > 0 ? ((currentRevenue - lastMonthRevenueCalc) / lastMonthRevenueCalc) * 100 : (currentRevenue > 0 ? 100 : 0));
       
-      // Calculate projected revenue (simple forecast)
-      const projection = lastMonthRevenue > 0 ? lastMonthRevenue * 1.05 : currentRevenue > 0 ? currentRevenue * 1.1 : 5000;
-      setProjectedRevenue(projection);
-
     } catch (error) {
       console.error("Failed to load dashboard data", error);
       toast({
@@ -287,6 +317,12 @@ export default function AdminDashboardPage() {
       setIsLoading(false);
     }
   }, [toast]);
+  
+  useEffect(() => {
+    if (!isLoading) {
+        handleGenerateProjection();
+    }
+  }, [isLoading, handleGenerateProjection]);
   
   // Effect for automated reminders
   useEffect(() => {
@@ -518,12 +554,39 @@ export default function AdminDashboardPage() {
             onClick={metric.onClick}
           />
         ))}
-         <KeyMetricCard 
-            title='Projected Revenue'
-            value={`PKR ${projectedRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}`}
-            icon={TrendingUp}
-            description='Next month forecast'
-        />
+        {isProjectionLoading ? (
+          <Card className="glassmorphism-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-5 w-[150px]" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+              </CardHeader>
+              <CardContent>
+              <Skeleton className="h-7 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+          </Card>
+        ) : (
+          <KeyMetricCard 
+              title='Projected Revenue'
+              value={`PKR ${projection?.projectedAmount.toLocaleString('en-US', {maximumFractionDigits: 0}) ?? '0'}`}
+              icon={TrendingUp}
+              description={
+                  <TooltipProvider>
+                      <UITooltip>
+                      <TooltipTrigger asChild>
+                          <span className="flex items-center gap-1 cursor-help">
+                          AI-powered forecast
+                          <Info className="h-3 w-3 text-muted-foreground" />
+                          </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          <p className="max-w-xs text-sm">{projection?.reasoning}</p>
+                      </TooltipContent>
+                      </UITooltip>
+                  </TooltipProvider>
+              }
+          />
+        )}
       </div>
       
       {/* Main Analysis Section in a 2x2 Grid */}
@@ -725,7 +788,3 @@ export default function AdminDashboardPage() {
     </>
   );
 }
-
-    
-
-    
