@@ -176,7 +176,7 @@ export default function AdminSettingsPage() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Current effective rate: PKR {currentRate}/hour. This rate is fundamental for calculating usage costs.
+                Current effective rate: PKR {currentRate}/hour.
               </p>
             </div>
           </AccordionContent>

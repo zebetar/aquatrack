@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -41,9 +40,6 @@ export function EditPaymentRecordDialog({ paymentRecord, onPaymentRecordUpdated,
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Payment for {paymentRecord.customerName}</DialogTitle>
-          <DialogDescription>
-            Modify the payment date or amount.
-          </DialogDescription>
         </DialogHeader>
         <EditPaymentRecordForm existingPayment={paymentRecord} onSuccess={handleSuccess} />
       </DialogContent>

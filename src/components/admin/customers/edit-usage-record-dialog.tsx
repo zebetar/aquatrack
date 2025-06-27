@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -41,9 +40,6 @@ export function EditUsageRecordDialog({ usageRecord, onUsageRecordUpdated, trigg
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Water Usage for {usageRecord.customerName}</DialogTitle>
-          <DialogDescription>
-            Modify the date, start time, or end time of water supply.
-          </DialogDescription>
         </DialogHeader>
         <EditUsageRecordForm existingRecord={usageRecord} onSuccess={handleSuccess} />
       </DialogContent>
