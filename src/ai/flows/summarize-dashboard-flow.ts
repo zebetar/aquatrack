@@ -33,41 +33,37 @@ export async function summarizeDashboardMetrics(
   const improvementSuggestions: string[] = [];
   let score = 0;
 
-  // Analyze metrics to build a dynamic summary
+  // Analyze metrics to build a dynamic, statistical summary
   if (metrics.totalCustomers > 0) {
-      keyTakeaways.push(`You are currently serving ${metrics.totalCustomers} customer(s).`);
+      keyTakeaways.push(`Active customers: ${metrics.totalCustomers}.`);
   } else {
-      keyTakeaways.push("There are no customers in the system yet.");
-      improvementSuggestions.push("Add your first customer to start tracking water usage and payments.");
+      keyTakeaways.push("Active customers: 0.");
+      improvementSuggestions.push("Action: Add first customer to begin tracking.");
       score -= 1;
   }
   
+  keyTakeaways.push(`Revenue (This Month): PKR ${metrics.monthlyRevenue.toLocaleString()}.`);
   if (metrics.monthlyRevenue > 5000) {
-      keyTakeaways.push(`Monthly revenue is strong at PKR ${metrics.monthlyRevenue.toLocaleString()}.`);
       score += 1;
-  } else if (metrics.monthlyRevenue > 0) {
-       keyTakeaways.push(`This month's revenue is PKR ${metrics.monthlyRevenue.toLocaleString()}.`);
-  } else {
-      keyTakeaways.push("No revenue has been generated this month.");
   }
   
   if (metrics.outstandingBillsValue > 0) {
       const numOutstanding = metrics.topOutstandingCustomers.length;
-      const customerText = numOutstanding === 1 ? 'customer' : 'customers';
-      keyTakeaways.push(`There is a total of PKR ${metrics.outstandingBillsValue.toLocaleString()} in outstanding bills from ${numOutstanding} ${customerText}.`);
-      improvementSuggestions.push("Follow up with customers who have outstanding balances to improve cash flow.");
+      keyTakeaways.push(`Outstanding Balance: PKR ${metrics.outstandingBillsValue.toLocaleString()} from ${numOutstanding} customer(s).`);
+      improvementSuggestions.push(`Action: Prioritize collecting PKR ${metrics.outstandingBillsValue.toLocaleString()} in outstanding payments.`);
       score -= 1;
   } else {
-      keyTakeaways.push("All customer accounts are settled with no outstanding bills.");
+      keyTakeaways.push("Outstanding Balance: PKR 0. All accounts are settled.");
       score +=1;
   }
   
   if (metrics.totalCustomers > 5) {
-      improvementSuggestions.push("With a growing customer base, consider analyzing usage patterns for optimization opportunities.");
+      improvementSuggestions.push(`Analysis: Evaluate usage patterns for ${metrics.totalCustomers} customers to identify optimization opportunities.`);
   }
   
-  if (metrics.topOutstandingCustomers.length > 0) {
-      improvementSuggestions.push(`Prioritize collecting from top debtors like ${metrics.topOutstandingCustomers[0].name}.`);
+  const topDebtor = metrics.topOutstandingCustomers[0];
+  if (topDebtor) {
+      improvementSuggestions.push(`Focus: Top debtor (${topDebtor.name}) owes PKR ${topDebtor.balance.toLocaleString()}.`);
   }
   
   let overallStatus: 'positive' | 'negative' | 'neutral' = 'neutral';
