@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Save, XCircle, Pencil } from 'lucide-react';
+import { Edit, Save, XCircle, Pencil, Droplets, CreditCard } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -77,7 +78,7 @@ export function CustomerDetailsView({
   return (
     <div className="space-y-6">
       <Card className="glassmorphism-card">
-        <Accordion type="single" collapsible>
+        <Accordion type="single" collapsible defaultChecked={false}>
           <AccordionItem value="customer-info" className="border-none">
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <AccordionTrigger className="flex-1 py-0 hover:no-underline">
@@ -153,31 +154,34 @@ export function CustomerDetailsView({
           <CardTitle>Water Usage History</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Mobile Card View */}
-          <div className="space-y-3 md:hidden">
+          {/* Mobile List View */}
+          <div className="space-y-0 md:hidden">
             {usageRecords.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">No usage records found.</p>
             ) : (
-              usageRecords.map(record => (
-                <div key={record.id} className="rounded-lg border bg-card/80 p-3 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-semibold">{format(new Date(record.date), 'PP')}</p>
-                      <p className="text-sm text-muted-foreground">{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</p>
+              <ul className="divide-y divide-border/50">
+                {usageRecords.map(record => (
+                  <li key={record.id} className="flex items-center gap-3 py-4 px-1">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <Droplets className="h-5 w-5 text-primary" />
                     </div>
-                    <EditUsageRecordDialog 
-                      usageRecord={record} 
+                    <div className="flex-1 space-y-1">
+                        <div className="flex items-baseline justify-between">
+                            <p className="font-semibold text-foreground">PKR {record.cost.toLocaleString('en-US')}</p>
+                            <p className="text-xs text-muted-foreground">{formatDurationFromHours(record.durationHours)}</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            {format(new Date(record.date), 'MMM d, yyyy')} &bull; {`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}
+                        </p>
+                    </div>
+                    <EditUsageRecordDialog
+                      usageRecord={record}
                       onUsageRecordUpdated={onUsageRecordUpdated}
-                      triggerButton={<Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-1"><Pencil className="h-4 w-4" /></Button>}
+                      triggerButton={<Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 -mr-2"><Pencil className="h-4 w-4" /></Button>}
                     />
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between items-baseline text-sm pt-1">
-                    <p className="text-muted-foreground">Duration: <span className="font-medium text-foreground">{formatDurationFromHours(record.durationHours)}</span></p>
-                    <p className="font-semibold text-primary">PKR {record.cost.toLocaleString('en-US')}</p>
-                  </div>
-                </div>
-              ))
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
           {/* Desktop Table View */}
@@ -222,31 +226,31 @@ export function CustomerDetailsView({
           <CardTitle>Payment History</CardTitle>
         </CardHeader>
         <CardContent>
-           {/* Mobile Card View */}
-           <div className="space-y-3 md:hidden">
+           {/* Mobile List View */}
+           <div className="space-y-0 md:hidden">
             {payments.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">No payment records found.</p>
             ) : (
-              payments.map(payment => (
-                 <div key={payment.id} className="rounded-lg border bg-card/80 p-3 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-semibold">{format(new Date(payment.paymentDate), 'PP')}</p>
-                      <p className="text-sm text-muted-foreground">{format(new Date(payment.paymentDate), 'p')}</p>
+              <ul className="divide-y divide-border/50">
+                {payments.map(payment => (
+                  <li key={payment.id} className="flex items-center gap-3 py-4 px-1">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10 dark:bg-green-500/20">
+                        <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
-                    <EditPaymentRecordDialog 
-                      paymentRecord={payment} 
-                      onPaymentRecordUpdated={onPaymentRecordUpdated}
-                      triggerButton={<Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-1"><Pencil className="h-4 w-4" /></Button>}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between items-baseline text-sm pt-1">
-                    <p className="text-muted-foreground">Amount Paid</p>
-                    <p className="font-semibold text-primary">PKR {payment.amountPaid.toLocaleString('en-US')}</p>
-                  </div>
-                 </div>
-              ))
+                    <div className="flex-1 space-y-1">
+                        <p className="font-semibold text-green-600 dark:text-green-500">PKR {payment.amountPaid.toLocaleString('en-US')}</p>
+                        <p className="text-sm text-muted-foreground">
+                            Payment on {format(new Date(payment.paymentDate), 'PP p')}
+                        </p>
+                    </div>
+                     <EditPaymentRecordDialog
+                        paymentRecord={payment}
+                        onPaymentRecordUpdated={onPaymentRecordUpdated}
+                        triggerButton={<Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 -mr-2"><Pencil className="h-4 w-4" /></Button>}
+                      />
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
           {/* Desktop Table View */}
