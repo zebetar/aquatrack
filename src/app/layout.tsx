@@ -1,14 +1,14 @@
 
 import type { Metadata, Viewport } from 'next';
-import { Roboto } from 'next/font/google'; // Changed from Montserrat to Roboto
+import { Poppins } from 'next/font/google'; // Changed from Roboto to Poppins
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 
-const roboto = Roboto({ // Changed font
+const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['400', '500', '700'], // Added common weights
-  variable: '--font-roboto', // Changed variable name
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
 });
 
 const APP_NAME = "AquaTrack";
@@ -65,7 +65,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={`${roboto.variable} font-sans antialiased`}> {/* Use Roboto variable */}
+      <body className={`${poppins.variable} font-sans antialiased`}> {/* Use Poppins variable */}
         <AuthProvider>
           {children}
           <Toaster />

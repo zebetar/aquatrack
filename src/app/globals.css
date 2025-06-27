@@ -13,7 +13,7 @@
   }
 
   body {
-    font-family: var(--font-roboto), Arial, Helvetica, sans-serif; /* Ensure Roboto is primary */
+    font-family: var(--font-poppins), Arial, Helvetica, sans-serif; /* Use Poppins as primary */
     width: 100%;
     max-width: 100vw;
     @apply bg-background text-foreground;
@@ -236,7 +236,7 @@
     --sidebar-fg-rgb: var(--sidebar-fg-dark-rgb);
     --sidebar-icon-fg-rgb: var(--sidebar-icon-fg-dark-rgb);
     --sidebar-active-bg-color: hsl(var(--sidebar-active-bg-dark));
-    --sidebar-active-fg-rgb: var(--sidebar-active-fg-dark-rgb);
+    --sidebar-active-fg-rgb: var(--sidebar-active-fg-light-rgb);
     --sidebar-hover-bg-color: hsl(var(--sidebar-hover-bg-dark));
     --sidebar-hover-fg-rgb: var(--sidebar-hover-fg-dark-rgb);
 
