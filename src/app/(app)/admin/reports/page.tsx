@@ -266,7 +266,7 @@ export default function AdminReportsPage() {
               onValueChange={(value) => setSupplyChartView(value as 'monthly' | 'daily')}
               className="w-auto"
             >
-              <TabsList className="h-8">
+              <TabsList>
                   <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
                   <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
               </TabsList>
@@ -298,7 +298,7 @@ export default function AdminReportsPage() {
               onValueChange={(value) => setRevenueChartView(value as 'monthly' | 'daily')}
               className="w-auto"
             >
-              <TabsList className="h-8">
+              <TabsList>
                   <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
                   <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
               </TabsList>
