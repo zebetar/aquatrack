@@ -154,6 +154,7 @@ const AiSummaryCard = ({ metrics }: { metrics: DashboardMetrics | null }) => {
     }
     if (error) {
       const isApiKeyError = error.includes("API key");
+      const isGcpConfigError = error.includes("Vertex AI API");
       return (
         <div className="flex flex-col items-center justify-center text-center p-4">
           <AlertCircle className="h-8 w-8 text-destructive mb-2" />
@@ -162,6 +163,11 @@ const AiSummaryCard = ({ metrics }: { metrics: DashboardMetrics | null }) => {
           {isApiKeyError && (
             <Button variant="link" asChild className="mt-2">
               <Link href="/admin/settings">Configure API Key</Link>
+            </Button>
+          )}
+          {isGcpConfigError && (
+            <Button variant="link" asChild className="mt-2">
+              <a href="https://console.cloud.google.com/apis/library/vertexai.googleapis.com" target="_blank" rel="noopener noreferrer">Enable Vertex AI API</a>
             </Button>
           )}
         </div>
@@ -592,3 +598,4 @@ export default function AdminDashboardPage() {
     
 
     
+
