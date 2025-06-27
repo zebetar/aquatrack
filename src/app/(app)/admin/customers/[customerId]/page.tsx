@@ -260,7 +260,7 @@ export default function CustomerDetailPage() {
     <div className="mt-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{customer.name}</h1>
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
           {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
           {!isEditing && <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />}
         </div>

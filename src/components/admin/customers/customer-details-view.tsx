@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Save, XCircle } from 'lucide-react';
+import { Edit, Save, XCircle, Pencil } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -19,6 +19,7 @@ import {
 import { EditUsageRecordDialog } from './edit-usage-record-dialog';
 import { EditPaymentRecordDialog } from './edit-payment-record-dialog';
 import { formatDurationFromHours } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 interface CustomerDetailsViewProps {
   customer: Customer;
@@ -77,7 +78,7 @@ export function CustomerDetailsView({
   return (
     <div className="space-y-6">
       <Card className="glassmorphism-card">
-        <Accordion type="single" collapsible>
+        <Accordion type="single" collapsible defaultValue="customer-info">
           <AccordionItem value="customer-info" className="border-none">
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <AccordionTrigger className="flex-1 py-0 hover:no-underline">
@@ -90,7 +91,7 @@ export function CustomerDetailsView({
               ) : (
                 <div className="flex gap-2 ml-4">
                   <Button variant="default" size="sm" onClick={onSaveChanges}>
-                    <Save className="mr-2 h-4 w-4" /> Save Changes
+                    <Save className="mr-2 h-4 w-4" /> Save
                   </Button>
                   <Button variant="ghost" size="sm" onClick={onCancelChanges}>
                     <XCircle className="mr-2 h-4 w-4" /> Cancel
@@ -153,8 +154,36 @@ export function CustomerDetailsView({
           <CardTitle>Water Usage History</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[300px] w-full">
-            <Table className="min-w-[600px]"> {/* Added min-width */}
+          {/* Mobile Card View */}
+          <div className="space-y-3 md:hidden">
+            {usageRecords.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">No usage records found.</p>
+            ) : (
+              usageRecords.map(record => (
+                <div key={record.id} className="rounded-lg border bg-card/80 p-3 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="font-semibold">{format(new Date(record.date), 'PP')}</p>
+                      <p className="text-sm text-muted-foreground">{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</p>
+                    </div>
+                    <EditUsageRecordDialog 
+                      usageRecord={record} 
+                      onUsageRecordUpdated={onUsageRecordUpdated}
+                      triggerButton={<Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-1"><Pencil className="h-4 w-4" /></Button>}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-baseline text-sm pt-1">
+                    <p className="text-muted-foreground">Duration: <span className="font-medium text-foreground">{formatDurationFromHours(record.durationHours)}</span></p>
+                    <p className="font-semibold text-primary">PKR {record.cost.toLocaleString('en-US')}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          {/* Desktop Table View */}
+          <ScrollArea className="hidden h-[300px] w-full md:block">
+            <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -165,23 +194,24 @@ export function CustomerDetailsView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {usageRecords.length === 0 && (
+                {usageRecords.length === 0 ? (
                   <TableRow><TableCell colSpan={5} className="text-center h-24">No usage records found.</TableCell></TableRow>
+                ) : (
+                  usageRecords.map(record => (
+                    <TableRow key={record.id}>
+                      <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
+                      <TableCell>{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</TableCell>
+                      <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
+                      <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
+                      <TableCell className="text-center">
+                        <EditUsageRecordDialog 
+                          usageRecord={record} 
+                          onUsageRecordUpdated={onUsageRecordUpdated} 
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
-                {usageRecords.map(record => (
-                  <TableRow key={record.id}>
-                    <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
-                    <TableCell>{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</TableCell>
-                    <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
-                    <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
-                    <TableCell className="text-center">
-                      <EditUsageRecordDialog 
-                        usageRecord={record} 
-                        onUsageRecordUpdated={onUsageRecordUpdated} 
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
               </TableBody>
             </Table>
           </ScrollArea>
@@ -193,8 +223,36 @@ export function CustomerDetailsView({
           <CardTitle>Payment History</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[300px] w-full">
-            <Table className="min-w-[550px]"> {/* Updated min-width */}
+           {/* Mobile Card View */}
+           <div className="space-y-3 md:hidden">
+            {payments.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">No payment records found.</p>
+            ) : (
+              payments.map(payment => (
+                 <div key={payment.id} className="rounded-lg border bg-card/80 p-3 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="font-semibold">{format(new Date(payment.paymentDate), 'PP')}</p>
+                      <p className="text-sm text-muted-foreground">{format(new Date(payment.paymentDate), 'p')}</p>
+                    </div>
+                    <EditPaymentRecordDialog 
+                      paymentRecord={payment} 
+                      onPaymentRecordUpdated={onPaymentRecordUpdated}
+                      triggerButton={<Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 -mt-1"><Pencil className="h-4 w-4" /></Button>}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-baseline text-sm pt-1">
+                    <p className="text-muted-foreground">Amount Paid</p>
+                    <p className="font-semibold text-primary">PKR {payment.amountPaid.toLocaleString('en-US')}</p>
+                  </div>
+                 </div>
+              ))
+            )}
+          </div>
+          {/* Desktop Table View */}
+          <ScrollArea className="hidden h-[300px] w-full md:block">
+            <Table className="min-w-[550px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -204,22 +262,23 @@ export function CustomerDetailsView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.length === 0 && (
+                {payments.length === 0 ? (
                   <TableRow><TableCell colSpan={4} className="text-center h-24">No payment records found.</TableCell></TableRow>
+                ) : (
+                  payments.map(payment => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{format(new Date(payment.paymentDate), 'PP')}</TableCell>
+                      <TableCell>{format(new Date(payment.paymentDate), 'p')}</TableCell>
+                      <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
+                      <TableCell className="text-center">
+                        <EditPaymentRecordDialog 
+                          paymentRecord={payment} 
+                          onPaymentRecordUpdated={onPaymentRecordUpdated} 
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
-                {payments.map(payment => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{format(new Date(payment.paymentDate), 'PP')}</TableCell>
-                    <TableCell>{format(new Date(payment.paymentDate), 'p')}</TableCell>
-                    <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
-                    <TableCell className="text-center">
-                      <EditPaymentRecordDialog 
-                        paymentRecord={payment} 
-                        onPaymentRecordUpdated={onPaymentRecordUpdated} 
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
               </TableBody>
             </Table>
           </ScrollArea>
