@@ -13,7 +13,7 @@ import { DashboardMetricsSchema, type DashboardMetrics } from '@/types';
 
 const summaryPrompt = ai.definePrompt({
     name: 'summarizeDashboardPrompt',
-    model: 'googleai/gemini-1.5-flash-latest',
+    model: 'googleai/gemini-1.5-flash',
     input: { schema: DashboardMetricsSchema },
     output: { schema: z.string() },
     prompt: `You are a helpful business analyst for a water supply company called AquaTrack. 
