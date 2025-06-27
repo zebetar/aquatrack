@@ -1,2 +1,2 @@
-// This file has been cleared as the "Stitch Studio" feature was removed.
+// This file has been cleared as all AI features were removed.
 // This file can now be deleted.

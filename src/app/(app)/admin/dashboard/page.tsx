@@ -2,14 +2,14 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
   getAllMockCustomers,
   getAllMockUsageRecords,
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, CustomerMonthlyUsage, DashboardMetrics } from '@/types';
+import type { Customer, WaterUsageRecord, CustomerMonthlyUsage } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { summarizeDashboard } from '@/ai/flows/summarize-dashboard-flow';
 
 interface ChartDataPoint {
   label: string;
@@ -147,12 +146,6 @@ export default function AdminDashboardPage() {
   const [revenueChartData, setRevenueChartData] = useState<ChartDataPoint[]>([]);
   const [supplyChange, setSupplyChange] = useState(0);
   const [revenueChange, setRevenueChange] = useState(0);
-
-  // AI Summary State
-  const [aiSummary, setAiSummary] = useState('');
-  const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
-  const [aiSummaryError, setAiSummaryError] = useState('');
-
 
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
@@ -360,47 +353,6 @@ export default function AdminDashboardPage() {
       await loadAndProcessDialogData();
     }
   };
-  
-  const handleGenerateSummary = async () => {
-    setIsAiSummaryLoading(true);
-    setAiSummary('');
-    setAiSummaryError('');
-    try {
-        const metrics: DashboardMetrics = {
-            totalCustomers,
-            monthlySupply,
-            monthlyRevenue,
-            outstandingBillsValue,
-            supplyChange,
-            revenueChange,
-        };
-        const result = await summarizeDashboard(metrics);
-        setAiSummary(result);
-    } catch (error: any) {
-        console.error("AI summary failed:", error);
-        
-        let detailedError = "An unknown error occurred while generating the summary.";
-        if (error.message) {
-            if (error.message.includes('FAILED_PRECONDITION')) {
-                detailedError = "The AI feature failed because the server is missing the required API key. Go to Admin Settings, copy the instructions from 'API Key Management' to create a `.env.local` file, and restart the development server.";
-            } else if (error.message.includes('NOT_FOUND')) {
-                detailedError = "The AI model was not found. This can happen if your Google Cloud project does not have the Vertex AI API enabled or if billing is not set up. Please verify your project configuration in the Google Cloud Console.";
-            } else {
-                detailedError = "Could not generate summary. Check the server logs for more details.";
-            }
-        }
-
-        setAiSummaryError(detailedError);
-        toast({
-            variant: "destructive",
-            title: "AI Summary Error",
-            description: "Could not generate summary. See details on the dashboard.",
-        });
-    } finally {
-        setIsAiSummaryLoading(false);
-    }
-  };
-
 
   if (isLoading) {
     return (
@@ -458,41 +410,6 @@ export default function AdminDashboardPage() {
             onClick={metric.onClick}
           />
         ))}
-      </div>
-
-       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.1s'}}>
-          <Card className="ai-summary-card">
-              <CardHeader className="flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-3">
-                      <Sparkles className="h-6 w-6 text-accent" />
-                      <CardTitle className="text-lg">AI-Powered Insights</CardTitle>
-                  </div>
-                  <Button onClick={handleGenerateSummary} disabled={isAiSummaryLoading} size="sm">
-                      {isAiSummaryLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                      Generate Summary
-                  </Button>
-              </CardHeader>
-              <CardContent>
-                  {isAiSummaryLoading && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Generating analysis...</span>
-                      </div>
-                  )}
-                  {aiSummaryError && !isAiSummaryLoading && (
-                      <div className="text-sm text-destructive border border-destructive/50 bg-destructive/10 p-4 rounded-md space-y-2">
-                          <h4 className="font-bold">Could not generate insights</h4>
-                          <p>{aiSummaryError}</p>
-                      </div>
-                  )}
-                  {aiSummary && !isAiSummaryLoading && (
-                      <p className="text-foreground/90">{aiSummary}</p>
-                  )}
-                  {!aiSummary && !isAiSummaryLoading && !aiSummaryError && (
-                      <p className="text-muted-foreground">Click "Generate Summary" to get an AI-powered analysis of this month's performance.</p>
-                  )}
-              </CardContent>
-          </Card>
       </div>
 
       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
