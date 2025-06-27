@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to summarize dashboard metrics.
@@ -12,6 +13,7 @@ import { DashboardMetricsSchema, type DashboardMetrics } from '@/types';
 
 const summaryPrompt = ai.definePrompt({
     name: 'summarizeDashboardPrompt',
+    model: 'googleai/gemini-1.5-flash-latest',
     input: { schema: DashboardMetricsSchema },
     output: { schema: z.string() },
     prompt: `You are a helpful business analyst for a water supply company called AquaTrack. 
