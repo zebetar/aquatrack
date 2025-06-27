@@ -10,7 +10,7 @@ export default function LoginPage() {
         <div className="mb-2 flex items-center justify-center rounded-full bg-sky-500/10 p-3 text-sky-500">
           <Droplets className="h-10 w-10" />
         </div>
-        <CardTitle className="text-4xl font-bold lowercase tracking-tighter text-sky-500">aquatrack</CardTitle>
+        <CardTitle className="text-4xl font-bold lowercase tracking-tighter text-sky-500 animate-shimmer">aquatrack</CardTitle>
       </CardHeader>
       <CardContent className="py-8"> {/* Increased vertical padding */}
         <LoginForm />

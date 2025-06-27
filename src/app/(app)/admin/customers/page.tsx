@@ -23,6 +23,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -97,10 +100,59 @@ export default function AdminCustomersPage() {
 
   if (isLoading && customers.length === 0) { 
     return (
-        <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2">Loading customers...</p>
+      <div className="mt-6">
+        <PageHeader 
+            title="Customer Management" 
+            actions={<div className="flex items-center gap-2"><Skeleton className="h-10 w-10" /><Skeleton className="h-10 w-44" /></div>}
+        />
+        {/* Skeleton for mobile card view */}
+        <div className="space-y-4 md:hidden">
+            {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="glassmorphism-card p-4">
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                        <div>
+                            <Skeleton className="h-4 w-16 mb-1" />
+                            <Skeleton className="h-5 w-24" />
+                        </div>
+                        <div>
+                            <Skeleton className="h-4 w-20 mb-1" />
+                            <Skeleton className="h-5 w-16" />
+                        </div>
+                    </div>
+                </Card>
+            ))}
         </div>
+
+        {/* Skeleton for desktop table view */}
+        <div className="hidden rounded-lg border bg-card shadow-sm glassmorphism-card md:block">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                        <TableHead className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableHead>
+                        <TableHead className="text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableHead>
+                        <TableHead className="text-center"><Skeleton className="h-5 w-16 mx-auto" /></TableHead>
+                        <TableHead className="text-center"><Skeleton className="h-5 w-12 mx-auto" /></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableCell>
+                            <TableCell className="text-center"><Skeleton className="h-6 w-20 mx-auto rounded-full" /></TableCell>
+                            <TableCell className="text-center"><Skeleton className="h-8 w-8 rounded-full mx-auto" /></TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+      </div>
     );
   }
 

@@ -310,3 +310,30 @@ export function updateCustomerEmail(customerId: string, newEmail: string): void 
 export function exportMockDataAsJSON(): string {
   return JSON.stringify(store, null, 2);
 }
+
+export function importMockDataFromJSON(jsonString: string): { success: boolean, message: string } {
+  try {
+    const parsedData = JSON.parse(jsonString);
+
+    if (
+      !('customers' in parsedData) ||
+      !('usageRecords' in parsedData) ||
+      !('payments' in parsedData) ||
+      !('notifications' in parsedData)
+    ) {
+      throw new Error("Invalid or corrupted data file. Missing required sections.");
+    }
+    
+    store = parsedData;
+    
+    saveStoreToLocalStorage();
+    
+    loadStoreFromLocalStorage();
+
+    return { success: true, message: "Data imported successfully. The page will now reload." };
+  } catch (error: any) {
+    console.error("Error during data import:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    return { success: false, message: `Import failed: ${errorMessage}` };
+  }
+}

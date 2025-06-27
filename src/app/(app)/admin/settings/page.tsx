@@ -8,7 +8,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot } from 'lucide-react';
+import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot, FileUp } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Switch } from '@/components/ui/switch';
+import { exportMockDataAsJSON, importMockDataFromJSON } from '@/lib/mock-data-store';
+import { format } from 'date-fns';
 
 const adminChangeNameSchema = z.object({
   newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
@@ -42,6 +44,10 @@ export default function AdminSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isAutomatedRemindersEnabled, setAutomatedRemindersEnabled] = useState(false);
+  
+  const [isImporting, setIsImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
@@ -173,6 +179,77 @@ export default function AdminSettingsPage() {
       document.documentElement.classList.remove('dark');
     }
   }, []);
+
+  const handleDownloadAllData = () => {
+    try {
+      const jsonData = exportMockDataAsJSON();
+      if (jsonData === "{\n  \"customers\": [],\n  \"usageRecords\": [],\n  \"payments\": [],\n  \"notifications\": []\n}") {
+         toast({
+          variant: "default",
+          title: "No Data to Export",
+          description: "The data store is currently empty.",
+        });
+        return;
+      }
+      const blob = new Blob([jsonData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `AquaTrack_backup_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "Data Backup Exported",
+        description: "All current data has been downloaded as a JSON file.",
+      });
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "Could not export the data.",
+      });
+    }
+  };
+
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      toast({ variant: "destructive", title: "No File Selected", description: "Please choose a JSON file to import." });
+      return;
+    }
+    if (file.type !== 'application/json') {
+      toast({ variant: "destructive", title: "Invalid File Type", description: "Please select a valid .json backup file." });
+      return;
+    }
+
+    setIsImporting(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const jsonString = e.target?.result as string;
+        const { success, message } = importMockDataFromJSON(jsonString);
+
+        if (success) {
+          toast({ title: "Import Successful", description: message });
+          setTimeout(() => window.location.reload(), 1500); 
+        } else {
+          throw new Error(message);
+        }
+      } catch (error: any) {
+        toast({ variant: "destructive", title: "Import Failed", description: error.message || "Could not process the file." });
+      } finally {
+        setIsImporting(false);
+        if (importFileRef.current) {
+          importFileRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
+
 
   return (
     <>
@@ -332,6 +409,7 @@ export default function AdminSettingsPage() {
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
                   <h3 className="font-medium">User Management</h3>
+                  <p className="text-sm text-muted-foreground">Edit or remove customer accounts.</p>
                 </div>
                 <Button variant="outline" asChild>
                   <Link href="/admin/users"><Users className="mr-2 h-4 w-4" />Manage Users</Link>
@@ -339,15 +417,31 @@ export default function AdminSettingsPage() {
               </div>
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
-                  <h3 className="font-medium">Data Export</h3>
+                  <h3 className="font-medium">PDF Data Export</h3>
+                   <p className="text-sm text-muted-foreground">Generate PDF statements for customers.</p>
                 </div>
                 <Button variant="outline" asChild>
-                  <Link href="/admin/data-export"><FileDown className="mr-2 h-4 w-4" />Export Data</Link>
+                  <Link href="/admin/data-export"><FileDown className="mr-2 h-4 w-4" />Export PDFs</Link>
                 </Button>
+              </div>
+               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+                <div>
+                  <h3 className="font-medium">Data Backup & Restore</h3>
+                   <p className="text-sm text-muted-foreground">Save or load all app data from a JSON file.</p>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Button variant="outline" onClick={handleDownloadAllData}><FileDown className="mr-2 h-4 w-4" />Backup</Button>
+                  <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={isImporting}>
+                    {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                    Restore
+                  </Button>
+                  <Input type="file" ref={importFileRef} className="hidden" accept=".json" onChange={handleImportData} />
+                </div>
               </div>
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
                   <h3 className="font-medium">System Theme</h3>
+                   <p className="text-sm text-muted-foreground">Switch between light and dark mode.</p>
                 </div>
                 <Button variant="outline" onClick={handleToggleTheme}><Palette className="mr-2 h-4 w-4" />Toggle Theme</Button>
               </div>

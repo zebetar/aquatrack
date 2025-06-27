@@ -24,6 +24,7 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } f
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { summarizeDashboardMetrics, type DashboardMetricsSummary } from '@/ai/flows/summarize-dashboard-flow';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -424,9 +425,44 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center mt-6">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Loading dashboard data...</p>
+      <div className="mt-6 animate-fade-in">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="glassmorphism-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-5 w-2/4" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-7 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+          <Card className="glassmorphism-card">
+             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-5 w-2/4" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-7 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+          </Card>
+        </div>
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="glassmorphism-card h-full">
+              <CardHeader>
+                <Skeleton className="h-6 w-1/3" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-[120px] w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
