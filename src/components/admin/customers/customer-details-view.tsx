@@ -45,7 +45,7 @@ const DetailItem = ({ label, value, isEditing = false, id, field, editedValue, o
   onChange?: (value: string) => void;
   inputType?: string;
 }) => (
-  <div className="space-y-1 py-2">
+  <div className="space-y-1">
     <Label htmlFor={id} className="text-sm font-medium text-muted-foreground">{label}</Label>
     {isEditing && id && field && onChange ? (
       <Input
@@ -85,22 +85,22 @@ export function CustomerDetailsView({
                 <CardTitle className="text-xl">Customer Information</CardTitle>
               </AccordionTrigger>
               {!isEditing ? (
-                <Button variant="outline" size="sm" onClick={onToggleEdit} className="ml-4">
-                  <Edit className="mr-2 h-4 w-4" /> Edit Details
+                <Button variant="ghost" size="icon" onClick={onToggleEdit} className="ml-4 rounded-full h-8 w-8">
+                  <Pencil className="h-4 w-4" />
                 </Button>
               ) : (
                 <div className="flex gap-2 ml-4">
-                  <Button variant="default" size="sm" onClick={onSaveChanges}>
-                    <Save className="mr-2 h-4 w-4" /> Save
+                  <Button variant="default" size="icon" onClick={onSaveChanges} className="rounded-full h-8 w-8">
+                    <Save className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={onCancelChanges}>
-                    <XCircle className="mr-2 h-4 w-4" /> Cancel
+                  <Button variant="ghost" size="icon" onClick={onCancelChanges} className="rounded-full h-8 w-8">
+                    <XCircle className="h-4 w-4" />
                   </Button>
                 </div>
               )}
             </CardHeader>
             <AccordionContent>
-              <CardContent className="space-y-2 p-4 pt-0">
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-4 pt-0">
                 <DetailItem
                   label="Name"
                   value={customer.name}
