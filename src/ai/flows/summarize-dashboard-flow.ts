@@ -81,9 +81,12 @@ export async function summarizeDashboard(metrics: DashboardMetrics): Promise<str
             throw new Error("The AI feature requires a valid API key. Please configure it in Admin Settings.");
         }
         if (e.message.includes('NOT_FOUND') || e.message.includes('model')) {
-             throw new Error("The specified AI model was not found. This might be a region or project configuration issue in your Google Cloud account.");
+             throw new Error("Model not found. Please ensure the 'Generative Language API' or 'Vertex AI API' is enabled in your Google Cloud project and that your project has a billing account enabled.");
+        }
+        if (e.message.includes('permission_denied') || e.message.includes('PERMISSION_DENIED')) {
+            throw new Error("Permission Denied. Please ensure the 'Generative Language API' or 'Vertex AI API' is enabled in your Google Cloud project for the provided API key.");
         }
         
-        throw new Error("An unexpected error occurred while generating the summary.");
+        throw new Error("An unexpected error occurred while generating the summary. Check the server console for details.");
     }
 }
