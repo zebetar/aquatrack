@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export interface User {
@@ -47,7 +48,7 @@ export interface Notification {
   id: string;
   userId: string; // Target user's ID (viewer authUID, customerId, or admin ID 'admin001')
   message: string;
-  type: 'USAGE_LOGGED' | 'PAYMENT_RECORDED' | 'ANNOUNCEMENT' | 'BILL_REMINDER' | 'CUSTOMER_ADDED' | 'CUSTOMER_UPDATED';
+  type: 'USAGE_LOGGED' | 'PAYMENT_RECORDED' | 'ANNOUNCEMENT' | 'BILL_REMINDER' | 'CUSTOMER_ADDED' | 'CUSTOMER_UPDATED' | 'ISSUE_REPORTED';
   isRead: boolean;
   linkTo?: string; // Optional link to navigate within the app
   createdAt: Date;

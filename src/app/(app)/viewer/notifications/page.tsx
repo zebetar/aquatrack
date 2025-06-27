@@ -5,7 +5,7 @@ import type { Notification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BellRing, CheckCircle2, Droplets, CreditCard, UserCog, Palette } from 'lucide-react'; 
+import { BellRing, CheckCircle2, Droplets, CreditCard, UserCog, Palette, AlertTriangle } from 'lucide-react'; 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
@@ -22,6 +22,7 @@ const NotificationIcon = ({ type }: { type: Notification['type']}) => {
     case 'CUSTOMER_UPDATED': return <UserCog {...iconProps} />;
     case 'BILL_REMINDER': return <BellRing {...iconProps} />;
     case 'ANNOUNCEMENT': return <Palette {...iconProps} />;
+    case 'ISSUE_REPORTED': return <AlertTriangle {...iconProps} />;
     default: return <BellRing {...iconProps} />;
   }
 };

@@ -1,22 +1,25 @@
 
 "use client";
 
-import type { WaterUsageRecord } from '@/types';
+import type { WaterUsageRecord, Notification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
-// import { CORE_WATER_RATE_PER_HOUR } from '@/lib/constants'; // Not directly used here for display
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
-import { Droplets } from 'lucide-react';
+import { getMockUsageRecordsByCustomerId, addMockNotification } from '@/lib/mock-data-store';
+import { Droplets, AlertTriangle } from 'lucide-react';
 import { formatDurationFromHours } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+
 
 export default function ViewerUsagePage() {
   const { user, loading: authLoading } = useAuth();
   const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   const loadUsageData = useCallback(async () => {
     if (!user || !user.customerId) {
@@ -35,6 +38,26 @@ export default function ViewerUsagePage() {
       loadUsageData();
     }
   }, [authLoading, loadUsageData]);
+
+  const handleReportIssue = (record: WaterUsageRecord) => {
+    if (!user || !user.customerId) return;
+    
+    const issueNotification: Notification = {
+        id: `noti-issue-${Date.now()}-${record.id}`,
+        userId: 'admin001',
+        message: `Issue reported by ${user.name} for usage on ${format(new Date(record.date), 'PP')}.`,
+        type: 'ISSUE_REPORTED',
+        isRead: false,
+        linkTo: `/admin/customers/${user.customerId}`,
+        createdAt: new Date(),
+    };
+    addMockNotification(issueNotification);
+
+    toast({
+        title: "Issue Reported",
+        description: "Your report has been sent to the admin for review.",
+    });
+  };
 
   if (isLoading || authLoading) {
     return (
@@ -83,11 +106,12 @@ export default function ViewerUsagePage() {
                   <TableHead>End Time</TableHead>
                   <TableHead className="text-right">Duration</TableHead>
                   <TableHead className="text-right">Cost (PKR)</TableHead>
+                  <TableHead className="text-center">Report Issue</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {usageRecords.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center h-24">No usage records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center h-24">No usage records found.</TableCell></TableRow>
                 ) : (
                   usageRecords.map(record => (
                     <TableRow key={record.id}>
@@ -96,6 +120,11 @@ export default function ViewerUsagePage() {
                       <TableCell>{format(new Date(record.endTime), 'p')}</TableCell>
                       <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
                       <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
+                      <TableCell className="text-center">
+                        <Button variant="ghost" size="icon" title="Report an issue with this record" onClick={() => handleReportIssue(record)}>
+                            <AlertTriangle className="h-4 w-4 text-amber-500 hover:text-amber-600" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

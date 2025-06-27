@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Palette } from 'lucide-react';
+import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Palette, AlertTriangle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import type { Notification } from '@/types';
@@ -26,6 +26,7 @@ const NotificationIcon = ({ type }: { type: Notification['type']}) => {
     case 'CUSTOMER_UPDATED': return <UserCog {...iconProps} />;
     case 'BILL_REMINDER': return <BellRing {...iconProps} />;
     case 'ANNOUNCEMENT': return <Palette {...iconProps} />;
+    case 'ISSUE_REPORTED': return <AlertTriangle {...iconProps} />;
     default: return <BellRing {...iconProps} />;
   }
 };
@@ -113,12 +114,15 @@ export default function AdminNotificationsPage() {
                     key={notification.id}
                     className={cn(
                         "flex items-start space-x-4 p-4 transition-colors",
-                        !notification.isRead ? 'bg-primary/5' : 'hover:bg-muted/50'
+                        !notification.isRead ? 'bg-primary/5' : 'hover:bg-muted/50',
+                         notification.type === 'ISSUE_REPORTED' && !notification.isRead && 'bg-amber-500/10'
                     )}
                   >
                     <div className={cn(
                         "mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-                        !notification.isRead ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                        !notification.isRead ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
+                        notification.type === 'ISSUE_REPORTED' && !notification.isRead && 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
+                        notification.type === 'ISSUE_REPORTED' && notification.isRead && 'text-amber-500'
                     )}>
                       <NotificationIcon type={notification.type} />
                     </div>
