@@ -1,5 +1,4 @@
 
-import 'dotenv/config';
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -9,6 +8,11 @@ const nextConfig: NextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: false,
+  },
+  experimental: {
+    // This is required to allow the Next.js dev server to accept requests from
+    // the Firebase Studio development environment.
+    allowedDevOrigins: ['*.cloudworkstations.dev'],
   },
   images: {
     remotePatterns: [
