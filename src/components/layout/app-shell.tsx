@@ -77,45 +77,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
-      {/* Main Content Area & Mobile Integration */}
+      {/* Main Content Area */}
       <div className={cn(
           "flex flex-1 flex-col",
           !isMobile && "md:ml-[var(--sidebar-collapsed-width)]",
           "overflow-x-hidden" 
         )}
       >
-        {/* Mobile Header with Sticky Menu Trigger */}
-        {isMobile && (
-          <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background/90 px-4 backdrop-blur-sm md:hidden">
-            <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0 text-foreground">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="left"
-                className={cn(
-                  "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r rounded-r-lg",
-                  "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-light-rgb))] dark:text-[rgb(var(--sidebar-fg-dark-rgb))]" 
-                )}
-              >
-                <SheetHeader className="sr-only"> {/* Visually hidden title for accessibility */}
-                  <SheetTitle>Navigation Menu</SheetTitle>
-                </SheetHeader>
-                {sidebarHeaderContent}
-                {sidebarNavContent}
-                {mobileSidebarFooter}
-              </SheetContent>
-            </Sheet>
-          </header>
-        )}
-        
-        <main className="main-content-area flex-1 p-6">
+        <main className="main-content-area flex-1 p-6 md:pb-6 pb-24">
           {children}
         </main>
       </div>
+
+      {/* Mobile Floating Action Button (FAB) for Menu */}
+      {isMobile && (
+        <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+          <SheetTrigger asChild>
+            <Button
+              variant="default"
+              size="icon"
+              className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg md:hidden animate-fade-in"
+            >
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent
+            side="left"
+            className={cn(
+              "flex flex-col p-0 w-[var(--sidebar-expanded-width)] border-r rounded-r-lg",
+              "bg-mobile-sidebar-light dark:bg-mobile-sidebar-dark text-[rgb(var(--sidebar-fg-light-rgb))] dark:text-[rgb(var(--sidebar-fg-dark-rgb))]"
+            )}
+          >
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+            </SheetHeader>
+            {sidebarHeaderContent}
+            {sidebarNavContent}
+            {mobileSidebarFooter}
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
