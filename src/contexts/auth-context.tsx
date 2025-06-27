@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { User, Customer } from '@/types';
@@ -35,33 +34,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect now simulates session persistence using localStorage for mock auth.
     setLoading(true);
     try {
       const storedUserString = localStorage.getItem('authUser');
       if (storedUserString) {
         const storedUser = JSON.parse(storedUserString) as User;
         setUser(storedUser);
-        // Redirect if a logged-in user tries to access the login page
-        if (pathname.startsWith('/login')) {
-          if (storedUser.role === 'admin') {
-            router.replace('/admin/dashboard');
-          } else {
-            router.replace('/viewer/dashboard');
-          }
-        }
-      } else {
-         // If no stored user, and not on login page, redirect to login
-         if (!pathname.startsWith('/login')) {
-            router.replace('/login');
-         }
       }
     } catch (error) {
       console.error("Error reading auth user from localStorage", error);
       localStorage.removeItem('authUser');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [pathname, router]);
+  }, []);
 
   const login = async (email: string, password: string, role: 'admin' | 'viewer'): Promise<void> => {
     setLoading(true);
@@ -78,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(adminUser);
         localStorage.setItem('authUser', JSON.stringify(adminUser));
         toast({ title: "Admin Login Successful" });
-        router.push('/admin/dashboard');
+        router.push('/');
       } else {
         toast({ variant: "destructive", title: "Invalid Admin Email", description: "The admin email is 'admin@aquatrack.com'." });
       }
@@ -101,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(viewerUser);
           localStorage.setItem('authUser', JSON.stringify(viewerUser));
           toast({ title: "Viewer Login Successful" });
-          router.push('/viewer/dashboard');
+          router.push('/');
         } else {
           toast({ variant: "destructive", title: "Incorrect Password", description: `The password for all viewers is "${MOCK_VIEWER_PASSWORD}".` });
         }

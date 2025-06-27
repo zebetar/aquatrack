@@ -263,12 +263,14 @@
     display: flex;
     flex-direction: column;
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+  h1 { 
+    @apply text-2xl font-semibold tracking-tight;
   }
-  h1 { @apply text-3xl; }
-  h2 { @apply text-2xl; }
-  h3 { @apply text-xl; }
+  h2 { @apply text-2xl font-semibold tracking-tight; }
+  h3 { @apply text-xl font-semibold tracking-tight; }
+  h4 { @apply text-lg font-semibold tracking-tight; }
+  h5 { @apply font-semibold tracking-tight; }
+  h6 { @apply font-semibold tracking-tight; }
 
 
   .main-content-area {
