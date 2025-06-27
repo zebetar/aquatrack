@@ -6,7 +6,7 @@
  *
  * To run the server, use the command: `genkit start`
  */
-import {getFlows} from '@google/genkit/dev-server';
+import {getFlows} from 'genkit/dev';
 import {readdirSync} from 'fs';
 import {join} from 'path';
 

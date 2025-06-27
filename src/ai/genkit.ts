@@ -5,13 +5,13 @@
  * the key is not provided in the environment variables.
  */
 
-import { genkit, type GenkitErrorCode, type GenkitPlugin } from '@google/genkit';
-import { googleAI } from '@google/genkit/googleai';
-import { defineDotprompt } from 'genkit';
+import { genkit, type GenkitPlugin } from 'genkit';
+import { googleAI } from 'genkit/googleai';
+import { firebase } from '@genkit-ai/firebase';
 
 const apiKey = process.env.GOOGLE_API_KEY;
 
-const plugins: GenkitPlugin[] = [];
+const plugins: GenkitPlugin[] = [firebase()];
 
 if (apiKey) {
   // Only add the Google AI plugin if the API key is available.
