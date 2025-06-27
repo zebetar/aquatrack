@@ -38,7 +38,7 @@ export function DeleteCustomerDialog({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         {triggerButton ? triggerButton : (
-          <Button variant="ghost" size="icon" title="Delete Customer" disabled={isDeleting}>
+          <Button variant="ghost" size="icon" title="Delete Customer" disabled={isDeleting} onClick={(e) => e.stopPropagation()}>
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
           </Button>
         )}

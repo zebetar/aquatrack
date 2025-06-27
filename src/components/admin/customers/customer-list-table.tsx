@@ -92,10 +92,10 @@ export function CustomerListTable({
           </Card>
         ) : (
           customers.map((customer) => (
-            <Card key={customer.id} className="glassmorphism-card">
+            <Card key={customer.id} className="glassmorphism-card cursor-pointer" onClick={() => handleRowClick(customer.id)}>
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold" onClick={() => handleRowClick(customer.id)}>{customer.name}</h3>
+                  <h3 className="text-lg font-semibold">{customer.name}</h3>
                   <div className="flex items-center gap-2">
                     <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"} className="text-sm px-3 py-1">
                       {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
@@ -135,7 +135,7 @@ export function CustomerListTable({
                           customer={customer}
                           onCustomerUpdated={onCustomerUpdated}
                           triggerButton={
-                            <Button variant="outline" size="sm" className="w-full">
+                            <Button variant="outline" size="sm" className="w-full" onClick={(e) => e.stopPropagation()}>
                                 <Pencil className="mr-2 h-4 w-4 text-primary" /> Edit
                             </Button>
                           }
@@ -145,7 +145,7 @@ export function CustomerListTable({
                           onDeleteConfirm={() => onCustomerDeleted(customer.id)}
                           isDeleting={deletingCustomerId === customer.id}
                            triggerButton={
-                            <Button variant="destructive" size="icon">
+                            <Button variant="destructive" size="icon" onClick={(e) => e.stopPropagation()}>
                               {deletingCustomerId === customer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                             </Button>
                           }
