@@ -11,9 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuShortcut
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth-context";
-import { LogOut, User as UserIcon, Settings } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Search } from "lucide-react";
 import Link from "next/link";
 
 export function UserNav() {
@@ -31,10 +32,12 @@ export function UserNav() {
   };
 
   const avatarSrc = user.avatarUrl; 
-  const placeholderInitials = getInitials(user.name);
   const isDataUri = avatarSrc && avatarSrc.startsWith('data:image');
   const aiHint = isDataUri ? "profile picture" : (avatarSrc ? "custom avatar" : "avatar person");
 
+  const openCommandPalette = () => {
+    window.dispatchEvent(new CustomEvent('open-command-palette'));
+  }
 
   return (
     <DropdownMenu>
@@ -44,9 +47,9 @@ export function UserNav() {
             {avatarSrc ? (
               <AvatarImage src={avatarSrc} alt={user.name || "User"} data-ai-hint={aiHint} />
             ) : (
-              <AvatarImage src={`https://placehold.co/100x100.png?text=${placeholderInitials}`} alt={user.name || "User"} data-ai-hint="avatar person" />
+              <AvatarImage src={`https://placehold.co/100x100.png`} alt={user.name || "User"} data-ai-hint="avatar person" />
             )}
-            <AvatarFallback>{placeholderInitials}</AvatarFallback>
+            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -59,6 +62,12 @@ export function UserNav() {
             </p>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={openCommandPalette}>
+            <Search className="mr-2 h-4 w-4" />
+            <span>Search...</span>
+            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
@@ -85,5 +94,3 @@ export function UserNav() {
     </DropdownMenu>
   );
 }
-
-    

@@ -280,13 +280,7 @@
   background: hsl(var(--card-light)); /* Opaque white for light mode */
   border: 1px solid hsla(var(--border-light), 0.5);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease-in-out, box-shadow 0.2s ease-out;
-}
-
-.glassmorphism-card:hover {
-  border-color: hsla(var(--primary), 0.5);
-  box-shadow: 0 4px 15px hsla(var(--primary), 0.1);
-  transform: translateY(-2px);
+  transition: all 0.3s ease-in-out;
 }
 
 .dark .glassmorphism-card {
@@ -295,12 +289,6 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-}
-
-.dark .glassmorphism-card:hover {
-  border-color: hsla(var(--primary), 0.6);
-  box-shadow: 0 4px 20px hsla(var(--primary), 0.25);
-  transform: translateY(-2px);
 }
 
 /* New AI Summary Card Style */
@@ -349,7 +337,7 @@
   @apply transition-all duration-300 ease-in-out;
 }
 .interactive-card-hover:hover {
-  @apply shadow-xl transform -translate-y-1 scale-[1.02];
+  @apply shadow-xl -translate-y-1 border-primary/20;
 }
 
 

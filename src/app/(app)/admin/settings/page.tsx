@@ -8,7 +8,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle } from 'lucide-react';
+import { Loader2, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,6 +21,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Switch } from '@/components/ui/switch';
 
 const adminChangeNameSchema = z.object({
   newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
@@ -39,11 +40,24 @@ export default function AdminSettingsPage() {
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isAutomatedRemindersEnabled, setAutomatedRemindersEnabled] = useState(false);
 
   useEffect(() => {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
     setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
+    const savedReminderSetting = localStorage.getItem('automated_reminders_enabled') === 'true';
+    setAutomatedRemindersEnabled(savedReminderSetting);
   }, []);
+  
+  const handleReminderToggle = (enabled: boolean) => {
+    setAutomatedRemindersEnabled(enabled);
+    localStorage.setItem('automated_reminders_enabled', String(enabled));
+    toast({
+        title: "Automation Setting Updated",
+        description: `Automated bill reminders are now ${enabled ? 'ON' : 'OFF'}.`
+    });
+  };
 
   useEffect(() => {
     setAvatarPreview(user?.avatarUrl || null);
@@ -162,7 +176,7 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <Accordion type="multiple" defaultValue={['admin-account']} className="w-full space-y-4 mt-6">
+      <Accordion type="multiple" defaultValue={['admin-account', 'system-ops']} className="w-full space-y-4 mt-6">
         
         {/* Water Rate Section */}
         <AccordionItem value="water-rate" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
@@ -186,6 +200,29 @@ export default function AdminSettingsPage() {
                   Save Rate
                 </Button>
               </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        
+        {/* Automation Settings */}
+        <AccordionItem value="automation" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
+          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
+             <div className="flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                <h3 className="text-lg font-semibold">Automation Settings</h3>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="flex items-center justify-between rounded-lg border bg-card/50 p-4">
+                <div>
+                    <Label htmlFor="automated-reminders" className="font-semibold">Automated Bill Reminders</Label>
+                    <p className="text-sm text-muted-foreground">Automatically send notifications to customers with outstanding bills.</p>
+                </div>
+                <Switch 
+                    id="automated-reminders"
+                    checked={isAutomatedRemindersEnabled}
+                    onCheckedChange={handleReminderToggle}
+                />
             </div>
           </AccordionContent>
         </AccordionItem>

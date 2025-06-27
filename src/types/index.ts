@@ -11,7 +11,7 @@ export interface User {
 }
 
 export interface Customer {
-  id: string;
+  id:string;
   name: string;
   email?: string; // Email used for the linked viewer account
   contactInfo?: string; // e.g., phone number or address
@@ -68,4 +68,14 @@ export interface CustomerMonthlyUsage {
   name: string;
   usageHours: number;
   cost: number;
+}
+
+export interface CommandItem {
+  id: string;
+  type: 'page' | 'customer' | 'action';
+  title: string;
+  description?: string;
+  icon: React.ElementType;
+  href?: string;
+  action?: () => void;
 }
