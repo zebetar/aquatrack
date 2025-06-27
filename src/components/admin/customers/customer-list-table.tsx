@@ -25,6 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 interface CustomerWithUsage extends Customer {
   totalUsageHours?: number;
@@ -33,7 +34,7 @@ interface CustomerWithUsage extends Customer {
 interface CustomerListTableProps {
   customers: CustomerWithUsage[];
   onCustomerDeleted: (customerId: string) => void;
-  onCustomerUpdated: (customer: Customer) => void;
+  onCustomerUpdated?: (customer: Customer) => void;
   deletingCustomerId: string | null;
   enableActions?: boolean;
   className?: string;
@@ -78,6 +79,10 @@ export function CustomerListTable({
     router.push(`/admin/customers/${customerId}`);
   };
 
+  const handleActionClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   const numberOfColumns = enableActions ? 6 : 4;
 
   return (
@@ -92,7 +97,9 @@ export function CustomerListTable({
           </Card>
         ) : (
           customers.map((customer) => (
-            <Card key={customer.id} className="glassmorphism-card cursor-pointer" onClick={() => handleRowClick(customer.id)}>
+            <Card key={customer.id} className="glassmorphism-card relative hover:bg-muted/50 transition-colors">
+              <Link href={`/admin/customers/${customer.id}`} className="absolute inset-0 z-10" aria-label={`View details for ${customer.name}`} />
+              
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">{customer.name}</h3>
@@ -113,7 +120,7 @@ export function CustomerListTable({
                     <p className="font-medium">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="relative z-20 grid grid-cols-2 gap-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -129,13 +136,13 @@ export function CustomerListTable({
                     )}
                     Statement
                   </Button>
-                   {enableActions && (
+                   {enableActions && onCustomerUpdated && (
                       <div className="flex justify-end gap-1">
                         <EditCustomerDialog
                           customer={customer}
                           onCustomerUpdated={onCustomerUpdated}
                           triggerButton={
-                            <Button variant="outline" size="sm" className="w-full" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="outline" size="sm" className="w-full" onClick={handleActionClick}>
                                 <Pencil className="mr-2 h-4 w-4 text-primary" /> Edit
                             </Button>
                           }
@@ -145,7 +152,7 @@ export function CustomerListTable({
                           onDeleteConfirm={() => onCustomerDeleted(customer.id)}
                           isDeleting={deletingCustomerId === customer.id}
                            triggerButton={
-                            <Button variant="destructive" size="icon" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="destructive" size="icon" onClick={handleActionClick}>
                               {deletingCustomerId === customer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                             </Button>
                           }
@@ -215,7 +222,7 @@ export function CustomerListTable({
                       )}
                     </Button>
                   </TableCell>
-                  {enableActions && (
+                  {enableActions && onCustomerUpdated && (
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <EditCustomerDialog 
