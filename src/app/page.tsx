@@ -1,10 +1,10 @@
+
 "use client";
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { Droplets, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Droplets } from 'lucide-react';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -29,24 +29,11 @@ export default function HomePage() {
     }
   }, [user, loading, router]);
 
-  // This splash screen mimics the login card for a seamless transition effect
+  // This splash screen shows only the icon animating.
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 animated-login-bg">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl glassmorphism-card animate-splash-pop w-full">
-          <CardHeader className="items-center text-center">
-            <div className="mb-2 flex items-center justify-center rounded-full bg-sky-500/10 p-3 text-sky-500">
-              <Droplets className="h-10 w-10" />
-            </div>
-            <CardTitle className="text-4xl font-bold lowercase tracking-tighter text-sky-500 animate-shimmer">aquatrack</CardTitle>
-          </CardHeader>
-          <CardContent className="py-8 text-center">
-             <div className="flex items-center justify-center text-muted-foreground">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
-                <p>Loading your dashboard...</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="animate-icon-pop">
+        <Droplets className="h-24 w-24 text-sky-500" />
       </div>
     </div>
   );

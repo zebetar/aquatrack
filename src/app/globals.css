@@ -535,22 +535,22 @@
 }
 
 /* Splash Screen Animation */
-@keyframes splash-pop {
+@keyframes icon-pop-and-fade {
   0% {
     transform: scale(1);
     opacity: 1;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.2);
     opacity: 1;
   }
   100% {
-    transform: scale(0.9);
+    transform: scale(0.5);
     opacity: 0;
   }
 }
 
-.animate-splash-pop {
+.animate-icon-pop {
   /* Animation duration must match the redirect timer in src/app/page.tsx */
-  animation: splash-pop 1.5s cubic-bezier(0.5, 0, 0.5, 1) forwards;
+  animation: icon-pop-and-fade 1.5s cubic-bezier(0.5, 0, 0.5, 1) forwards;
 }
