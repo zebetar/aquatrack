@@ -79,3 +79,17 @@ export interface CommandItem {
   href?: string;
   action?: () => void;
 }
+
+// Schemas and Types for Revenue Projection
+export const ProjectRevenueInputSchema = z.object({
+  lastMonthRevenue: z.number().describe("The total revenue from the previous month."),
+  currentMonthRevenue: z.number().describe("The total revenue so far in the current month."),
+  currentDate: z.string().describe("The current date in ISO 8601 format."),
+});
+export type ProjectRevenueInput = z.infer<typeof ProjectRevenueInputSchema>;
+
+export const ProjectedRevenueOutputSchema = z.object({
+  projectedAmount: z.number().describe("The forecasted revenue amount for the next month."),
+  reasoning: z.string().describe("A brief (1-2 sentences) explanation of the key factors that influenced the projection, such as seasonality or weather."),
+});
+export type ProjectedRevenueOutput = z.infer<typeof ProjectedRevenueOutputSchema>;

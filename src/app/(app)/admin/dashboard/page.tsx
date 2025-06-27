@@ -11,7 +11,7 @@ import {
   getMockOutstandingCustomers,
   addMockNotification
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, CustomerMonthlyUsage, Notification } from '@/types';
+import type { Customer, WaterUsageRecord, CustomerMonthlyUsage, Notification, ProjectedRevenueOutput } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, isAfter, subHours } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { summarizeDashboardMetrics, type DashboardMetricsSummary } from '@/ai/flows/summarize-dashboard-flow';
-import { projectRevenue, type ProjectedRevenueOutput } from '@/ai/flows/project-revenue-flow';
+import { projectRevenue } from '@/ai/flows/project-revenue-flow';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TooltipProvider, Tooltip as UITooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

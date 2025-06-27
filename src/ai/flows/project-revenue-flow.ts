@@ -5,25 +5,9 @@
  * @fileOverview A mock flow to project future revenue based on historical data and simulated factors.
  * This function simulates an AI projection without making any external API calls.
  * - projectRevenue - A function that projects next month's revenue.
- * - ProjectRevenueInput - The input type for the projectRevenue function.
- * - ProjectedRevenueOutput - The return type for the projectRevenue function.
  */
 
-import { z } from 'zod';
-
-export const ProjectRevenueInputSchema = z.object({
-  lastMonthRevenue: z.number().describe("The total revenue from the previous month."),
-  currentMonthRevenue: z.number().describe("The total revenue so far in the current month."),
-  currentDate: z.string().describe("The current date in ISO 8601 format."),
-});
-export type ProjectRevenueInput = z.infer<typeof ProjectRevenueInputSchema>;
-
-export const ProjectedRevenueOutputSchema = z.object({
-  projectedAmount: z.number().describe("The forecasted revenue amount for the next month."),
-  reasoning: z.string().describe("A brief (1-2 sentences) explanation of the key factors that influenced the projection, such as seasonality or weather."),
-});
-export type ProjectedRevenueOutput = z.infer<typeof ProjectedRevenueOutputSchema>;
-
+import type { ProjectRevenueInput, ProjectedRevenueOutput } from '@/types';
 
 export async function projectRevenue(input: ProjectRevenueInput): Promise<ProjectedRevenueOutput> {
   // Simulate network delay to mimic a real API call
