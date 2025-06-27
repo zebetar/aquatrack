@@ -72,6 +72,7 @@ export function CustomerDetailsView({
             <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-16"></TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Time Range</TableHead>
                   <TableHead className="text-right">Duration</TableHead>
@@ -81,14 +82,19 @@ export function CustomerDetailsView({
               </TableHeader>
               <TableBody>
                 {usageRecords.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center h-24">No usage records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center h-24">No usage records found.</TableCell></TableRow>
                 ) : (
                   usageRecords.map(record => (
                     <TableRow key={record.id}>
+                      <TableCell>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                          <Droplets className="h-5 w-5 text-primary" />
+                        </div>
+                      </TableCell>
                       <TableCell>{format(new Date(record.date), 'PP')}</TableCell>
                       <TableCell>{`${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}</TableCell>
                       <TableCell className="text-right">{formatDurationFromHours(record.durationHours)}</TableCell>
-                      <TableCell className="text-right">{record.cost.toLocaleString('en-US')}</TableCell>
+                      <TableCell className="text-right font-semibold">{record.cost.toLocaleString('en-US')}</TableCell>
                       <TableCell className="text-center">
                         <EditUsageRecordDialog 
                           usageRecord={record} 
@@ -141,6 +147,7 @@ export function CustomerDetailsView({
             <Table className="min-w-[550px]">
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-16"></TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead className="text-right">Amount Paid (PKR)</TableHead>
@@ -149,13 +156,18 @@ export function CustomerDetailsView({
               </TableHeader>
               <TableBody>
                 {payments.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center h-24">No payment records found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center h-24">No payment records found.</TableCell></TableRow>
                 ) : (
                   payments.map(payment => (
                     <TableRow key={payment.id}>
+                      <TableCell>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10 dark:bg-green-500/20">
+                          <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                      </TableCell>
                       <TableCell>{format(new Date(payment.paymentDate), 'PP')}</TableCell>
                       <TableCell>{format(new Date(payment.paymentDate), 'p')}</TableCell>
-                      <TableCell className="text-right">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
+                      <TableCell className="text-right font-semibold text-green-600 dark:text-green-500">{payment.amountPaid.toLocaleString('en-US')}</TableCell>
                       <TableCell className="text-center">
                         <EditPaymentRecordDialog 
                           paymentRecord={payment} 
