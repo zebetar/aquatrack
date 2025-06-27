@@ -8,11 +8,10 @@
 
 import { genkit, type GenkitPlugin } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
 
 const apiKey = process.env.GOOGLE_API_KEY;
 
-const plugins: GenkitPlugin[] = [enableFirebaseTelemetry()];
+const plugins: GenkitPlugin[] = [];
 
 if (apiKey) {
   // Only add the Google AI plugin if the API key is available.
@@ -41,9 +40,7 @@ if (apiKey) {
 // Configure Genkit with the available plugins.
 export const ai = genkit({
   plugins,
-  // This allows Genkit to gracefully handle errors, like a missing API key,
-  // without crashing the entire server. The error can be caught in the flow.
-  flowStateStore: 'firebase',
-  traceStore: 'firebase',
+  // Using in-memory storage for development.
+  // flowStateStore and traceStore are removed as they require the Firebase plugin.
   enableTracingAndMetrics: true,
 });
