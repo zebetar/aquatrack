@@ -5,17 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, parseISO, getDaysInMonth } from 'date-fns';
 import { getAllMockUsageRecords, getAllMockCustomers } from '@/lib/mock-data-store';
-import type { Customer } from '@/types';
+import type { Customer, WaterUsageRecord } from '@/types';
 import { formatDurationFromHours, cn } from '@/lib/utils';
 import { Loader2, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert, Droplets } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface MonthlyData {
-  month: string;
-  monthLabel: string;
+interface ChartDataPoint {
+  label: string;
   supply: number;
   revenue: number;
 }
@@ -51,8 +51,15 @@ export default function AdminReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   
-  const [chartData, setChartData] = useState<MonthlyData[]>([]);
-  
+  const [allUsageRecords, setAllUsageRecords] = useState<WaterUsageRecord[]>([]);
+
+  // Chart State
+  const [supplyChartView, setSupplyChartView] = useState<'monthly' | 'daily'>('monthly');
+  const [revenueChartView, setRevenueChartView] = useState<'monthly' | 'daily'>('monthly');
+  const [supplyChartData, setSupplyChartData] = useState<ChartDataPoint[]>([]);
+  const [revenueChartData, setRevenueChartData] = useState<ChartDataPoint[]>([]);
+
+  // Monthly Stats
   const [supplyThisMonth, setSupplyThisMonth] = useState(0);
   const [revenueThisMonth, setRevenueThisMonth] = useState(0);
   const [supplyChange, setSupplyChange] = useState(0);
@@ -79,33 +86,11 @@ export default function AdminReportsPage() {
   const loadReportsData = useCallback(() => {
     setIsLoading(true);
     
-    const allUsageRecords = getAllMockUsageRecords();
-    const allCustomers = getAllMockCustomers();
-    const selectedDate = parseISO(selectedMonth);
-
-    const historicalMap = new Map<string, { supply: number, revenue: number }>();
-    for (let i = 5; i >= 0; i--) {
-        const date = subMonths(selectedDate, i);
-        const monthKey = format(date, 'yyyy-MM');
-        historicalMap.set(monthKey, { supply: 0, revenue: 0 });
-    }
+    const records = getAllMockUsageRecords();
+    const customers = getAllMockCustomers();
+    setAllUsageRecords(records);
     
-    allUsageRecords.forEach(record => {
-        const recordDate = new Date(record.date);
-        const monthKey = format(recordDate, 'yyyy-MM');
-        if (historicalMap.has(monthKey)) {
-            const current = historicalMap.get(monthKey)!;
-            current.supply += record.durationHours;
-            current.revenue += record.cost;
-        }
-    });
-
-    const processedChartData: MonthlyData[] = Array.from(historicalMap.entries()).map(([month, data]) => ({
-      month,
-      monthLabel: format(parseISO(month + '-01'), 'MMM'),
-      ...data,
-    }));
-    setChartData(processedChartData);
+    const selectedDate = parseISO(selectedMonth);
 
     const firstDayOfMonth = startOfMonth(selectedDate);
     const lastDayOfMonth = endOfMonth(selectedDate);
@@ -113,8 +98,8 @@ export default function AdminReportsPage() {
     const firstDayOfLastMonth = startOfMonth(lastMonthDate);
     const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-    const usageThisMonth = allUsageRecords.filter(r => new Date(r.date) >= firstDayOfMonth && new Date(r.date) <= lastDayOfMonth);
-    const usageLastMonth = allUsageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+    const usageThisMonth = records.filter(r => new Date(r.date) >= firstDayOfMonth && new Date(r.date) <= lastDayOfMonth);
+    const usageLastMonth = records.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
     
     const currentMonthSupply = usageThisMonth.reduce((sum, r) => sum + r.durationHours, 0);
     const currentMonthRevenue = usageThisMonth.reduce((sum, r) => sum + r.cost, 0);
@@ -139,7 +124,7 @@ export default function AdminReportsPage() {
     setTopCustomers(processedTopCustomers);
 
     setTotalRevenue(currentMonthRevenue);
-    const totalOutstanding = allCustomers.reduce((sum, customer) => sum + customer.balance, 0);
+    const totalOutstanding = customers.reduce((sum, customer) => sum + customer.balance, 0);
     setOutstandingBalance(totalOutstanding);
     const activeCustomersThisMonth = customerConsumptionMap.size;
     setAverageConsumption(activeCustomersThisMonth > 0 ? currentMonthSupply / activeCustomersThisMonth : 0);
@@ -150,6 +135,74 @@ export default function AdminReportsPage() {
   useEffect(() => {
     loadReportsData();
   }, [loadReportsData]);
+
+  // Combined Effect for Chart Data
+  useEffect(() => {
+      if (allUsageRecords.length === 0) return;
+      const selectedDate = parseISO(selectedMonth);
+
+      const createMonthlyData = () => {
+          const historicalMap = new Map<string, { supply: number; revenue: number }>();
+          for (let i = 5; i >= 0; i--) {
+              const date = subMonths(selectedDate, i);
+              const monthKey = format(date, 'yyyy-MM');
+              historicalMap.set(monthKey, { supply: 0, revenue: 0 });
+          }
+          allUsageRecords.forEach(record => {
+              const recordDate = new Date(record.date);
+              const monthKey = format(recordDate, 'yyyy-MM');
+              if (historicalMap.has(monthKey)) {
+                  const current = historicalMap.get(monthKey)!;
+                  current.supply += record.durationHours;
+                  current.revenue += record.cost;
+              }
+          });
+          return Array.from(historicalMap.entries()).map(([month, data]) => ({
+              label: format(parseISO(month + '-01'), 'MMM'), ...data
+          }));
+      };
+
+      const createDailyData = () => {
+          const dailyMap = new Map<string, { supply: number; revenue: number }>();
+          const firstDay = startOfMonth(selectedDate);
+          const lastDay = endOfMonth(selectedDate);
+          
+          for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+              const dayKey = format(d, 'yyyy-MM-dd');
+              dailyMap.set(dayKey, { supply: 0, revenue: 0 });
+          }
+
+          const usageInMonth = allUsageRecords.filter(r => {
+            const rDate = new Date(r.date);
+            return rDate >= firstDay && rDate <= lastDay;
+          });
+
+          usageInMonth.forEach(record => {
+              const dayKey = format(new Date(record.date), 'yyyy-MM-dd');
+              if (dailyMap.has(dayKey)) {
+                  const current = dailyMap.get(dayKey)!;
+                  current.supply += record.durationHours;
+                  current.revenue += record.cost;
+              }
+          });
+          return Array.from(dailyMap.entries()).map(([day, data]) => ({
+              label: format(parseISO(day), 'd'), ...data
+          }));
+      };
+
+      if (supplyChartView === 'monthly') {
+          setSupplyChartData(createMonthlyData());
+      } else {
+          setSupplyChartData(createDailyData());
+      }
+
+      if (revenueChartView === 'monthly') {
+          setRevenueChartData(createMonthlyData());
+      } else {
+          setRevenueChartData(createDailyData());
+      }
+  }, [allUsageRecords, supplyChartView, revenueChartView, selectedMonth]);
+
 
   const selectedMonthLabel = monthOptions.find(m => m.value === selectedMonth)?.label || "Selected Month";
 
@@ -181,8 +234,18 @@ export default function AdminReportsPage() {
       <h2 className="text-xl font-semibold">Monthly Performance</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="glassmorphism-card">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base font-medium text-muted-foreground">Supply Volume</CardTitle>
+            <Tabs
+              value={supplyChartView}
+              onValueChange={(value) => setSupplyChartView(value as 'monthly' | 'daily')}
+              className="w-auto"
+            >
+              <TabsList className="h-8">
+                  <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
+                  <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatDurationFromHours(supplyThisMonth)}</div>
@@ -192,8 +255,8 @@ export default function AdminReportsPage() {
             </div>
             <div className="h-[120px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="monthLabel" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                <BarChart data={supplyChartData}>
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}} formatter={(value) => [formatDurationFromHours(Number(value)), "Supply"]}/>
                   <Bar dataKey="supply" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -203,8 +266,18 @@ export default function AdminReportsPage() {
         </Card>
 
         <Card className="glassmorphism-card">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base font-medium text-muted-foreground">Revenue</CardTitle>
+            <Tabs
+              value={revenueChartView}
+              onValueChange={(value) => setRevenueChartView(value as 'monthly' | 'daily')}
+              className="w-auto"
+            >
+              <TabsList className="h-8">
+                  <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
+                  <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">PKR {revenueThisMonth.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
@@ -214,16 +287,16 @@ export default function AdminReportsPage() {
             </div>
             <div className="h-[120px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                 <AreaChart data={chartData}>
+                 <AreaChart data={revenueChartData}>
                     <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorRevenueReports" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="monthLabel" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                    <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                     <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}} formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, "Revenue"]} />
-                    <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenueReports)" strokeWidth={2} />
                  </AreaChart>
               </ResponsiveContainer>
             </div>
