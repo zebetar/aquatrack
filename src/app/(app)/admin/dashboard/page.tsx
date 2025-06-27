@@ -364,7 +364,7 @@ export default function AdminDashboardPage() {
   const handleGenerateSummary = async () => {
     setIsAiSummaryLoading(true);
     setAiSummary('');
-    setAiSummaryError(''); // Clear previous errors
+    setAiSummaryError('');
     try {
         const metrics: DashboardMetrics = {
             totalCustomers,
@@ -380,10 +380,14 @@ export default function AdminDashboardPage() {
         console.error("AI summary failed:", error);
         
         let detailedError = "An unknown error occurred while generating the summary.";
-        if (error.message && error.message.includes('FAILED_PRECONDITION')) {
-            detailedError = "The AI feature failed because the server is missing the required API key. Please go to Admin Settings, copy the instructions from the 'API Key Management' section to create a `.env.local` file, and then restart the development server.";
-        } else {
-            detailedError = "Could not generate summary. Please check the server logs for more details."
+        if (error.message) {
+            if (error.message.includes('FAILED_PRECONDITION')) {
+                detailedError = "The AI feature failed because the server is missing the required API key. Go to Admin Settings, copy the instructions from 'API Key Management' to create a `.env.local` file, and restart the development server.";
+            } else if (error.message.includes('NOT_FOUND')) {
+                detailedError = "The AI model was not found. This can happen if your Google Cloud project does not have the Vertex AI API enabled or if billing is not set up. Please verify your project configuration in the Google Cloud Console.";
+            } else {
+                detailedError = "Could not generate summary. Check the server logs for more details.";
+            }
         }
 
         setAiSummaryError(detailedError);
