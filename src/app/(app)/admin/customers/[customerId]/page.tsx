@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
@@ -258,16 +257,20 @@ export default function CustomerDetailPage() {
 
   return (
     <div className="mt-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{customer.name}</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 self-start">
+            <Button asChild variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-muted">
+              <Link href="/admin/customers" aria-label="Back to Customers List">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl pt-1">{customer.name}</h1>
+        </div>
         <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
           {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
           {!isEditing && <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />}
         </div>
       </div>
-      <Button variant="link" asChild className="mb-6 px-0 h-auto -ml-1">
-          <Link href="/admin/customers"><ArrowLeft className="mr-2 h-4 w-4" />Back to Customers List</Link>
-      </Button>
       
       {showInlineLoader && (
         <div className="my-4 flex items-center justify-center text-muted-foreground">
