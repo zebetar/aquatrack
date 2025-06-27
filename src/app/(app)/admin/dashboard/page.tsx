@@ -404,74 +404,8 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+      <div className="flex items-center justify-between mt-6">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <Button onClick={handleGenerateSummary} disabled={isSummaryLoading}>
-          {isSummaryLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Sparkles className="mr-2 h-4 w-4" />
-          )}
-          Generate Summary
-        </Button>
-      </div>
-
-      <div className="mt-4">
-        {isSummaryLoading && (
-          <Card className="ai-summary-card animate-pulse">
-            <CardHeader className="flex flex-row items-center gap-3">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <CardTitle>Generating AI Summary...</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="h-4 bg-muted rounded w-3/4"></div>
-              <div className="h-4 bg-muted rounded w-1/2"></div>
-              <div className="h-4 bg-muted rounded w-5/6"></div>
-            </CardContent>
-          </Card>
-        )}
-        
-        {summaryError && (
-          <Card className="border-destructive/50 bg-destructive/10 text-destructive-foreground">
-            <CardHeader className="flex flex-row items-center gap-3">
-              <AlertTriangle className="h-6 w-6 text-destructive" />
-              <CardTitle>Error Generating Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{summaryError}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {summary && !isSummaryLoading && !summaryError && (
-          <Card className="ai-summary-card animate-fade-in">
-            <CardHeader className="flex flex-row items-center gap-3 pb-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <CardTitle>Dashboard Summary</CardTitle>
-              <Badge variant={summary.overallStatus === 'positive' ? 'default' : summary.overallStatus === 'negative' ? 'destructive' : 'secondary'} className="capitalize ml-auto">
-                {summary.overallStatus}
-              </Badge>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-              <div>
-                <h4 className="font-semibold mb-2 text-foreground">Key Takeaways</h4>
-                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  {summary.keyTakeaways.map((item, index) => (
-                    <li key={`takeaway-${index}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 text-foreground">Improvement Suggestions</h4>
-                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  {summary.improvementSuggestions.map((item, index) => (
-                    <li key={`suggestion-${index}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6 animate-fade-in">
@@ -486,6 +420,76 @@ export default function AdminDashboardPage() {
             onClick={metric.onClick}
           />
         ))}
+      </div>
+      
+      {/* New AI Summary Section */}
+      <div className="mt-8 animate-fade-in" style={{animationDelay: '0.1s'}}>
+        <Card className="ai-summary-card">
+            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        AI-Powered Summary
+                    </CardTitle>
+                    <p className="text-muted-foreground text-sm mt-1">Get an instant analysis of your key metrics.</p>
+                </div>
+                <Button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="w-full sm:w-auto">
+                    {isSummaryLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Generate Summary
+                </Button>
+            </CardHeader>
+
+            {(isSummaryLoading || summaryError || summary) && (
+                 <CardContent>
+                    {isSummaryLoading && (
+                        <div className="space-y-4 pt-4 animate-pulse">
+                            <p className="text-sm text-muted-foreground">Generating summary...</p>
+                            <div className="h-4 bg-muted rounded w-3/4"></div>
+                            <div className="h-4 bg-muted rounded w-1/2" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="h-4 bg-muted rounded w-5/6" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                    )}
+                    {summaryError && (
+                        <div className="border-l-4 border-destructive bg-destructive/10 p-4">
+                            <h4 className="font-bold text-destructive flex items-center gap-2"><AlertTriangle className="h-5 w-5"/>Error</h4>
+                            <p className="mt-2 text-destructive-foreground">{summaryError}</p>
+                        </div>
+                    )}
+                    {summary && !isSummaryLoading && !summaryError && (
+                        <div className="border-t pt-4 mt-4">
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="font-semibold text-lg">Analysis Complete</h3>
+                                <Badge variant={summary.overallStatus === 'positive' ? 'default' : summary.overallStatus === 'negative' ? 'destructive' : 'secondary'} className="capitalize">
+                                    {summary.overallStatus}
+                                </Badge>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="font-semibold mb-2 text-foreground">Key Takeaways</h4>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                        {summary.keyTakeaways.map((item, index) => (
+                                        <li key={`takeaway-${index}`}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2 text-foreground">Improvement Suggestions</h4>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                        {summary.improvementSuggestions.map((item, index) => (
+                                        <li key={`suggestion-${index}`}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            )}
+        </Card>
       </div>
 
       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
@@ -618,8 +622,3 @@ export default function AdminDashboardPage() {
   );
 }
     
-
-    
-
-    
-
