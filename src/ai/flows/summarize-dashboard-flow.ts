@@ -8,17 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-
-export const DashboardMetricsSchema = z.object({
-  totalCustomers: z.number().describe('The total number of customers.'),
-  monthlySupply: z.number().describe('The total water supply in hours for the current month.'),
-  monthlyRevenue: z.number().describe('The total revenue in PKR for the current month.'),
-  outstandingBillsValue: z.number().describe('The total value of all outstanding bills in PKR.'),
-  supplyChange: z.number().describe('The percentage change in supply compared to the previous month.'),
-  revenueChange: z.number().describe('The percentage change in revenue compared to the previous month.'),
-});
-
-export type DashboardMetrics = z.infer<typeof DashboardMetricsSchema>;
+import { DashboardMetricsSchema, type DashboardMetrics } from '@/types';
 
 const summaryPrompt = ai.definePrompt({
     name: 'summarizeDashboardPrompt',
