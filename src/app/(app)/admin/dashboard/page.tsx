@@ -26,7 +26,15 @@ import { summarizeDashboardMetrics, type DashboardMetricsSummary } from '@/ai/fl
 import { projectRevenue } from '@/ai/flows/project-revenue-flow';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TooltipProvider, Tooltip as UITooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -173,6 +181,7 @@ export default function AdminDashboardPage() {
   const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
   const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
   const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false);
+  const [isProjectionInfoOpen, setIsProjectionInfoOpen] = useState(false);
 
   // Chart state
   const [allUsageRecords, setAllUsageRecords] = useState<WaterUsageRecord[]>([]);
@@ -567,24 +576,16 @@ export default function AdminDashboardPage() {
           </Card>
         ) : (
           <KeyMetricCard 
-              title='Projected Revenue'
-              value={`PKR ${projection?.projectedAmount.toLocaleString('en-US', {maximumFractionDigits: 0}) ?? '0'}`}
-              icon={TrendingUp}
-              description={
-                  <TooltipProvider>
-                      <UITooltip>
-                      <TooltipTrigger asChild>
-                          <span className="flex items-center gap-1 cursor-help">
-                          AI-powered forecast
-                          <Info className="h-3 w-3 text-muted-foreground" />
-                          </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                          <p className="max-w-xs text-sm">{projection?.reasoning}</p>
-                      </TooltipContent>
-                      </UITooltip>
-                  </TooltipProvider>
-              }
+            title='Projected Revenue'
+            value={`PKR ${projection?.projectedAmount.toLocaleString('en-US', {maximumFractionDigits: 0}) ?? '0'}`}
+            icon={TrendingUp}
+            onClick={() => setIsProjectionInfoOpen(true)}
+            description={
+              <span className="flex items-center gap-1">
+                View forecast details
+                <Info className="h-3 w-3 text-muted-foreground" />
+              </span>
+            }
           />
         )}
       </div>
@@ -785,6 +786,21 @@ export default function AdminDashboardPage() {
         onClose={() => setIsOutstandingBillsDialogOpen(false)}
         data={customersWithOutstandingBills}
       />
+      <AlertDialog open={isProjectionInfoOpen} onOpenChange={setIsProjectionInfoOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Revenue Projection Analysis</AlertDialogTitle>
+                <AlertDialogDescription className="pt-2">
+                    {projection?.reasoning || "No reasoning available for this projection."}
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setIsProjectionInfoOpen(false)}>
+                    Close
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
