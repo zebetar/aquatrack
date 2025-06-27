@@ -60,29 +60,29 @@ export async function projectRevenue(input: ProjectRevenueInput): Promise<Projec
     // Temperature factors
     if (isHot) {
       weatherModifier *= 1.25; 
-      positiveFactors.push("a forecast of very hot weather");
+      positiveFactors.push("Forecast: Very hot weather");
     } else if (isWarm) {
       weatherModifier *= 1.10;
-      positiveFactors.push("a forecast of warm weather");
+      positiveFactors.push("Forecast: Warm weather");
     }
 
     if (isCool) {
       weatherModifier *= 0.90;
-      negativeFactors.push("a forecast of cool weather");
+      negativeFactors.push("Forecast: Cool weather");
     }
     
     // Precipitation factors - make them more explicit
     if (totalPrecipitation > 20) {
       weatherModifier *= 0.80; // Strong decrease for significant rain
-      negativeFactors.push("an expectation of significant rainfall");
+      negativeFactors.push("Forecast: Significant rainfall");
     } else if (totalPrecipitation > 5) {
       weatherModifier *= 0.95; // Minor decrease for some rain
-      negativeFactors.push("a forecast for some light rain");
+      negativeFactors.push("Forecast: Light rain");
     } else {
       // If there's no significant rain, and it's hot, it's a positive factor.
       if (isHot || isWarm) {
         weatherModifier *= 1.05; // Minor increase for dry and hot conditions
-        positiveFactors.push("continued dry conditions");
+        positiveFactors.push("Forecast: Dry conditions");
       }
     }
     
@@ -94,12 +94,12 @@ export async function projectRevenue(input: ProjectRevenueInput): Promise<Projec
      // Summer months in Lodhran: April (3) to September (8)
      if (month >= 3 && month <= 8) {
         weatherModifier *= 1.15;
-        positiveFactors.push("typical hot summer conditions");
+        positiveFactors.push("Seasonality: Hot summer");
      }
      // Winter months: November (10) to February (1)
      if (month >= 10 || month <= 1) {
         weatherModifier *= 0.85;
-        negativeFactors.push("typical cool winter conditions");
+        negativeFactors.push("Seasonality: Cool winter");
      }
   }
 
@@ -109,7 +109,7 @@ export async function projectRevenue(input: ProjectRevenueInput): Promise<Projec
   const isHarvestSeason = month === 3 || month === 9;
   if(isHarvestSeason) {
     weatherModifier *= 0.95; // 5% decrease for harvesting
-    negativeFactors.push("the ongoing harvest season");
+    negativeFactors.push("Seasonality: Harvest season");
   }
 
   // Apply the modifier
@@ -121,26 +121,24 @@ export async function projectRevenue(input: ProjectRevenueInput): Promise<Projec
 
   // Construct final reasoning string with percentage and clearer details
   const percentageChange = baseline > 0 ? ((projectedAmount - baseline) / baseline) * 100 : (projectedAmount > 0 ? 100 : 0);
-  const roundedPercentage = Math.round(Math.abs(percentageChange));
+  const roundedPercentage = Math.round(percentageChange);
   
-  const isIncrease = percentageChange > 2;
-  const isDecrease = percentageChange < -2;
+  const reasoningParts: string[] = [];
 
-  let reasoningIntro = "";
-  if (isIncrease) {
-    reasoningIntro = `Revenue is projected to increase by approximately ${roundedPercentage}%. `;
-  } else if (isDecrease) {
-    reasoningIntro = `Revenue is projected to decrease by approximately ${roundedPercentage}%. `;
-  } else {
-    reasoningIntro = "Revenue is expected to remain stable this month. ";
-  }
-
+  // Add the main projection line
+  reasoningParts.push(`Projected Change: ${roundedPercentage >= 0 ? '+' : ''}${roundedPercentage}%`);
+  
   const allFactors = [...positiveFactors, ...negativeFactors];
   if (allFactors.length > 0) {
-    finalReasoning = reasoningIntro + `This forecast is influenced by factors including: ${allFactors.join(', ')}.`;
+    reasoningParts.push("\nKey Factors:");
+    const factorPoints = allFactors.map(factor => `• ${factor}`);
+    reasoningParts.push(...factorPoints);
   } else {
-    finalReasoning = reasoningIntro + "This forecast is based on historical performance as no significant external factors were detected.";
+    reasoningParts.push("\nBased on historical performance as no significant external factors were detected.");
   }
+
+  finalReasoning = reasoningParts.join('\n');
+
 
   // Ensure projection is not negative
   if (projectedAmount < 0) {

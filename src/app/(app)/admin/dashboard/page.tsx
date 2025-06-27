@@ -790,7 +790,7 @@ export default function AdminDashboardPage() {
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Revenue Projection Analysis</AlertDialogTitle>
-                <AlertDialogDescription className="pt-2">
+                <AlertDialogDescription className="pt-2 whitespace-pre-line">
                     {projection?.reasoning || "No reasoning available for this projection."}
                 </AlertDialogDescription>
             </AlertDialogHeader>
