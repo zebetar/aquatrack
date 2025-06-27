@@ -404,10 +404,6 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between mt-6">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-      </div>
-
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6 animate-fade-in">
         {metrics.map(metric => (
           <KeyMetricCard 
@@ -621,4 +617,6 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+    
+
     
