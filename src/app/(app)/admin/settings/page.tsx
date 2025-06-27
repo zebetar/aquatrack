@@ -268,7 +268,16 @@ export default function AdminSettingsPage() {
                         <span className="font-bold">You must restart the development server.</span> Use the restart button (🔄) at the top of the preview panel for the change to take effect.
                     </li>
                 </ol>
-                <p className="text-sm mt-2">After restarting, the "Server API Key Status" above should change to "Detected".</p>
+                <div className="mt-4">
+                    <h5 className="font-semibold">Check your formatting!</h5>
+                    <p className="text-sm">Even small typos or extra characters can cause this error. Ensure your file looks exactly like the example, with no extra spaces or quotes.</p>
+                    <pre className="mt-2 rounded-md bg-green-500/20 p-2 text-sm font-mono text-green-900 dark:text-green-200">
+                        <code># Correct format in .env.local<br/>GOOGLE_API_KEY=AIzaSy...</code>
+                    </pre>
+                    <pre className="mt-2 rounded-md bg-red-500/20 p-2 text-sm font-mono text-red-900 dark:text-red-200">
+                        <code># Incorrect formats<br/>GOOGLE_API_KEY = "AIzaSy..."<br/> GOOGLE_API_KEY=AIzaSy...</code>
+                    </pre>
+                </div>
               </div>
             </div>
           </AccordionContent>
@@ -431,5 +440,3 @@ export default function AdminSettingsPage() {
     </>
   );
 }
-
-    
