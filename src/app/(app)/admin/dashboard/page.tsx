@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertCircle } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -20,7 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { summarizeDashboard, type DashboardMetrics } from '@/ai/flows/summarize-dashboard-flow';
 
 interface ChartDataPoint {
   label: string;
@@ -118,97 +117,15 @@ const KeyMetricCard = memo(({
 KeyMetricCard.displayName = 'KeyMetricCard'; 
 
 
-const AiSummaryCard = ({ metrics }: { metrics: DashboardMetrics | null }) => {
-  const [summary, setSummary] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleGenerateSummary = async () => {
-    if (!metrics) {
-      setError("Dashboard data not available to generate a summary.");
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    setSummary('');
-
-    try {
-      const result = await summarizeDashboard(metrics);
-      setSummary(result);
-    } catch (e: any) {
-      console.error("AI Summary Error:", e.message);
-      setError(e.message || "An unknown error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center h-24">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <p className="ml-3 text-muted-foreground">Generating analysis...</p>
-        </div>
-      );
-    }
-    if (error) {
-      const isApiKeyError = error.includes("API key");
-      const isGcpConfigError = error.includes("Vertex AI API");
-      return (
-        <div className="flex flex-col items-center justify-center text-center p-4">
-          <AlertCircle className="h-8 w-8 text-destructive mb-2" />
-          <p className="font-semibold text-destructive">Analysis Failed</p>
-          <p className="text-sm text-muted-foreground mt-1">{error}</p>
-          {isApiKeyError && (
-            <Button variant="link" asChild className="mt-2">
-              <Link href="/admin/settings">Configure API Key</Link>
-            </Button>
-          )}
-          {isGcpConfigError && (
-            <Button variant="link" asChild className="mt-2">
-              <a href="https://console.cloud.google.com/apis/library/vertexai.googleapis.com" target="_blank" rel="noopener noreferrer">Enable Vertex AI API</a>
-            </Button>
-          )}
-        </div>
-      );
-    }
-    if (summary) {
-      return <p className="text-sm md:text-base text-foreground leading-relaxed">{summary}</p>;
-    }
-    return (
-      <div className="text-center">
-        <p className="text-muted-foreground mb-4">Get an AI-powered summary of your monthly performance.</p>
-        <Button onClick={handleGenerateSummary}>
-          <Sparkles className="mr-2 h-4 w-4" />
-          Generate Summary
-        </Button>
-      </div>
-    );
-  };
-
-  return (
-    <Card className="ai-summary-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Sparkles className="h-5 w-5 text-accent" />
-          <span>AI-Powered Insights</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {renderContent()}
-      </CardContent>
-    </Card>
-  );
-};
-
-
 export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   // Dashboard Metrics
-  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [monthlySupply, setMonthlySupply] = useState("0 min");
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+  const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
   
   // Data for dialogs
   const [isDialogDataLoading, setIsDialogDataLoading] = useState(false);
@@ -272,12 +189,10 @@ export default function AdminDashboardPage() {
       
       const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
       
-      setDashboardMetrics({
-        totalCustomers: allCustomers.length,
-        monthlySupply: formatDurationFromHours(currentSupply),
-        monthlyRevenue: currentRevenue,
-        outstandingBillsValue: totalDue,
-      });
+      setTotalCustomers(allCustomers.length);
+      setMonthlySupply(formatDurationFromHours(currentSupply));
+      setMonthlyRevenue(currentRevenue);
+      setOutstandingBillsValue(totalDue);
 
       // Calculate changes for cards
       const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
@@ -402,7 +317,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  if (isLoading || !dashboardMetrics) {
+  if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center mt-6">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -414,28 +329,28 @@ export default function AdminDashboardPage() {
   const metrics = [
     { 
       title: 'Total Customers', 
-      value: dashboardMetrics.totalCustomers.toString(), 
+      value: totalCustomers.toString(), 
       icon: Users, 
-      description: `${dashboardMetrics.totalCustomers} active`,
+      description: `${totalCustomers} active`,
       href: '/admin/customers'
     },
     { 
       title: 'Monthly Supply', 
-      value: dashboardMetrics.monthlySupply, 
+      value: monthlySupply, 
       icon: Droplets, 
       description: 'Current month',
       onClick: handleOpenSupplyDialog
     },
     { 
       title: 'Monthly Revenue', 
-      value: `PKR ${dashboardMetrics.monthlyRevenue.toLocaleString('en-US')}`, 
+      value: `PKR ${monthlyRevenue.toLocaleString('en-US')}`, 
       icon: CreditCard, 
       description: 'Current month',
       onClick: handleOpenRevenueDialog
     },
     { 
       title: 'Outstanding Bills', 
-      value: `PKR ${dashboardMetrics.outstandingBillsValue.toLocaleString('en-US')}`, 
+      value: `PKR ${outstandingBillsValue.toLocaleString('en-US')}`, 
       icon: BarChart3, 
       description: 'Total amount due',
       onClick: () => setIsOutstandingBillsDialogOpen(true)
@@ -460,10 +375,6 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="mt-8 animate-fade-in" style={{animationDelay: '0.1s'}}>
-        <AiSummaryCard metrics={dashboardMetrics} />
-      </div>
-
       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="glassmorphism-card">
@@ -481,7 +392,7 @@ export default function AdminDashboardPage() {
               </Tabs>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{dashboardMetrics.monthlySupply}</div>
+              <div className="text-3xl font-bold">{monthlySupply}</div>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
                 <StatChangeIndicator value={supplyChange} />
@@ -513,7 +424,7 @@ export default function AdminDashboardPage() {
               </Tabs>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">PKR {dashboardMetrics.monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+              <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
                <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
                 <StatChangeIndicator value={revenueChange} />
@@ -598,4 +509,3 @@ export default function AdminDashboardPage() {
     
 
     
-
