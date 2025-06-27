@@ -12,8 +12,6 @@ interface MockDataStore {
   notifications: Notification[];
 }
 
-const STORAGE_KEY = 'aquaTrackMockDataStore';
-
 // Initialize a default store structure.
 let store: MockDataStore = {
   customers: [],
