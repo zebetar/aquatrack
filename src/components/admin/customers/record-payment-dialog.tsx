@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -36,11 +35,8 @@ export function RecordPaymentDialog({ customer, onPaymentRecorded }: RecordPayme
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader className="sm:text-center">
           <DialogTitle>Record Payment for {customer.name}</DialogTitle>
-          <DialogDescription>
-            Enter the amount paid and the date of payment.
-          </DialogDescription>
         </DialogHeader>
         <RecordPaymentForm customer={customer} onSuccess={handleSuccess} />
       </DialogContent>
