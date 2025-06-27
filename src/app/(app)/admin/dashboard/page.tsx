@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, Loader2, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertTriangle } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
@@ -20,6 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { summarizeDashboardMetrics, type DashboardMetricsSummary } from '@/ai/flows/summarize-dashboard-flow';
+import { Badge } from '@/components/ui/badge';
 
 interface ChartDataPoint {
   label: string;
@@ -148,12 +150,53 @@ export default function AdminDashboardPage() {
   const [supplyChange, setSupplyChange] = useState(0);
   const [revenueChange, setRevenueChange] = useState(0);
 
+  // AI Summary state
+  const [summary, setSummary] = useState<DashboardMetricsSummary | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
       .filter(c => c.cost > 0)
       .sort((a, b) => b.cost - a.cost);
   }, [customersWithMonthlyUsageData]);
 
+  const handleGenerateSummary = useCallback(async () => {
+    setIsSummaryLoading(true);
+    setSummaryError(null);
+    setSummary(null);
+
+    const metricsPayload = {
+      totalCustomers,
+      monthlySupply,
+      monthlyRevenue,
+      outstandingBillsValue,
+      topOutstandingCustomers,
+    };
+
+    try {
+      const result = await summarizeDashboardMetrics(metricsPayload);
+      setSummary(result);
+    } catch (e: any) {
+      const errorMessage = e.message || "An unknown error occurred while generating the summary.";
+      console.error("AI Summary Error:", errorMessage);
+      setSummaryError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "AI Summary Failed",
+        description: errorMessage,
+      });
+    } finally {
+      setIsSummaryLoading(false);
+    }
+  }, [
+    toast,
+    totalCustomers,
+    monthlySupply,
+    monthlyRevenue,
+    outstandingBillsValue,
+    topOutstandingCustomers,
+  ]);
 
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
@@ -361,6 +404,76 @@ export default function AdminDashboardPage() {
 
   return (
     <>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <Button onClick={handleGenerateSummary} disabled={isSummaryLoading}>
+          {isSummaryLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="mr-2 h-4 w-4" />
+          )}
+          Generate Summary
+        </Button>
+      </div>
+
+      <div className="mt-4">
+        {isSummaryLoading && (
+          <Card className="ai-summary-card animate-pulse">
+            <CardHeader className="flex flex-row items-center gap-3">
+              <Sparkles className="h-6 w-6 text-primary" />
+              <CardTitle>Generating AI Summary...</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-4 bg-muted rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-5/6"></div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {summaryError && (
+          <Card className="border-destructive/50 bg-destructive/10 text-destructive-foreground">
+            <CardHeader className="flex flex-row items-center gap-3">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
+              <CardTitle>Error Generating Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{summaryError}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {summary && !isSummaryLoading && !summaryError && (
+          <Card className="ai-summary-card animate-fade-in">
+            <CardHeader className="flex flex-row items-center gap-3 pb-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              <CardTitle>Dashboard Summary</CardTitle>
+              <Badge variant={summary.overallStatus === 'positive' ? 'default' : summary.overallStatus === 'negative' ? 'destructive' : 'secondary'} className="capitalize ml-auto">
+                {summary.overallStatus}
+              </Badge>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div>
+                <h4 className="font-semibold mb-2 text-foreground">Key Takeaways</h4>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {summary.keyTakeaways.map((item, index) => (
+                    <li key={`takeaway-${index}`}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2 text-foreground">Improvement Suggestions</h4>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {summary.improvementSuggestions.map((item, index) => (
+                    <li key={`suggestion-${index}`}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6 animate-fade-in">
         {metrics.map(metric => (
           <KeyMetricCard 
@@ -509,3 +622,4 @@ export default function AdminDashboardPage() {
     
 
     
+
