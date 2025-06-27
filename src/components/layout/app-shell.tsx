@@ -84,12 +84,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           "overflow-x-hidden" 
         )}
       >
-        {/* Mobile Menu Trigger */}
+        {/* Mobile Header with Sticky Menu Trigger */}
         {isMobile && (
-          <div className="fixed top-4 left-4 z-50 md:hidden">
+          <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background/90 px-4 backdrop-blur-sm md:hidden">
             <Sheet open={openMobile} onOpenChange={setOpenMobile}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0 text-foreground bg-card/80 dark:bg-card/80 backdrop-blur-sm border border-border/50 dark:border-border/50">
+                <Button variant="ghost" size="icon" className="shrink-0 text-foreground">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle navigation menu</span>
                 </Button>
@@ -109,10 +109,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {mobileSidebarFooter}
               </SheetContent>
             </Sheet>
-          </div>
+          </header>
         )}
         
-        <main className="main-content-area flex-1 p-6 pt-20 md:pt-6">
+        <main className="main-content-area flex-1 p-6">
           {children}
         </main>
       </div>
