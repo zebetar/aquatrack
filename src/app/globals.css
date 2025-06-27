@@ -81,11 +81,6 @@
     --table-row-hover-bg-light: 216 100% 91%;     /* Lighter #d1e4ff */
 
 
-    /* Dialog background gradient */
-    --dialog-gradient-top-light: 210 50% 96%;
-    --dialog-gradient-bottom-light: 210 40% 98%;
-
-
     /* Dark Theme: Deep, Desaturated Navy/Charcoal with Vibrant Accents (Updated for Contrast) */
     --background-dark: 222 40% 12%; /* Deep, desaturated navy/charcoal */
     --foreground-dark: 210 30% 90%; /* Light cool grey (brighter) */
@@ -132,10 +127,6 @@
     --table-row-gradient-start-dark: hsl(var(--card-dark));
     --table-row-gradient-end-dark: hsl(var(--card-dark));
     --table-row-hover-bg-dark: 222 40% 24%; /* Slightly lighter for hover */
-
-    /* Dialog background gradient dark */
-    --dialog-gradient-top-dark: 222 40% 18%;
-    --dialog-gradient-bottom-dark: 222 40% 20%;
 
 
     /* Chart Colors */
@@ -207,9 +198,6 @@
     --table-row-gradient-start: hsl(var(--table-row-gradient-start-light));
     --table-row-gradient-end: hsl(var(--table-row-gradient-end-light));
     --table-row-hover-bg: hsl(var(--table-row-hover-bg-light));
-
-    --dialog-gradient-top: hsl(var(--dialog-gradient-top-light));
-    --dialog-gradient-bottom: hsl(var(--dialog-gradient-bottom-light));
   }
 
   .dark {
@@ -255,9 +243,6 @@
     --table-row-gradient-start: hsl(var(--table-row-gradient-start-dark));
     --table-row-gradient-end: hsl(var(--table-row-gradient-end-dark));
     --table-row-hover-bg: hsl(var(--table-row-hover-bg-dark));
-
-    --dialog-gradient-top: hsl(var(--dialog-gradient-top-dark));
-    --dialog-gradient-bottom: hsl(var(--dialog-gradient-bottom-dark));
   }
 }
 
@@ -404,17 +389,6 @@
 .animated-element:hover {
   opacity: 1;
 }
-
-/* Dialog gradient background */
-.dialog-gradient-background {
-  background-image: linear-gradient(to bottom, hsl(var(--dialog-gradient-top)), hsl(var(--dialog-gradient-bottom)));
-  color: hsl(var(--foreground)); /* Ensure text is readable */
-}
-/* Ensure dark mode dialogs also use foreground text color */
-.dark .dialog-gradient-background {
-  color: hsl(var(--foreground-dark));
-}
-
 
 /* Fade-in animation */
 @keyframes fadeIn {
