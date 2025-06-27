@@ -2,13 +2,13 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, DollarSign, Clock, Droplets, BellRing } from 'lucide-react';
+import { FileText, DollarSign, Clock, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, memo } from 'react'; 
 import { useAuth } from '@/contexts/auth-context';
-import { getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId, getMockNotificationsByUserId } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, Payment, Notification as AppNotification } from '@/types';
+import { getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
+import type { Customer, WaterUsageRecord, Payment } from '@/types';
 import { format } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 
@@ -51,7 +51,6 @@ export default function ViewerDashboardPage() {
   const [recentUsageHours, setRecentUsageHours] = useState(0);
   const [lastPayment, setLastPayment] = useState<Payment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
 
   const viewerUserId = user?.id; 
 
@@ -82,9 +81,6 @@ export default function ViewerDashboardPage() {
     } else {
       setLastPayment(null);
     }
-
-    const notifications = getMockNotificationsByUserId(viewerUserId);
-    setRecentNotifications(notifications.slice(0, 5)); 
 
     setIsLoading(false);
   }, [viewerUserId, user?.customerId]); 
@@ -131,38 +127,6 @@ export default function ViewerDashboardPage() {
         {summaries.map(summary => (
           <SummaryCard key={summary.title} {...summary} />
         ))}
-      </div>
-      <div className="mt-6">
-        <Card className="shadow-md glassmorphism-card">
-          <CardHeader>
-            <CardTitle>Recent Notifications</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentNotifications.length === 0 ? (
-              <p className="text-muted-foreground">No recent notifications.</p> 
-            ) : (
-               <ul className="space-y-3">
-                {recentNotifications.map(activity => (
-                  <li key={activity.id} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/30">
-                    <BellRing className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
-                    <div>
-                      <p className="text-sm">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{!isNaN(new Date(activity.createdAt).getTime()) ? format(new Date(activity.createdAt), 'PP p') : 'Invalid date'}</p>
-                       {activity.linkTo && (
-                         <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary">
-                           <Link href={activity.linkTo}>View</Link>
-                         </Button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Button variant="outline" asChild className="mt-4">
-              <Link href="/viewer/notifications">View All Notifications</Link>
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
