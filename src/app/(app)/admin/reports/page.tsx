@@ -265,7 +265,6 @@ export default function AdminReportsPage() {
       <Card className="glassmorphism-card">
         <CardHeader>
           <CardTitle>Financial Summary</CardTitle>
-          <CardDescription>Key financial metrics for {selectedMonthLabel}. Note: Outstanding balance is for all time.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-center p-4 bg-muted/40 rounded-lg border border-border/50">
