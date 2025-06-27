@@ -23,6 +23,31 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { summarizeDashboardMetrics, type DashboardMetricsSummary } from '@/ai/flows/summarize-dashboard-flow';
 import { Badge } from '@/components/ui/badge';
 
+const FuturisticTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    const value = data.value;
+    const name = data.name; // 'supply' or 'revenue'
+    
+    let formattedValue;
+    if (name === 'supply') {
+      formattedValue = formatDurationFromHours(Number(value));
+    } else if (name === 'revenue') {
+      formattedValue = `PKR ${Number(value).toLocaleString()}`;
+    } else {
+      formattedValue = value.toLocaleString();
+    }
+
+    return (
+      <div className="rounded-md border border-primary/20 bg-background/80 py-1.5 px-2.5 shadow-lg backdrop-blur-sm animate-fade-in text-foreground">
+        <p className="text-sm font-bold text-primary">{formattedValue}</p>
+        <p className="text-xs text-muted-foreground capitalize">{name} for {label}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 interface ChartDataPoint {
   label: string;
   supply: number;
@@ -514,7 +539,7 @@ export default function AdminDashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={supplyChartData}>
                     <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}} formatter={(value) => [formatDurationFromHours(Number(value)), "Supply"]}/>
+                    <Tooltip cursor={{fill: 'hsl(var(--muted) / 0.5)'}} content={<FuturisticTooltip />} />
                     <Bar dataKey="supply" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -552,7 +577,7 @@ export default function AdminDashboardPage() {
                         </linearGradient>
                       </defs>
                       <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)'}} formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, "Revenue"]} />
+                      <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} content={<FuturisticTooltip />} />
                       <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
                    </AreaChart>
                 </ResponsiveContainer>
