@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
@@ -17,7 +18,6 @@ import {
   getMockPaymentsByCustomerId,
   addMockUsageRecord,
   addMockPayment,
-  updateMockCustomer,
   updateMockUsageRecord,
   updateMockPaymentRecord,
   addMockNotification
@@ -32,8 +32,6 @@ export default function CustomerDetailPage() {
   const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedCustomerData, setEditedCustomerData] = useState<Partial<Customer>>({});
 
   const fetchCustomerData = useCallback(() => {
     if (!customerId) {
@@ -47,9 +45,6 @@ export default function CustomerDetailPage() {
       const paymentData = getMockPaymentsByCustomerId(customerId);
       
       setCustomer(custData || null);
-      if (custData) { 
-        setEditedCustomerData(custData);
-      }
       setUsageRecords(usageData || []);
       setPayments(paymentData || []);
     } catch (error) {
@@ -158,69 +153,6 @@ export default function CustomerDetailPage() {
     }
   };
 
-  const handleToggleEdit = () => {
-    if (!isEditing && customer) {
-      setEditedCustomerData({ ...customer });
-    }
-    setIsEditing(!isEditing);
-  };
-
-  const handleFieldChange = (field: keyof Customer, value: string) => {
-    setEditedCustomerData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveChanges = () => {
-    if (customer && customerId && editedCustomerData) {
-      try {
-        const updatedData: Partial<Customer> = {
-          name: editedCustomerData.name || customer.name,
-          contactInfo: editedCustomerData.contactInfo,
-          email: editedCustomerData.email ? editedCustomerData.email.trim().toLowerCase() : undefined,
-        };
-
-        updateMockCustomer({ id: customerId, ...updatedData });
-        
-        const adminNotification: Notification = {
-          id: `noti-${Date.now()}-admin-update`,
-          userId: 'admin001',
-          message: `Customer details for ${updatedData.name} updated.`,
-          type: 'CUSTOMER_UPDATED',
-          isRead: false,
-          linkTo: `/admin/customers/${customerId}`,
-          createdAt: new Date(),
-        };
-        addMockNotification(adminNotification);
-
-        if (customer.authUID) {
-          const viewerNotification: Notification = {
-              id: `noti-${Date.now()}-viewer-update`,
-              userId: customer.authUID,
-              message: `Your account details have been updated by an administrator.`,
-              type: 'CUSTOMER_UPDATED',
-              isRead: false,
-              linkTo: `/viewer/profile`,
-              createdAt: new Date(),
-          };
-          addMockNotification(viewerNotification);
-        }
-
-        fetchCustomerData();
-        setIsEditing(false);
-        toast({ title: "Customer Updated", description: "Customer details have been saved." });
-      } catch (error) {
-        console.error("Failed to save customer changes:", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not save customer details." });
-      }
-    }
-  };
-
-  const handleCancelChanges = () => {
-    if (customer) {
-      setEditedCustomerData({ ...customer });
-    }
-    setIsEditing(false);
-  };
-
   if (isLoading && !customer) { 
     return (
       <div className="flex h-full items-center justify-center mt-6">
@@ -267,8 +199,8 @@ export default function CustomerDetailPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl pt-1">{customer.name}</h1>
         </div>
         <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
-          {!isEditing && <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />}
-          {!isEditing && <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />}
+          <LogUsageDialog customer={customer} onUsageLogged={handleAddUsageRecord} />
+          <RecordPaymentDialog customer={customer} onPaymentRecorded={handleAddPaymentRecord} />
         </div>
       </div>
       
@@ -283,12 +215,6 @@ export default function CustomerDetailPage() {
         customer={customer} 
         usageRecords={[...usageRecords]} 
         payments={[...payments]}
-        isEditing={isEditing}
-        editedCustomerData={editedCustomerData}
-        onFieldChange={handleFieldChange}
-        onToggleEdit={handleToggleEdit}
-        onSaveChanges={handleSaveChanges}
-        onCancelChanges={handleCancelChanges}
         onUsageRecordUpdated={handleUpdateUsageRecord}
         onPaymentRecordUpdated={handleUpdatePaymentRecord}
       />

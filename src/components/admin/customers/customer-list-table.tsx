@@ -13,12 +13,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { Download, Loader2, Trash2 } from 'lucide-react';
+import { Download, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
+import { EditCustomerDialog } from '@/components/admin/users/edit-customer-dialog';
 import { formatDurationFromHours } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ interface CustomerWithUsage extends Customer {
 interface CustomerListTableProps {
   customers: CustomerWithUsage[];
   onCustomerDeleted: (customerId: string) => void;
+  onCustomerUpdated: (customer: Customer) => void;
   deletingCustomerId: string | null;
   enableActions?: boolean;
   className?: string;
@@ -40,6 +42,7 @@ interface CustomerListTableProps {
 export function CustomerListTable({
   customers,
   onCustomerDeleted,
+  onCustomerUpdated,
   deletingCustomerId,
   enableActions = false,
   className
@@ -75,7 +78,7 @@ export function CustomerListTable({
     router.push(`/admin/customers/${customerId}`);
   };
 
-  const numberOfColumns = enableActions ? 5 : 4;
+  const numberOfColumns = enableActions ? 6 : 4;
 
   return (
     <>
@@ -89,33 +92,14 @@ export function CustomerListTable({
           </Card>
         ) : (
           customers.map((customer) => (
-            <Card key={customer.id} className="glassmorphism-card" onClick={() => handleRowClick(customer.id)}>
+            <Card key={customer.id} className="glassmorphism-card">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">{customer.name}</h3>
+                  <h3 className="text-lg font-semibold" onClick={() => handleRowClick(customer.id)}>{customer.name}</h3>
                   <div className="flex items-center gap-2">
                     <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"} className="text-sm px-3 py-1">
                       {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
                     </Badge>
-                    {enableActions && (
-                      <DeleteCustomerDialog
-                        customer={customer}
-                        onDeleteConfirm={() => onCustomerDeleted(customer.id)}
-                        isDeleting={deletingCustomerId === customer.id}
-                        triggerButton={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Delete Customer"
-                            disabled={deletingCustomerId === customer.id}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-8 h-8 hover:bg-destructive/20"
-                          >
-                            {deletingCustomerId === customer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-destructive" />}
-                          </Button>
-                        }
-                      />
-                    )}
                   </div>
                 </div>
                 <Separator />
@@ -129,7 +113,7 @@ export function CustomerListTable({
                     <p className="font-medium">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</p>
                   </div>
                 </div>
-                <div className="pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -143,8 +127,31 @@ export function CustomerListTable({
                     ) : (
                       <Download className="mr-2 h-4 w-4 text-primary" />
                     )}
-                    Download Statement
+                    Statement
                   </Button>
+                   {enableActions && (
+                      <div className="flex justify-end gap-1">
+                        <EditCustomerDialog
+                          customer={customer}
+                          onCustomerUpdated={onCustomerUpdated}
+                          triggerButton={
+                            <Button variant="outline" size="sm" className="w-full">
+                                <Pencil className="mr-2 h-4 w-4 text-primary" /> Edit
+                            </Button>
+                          }
+                        />
+                        <DeleteCustomerDialog
+                          customer={customer}
+                          onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                          isDeleting={deletingCustomerId === customer.id}
+                           triggerButton={
+                            <Button variant="destructive" size="icon">
+                              {deletingCustomerId === customer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                            </Button>
+                          }
+                        />
+                      </div>
+                    )}
                 </div>
               </CardContent>
             </Card>
@@ -173,7 +180,7 @@ export function CustomerListTable({
           <TableBody>
             {customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={numberOfColumns + (enableActions ? 1 : 0)} className="h-24 text-center">
+                <TableCell colSpan={numberOfColumns} className="h-24 text-center">
                   No customers found.
                 </TableCell>
               </TableRow>
@@ -210,23 +217,17 @@ export function CustomerListTable({
                   </TableCell>
                   {enableActions && (
                     <TableCell className="text-center">
-                      <DeleteCustomerDialog
-                        customer={customer}
-                        onDeleteConfirm={() => onCustomerDeleted(customer.id)}
-                        isDeleting={deletingCustomerId === customer.id}
-                        triggerButton={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Delete Customer"
-                            disabled={deletingCustomerId === customer.id}
-                            onClick={(e) => e.stopPropagation()}
-                            className="hover:bg-destructive/20"
-                          >
-                            {deletingCustomerId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                          </Button>
-                        }
-                      />
+                      <div className="flex items-center justify-center gap-1">
+                        <EditCustomerDialog 
+                          customer={customer}
+                          onCustomerUpdated={onCustomerUpdated}
+                        />
+                        <DeleteCustomerDialog
+                          customer={customer}
+                          onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                          isDeleting={deletingCustomerId === customer.id}
+                        />
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>

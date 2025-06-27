@@ -2,7 +2,7 @@
 "use client";
 
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer } from '@/types';
+import type { Customer, Notification } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import {
   getAllMockCustomers,
@@ -10,7 +10,9 @@ import {
   getMockCustomerById,
   getMockUsageRecordsByCustomerId,
   getMockPaymentsByCustomerId,
-  getAllMockUsageRecords
+  getAllMockUsageRecords,
+  updateMockCustomer, // New import
+  addMockNotification, // New import
 } from '@/lib/mock-data-store';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { Loader2 } from 'lucide-react';
@@ -53,6 +55,45 @@ export default function AdminUsersPage() {
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
+
+  const handleCustomerUpdated = (customer: Customer) => {
+    try {
+      updateMockCustomer(customer);
+      
+      const adminNotification: Notification = {
+        id: `noti-${Date.now()}-admin-update`,
+        userId: 'admin001',
+        message: `Customer details for ${customer.name} updated.`,
+        type: 'CUSTOMER_UPDATED',
+        isRead: false,
+        linkTo: `/admin/customers/${customer.id}`,
+        createdAt: new Date(),
+      };
+      addMockNotification(adminNotification);
+
+      if (customer.authUID) {
+        const viewerNotification: Notification = {
+            id: `noti-${Date.now()}-viewer-update`,
+            userId: customer.authUID,
+            message: `Your account details have been updated by an administrator.`,
+            type: 'CUSTOMER_UPDATED',
+            isRead: false,
+            linkTo: `/viewer/profile`,
+            createdAt: new Date(),
+        };
+        addMockNotification(viewerNotification);
+      }
+
+      fetchCustomers(); // Refresh list to show updated data
+    } catch (error) {
+      console.error("Failed to update customer:", error);
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Could not save customer changes. See console for details.",
+      });
+    }
+  };
 
   const handleCustomerDeleted = async (customerId: string) => {
     setDeletingCustomerId(customerId);
@@ -118,6 +159,7 @@ export default function AdminUsersPage() {
       <CustomerListTable
         customers={customers}
         onCustomerDeleted={handleCustomerDeleted}
+        onCustomerUpdated={handleCustomerUpdated}
         deletingCustomerId={deletingCustomerId}
         enableActions={true}
       />
