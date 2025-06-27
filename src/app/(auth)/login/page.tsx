@@ -5,7 +5,7 @@ import { Droplets } from 'lucide-react';
 
 export default function LoginPage() {
   return (
-    <Card className="shadow-xl glassmorphism-card animate-fade-in w-full">
+    <Card className="shadow-xl glassmorphism-card w-full">
       <CardHeader className="items-center text-center">
         <div className="mb-2 flex items-center justify-center rounded-full bg-sky-500/10 p-3 text-sky-500">
           <Droplets className="h-10 w-10" />
