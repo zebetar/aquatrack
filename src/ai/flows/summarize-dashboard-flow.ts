@@ -46,7 +46,7 @@ const summaryPrompt = ai.definePrompt({
   `,
   
   // Model configuration
-  model: 'gemini-pro',
+  model: 'gemini-1.5-flash',
   config: {
     temperature: 0.7, // A little creativity
   },
