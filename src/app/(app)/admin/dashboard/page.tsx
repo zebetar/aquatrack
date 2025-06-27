@@ -377,7 +377,7 @@ export default function AdminDashboardPage() {
         toast({
             variant: "destructive",
             title: "AI Summary Error",
-            description: "Could not generate insights. Please ensure your API key is configured.",
+            description: "API key is missing or invalid. Please ensure it's set correctly in your .env.local file and that you've restarted the server.",
         });
     } finally {
         setIsAiSummaryLoading(false);
@@ -601,6 +601,8 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+    
+
     
 
     
