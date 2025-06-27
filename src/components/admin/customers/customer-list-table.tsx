@@ -92,31 +92,31 @@ export function CustomerListTable({
             <Card key={customer.id} className="glassmorphism-card" onClick={() => handleRowClick(customer.id)}>
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">{customer.name}</h3>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold">{customer.name}</h3>
                     <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
                       {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
                     </Badge>
+                    {enableActions && (
+                      <DeleteCustomerDialog
+                        customer={customer}
+                        onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                        isDeleting={deletingCustomerId === customer.id}
+                        triggerButton={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Delete Customer"
+                            disabled={deletingCustomerId === customer.id}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-8 h-8 hover:bg-destructive/20"
+                          >
+                            {deletingCustomerId === customer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-destructive" />}
+                          </Button>
+                        }
+                      />
+                    )}
                   </div>
-                  {enableActions && (
-                    <DeleteCustomerDialog
-                      customer={customer}
-                      onDeleteConfirm={() => onCustomerDeleted(customer.id)}
-                      isDeleting={deletingCustomerId === customer.id}
-                      triggerButton={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Delete Customer"
-                          disabled={deletingCustomerId === customer.id}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-8 h-8 hover:bg-destructive/20"
-                        >
-                          {deletingCustomerId === customer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-destructive" />}
-                        </Button>
-                      }
-                    />
-                  )}
                 </div>
                 <Separator />
                 <div className="grid grid-cols-2 gap-4 text-sm">
