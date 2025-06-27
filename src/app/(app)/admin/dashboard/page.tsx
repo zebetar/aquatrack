@@ -372,18 +372,6 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
-        <div className="flex justify-end mb-4">
-            <Tabs
-                value={chartView}
-                onValueChange={(value) => setChartView(value as 'monthly' | 'daily')}
-                className="w-full sm:w-auto"
-            >
-                <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
-                    <TabsTrigger value="daily">Daily</TabsTrigger>
-                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                </TabsList>
-            </Tabs>
-        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="glassmorphism-card">
             <CardHeader>
@@ -408,8 +396,18 @@ export default function AdminDashboardPage() {
           </Card>
 
           <Card className="glassmorphism-card">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base font-medium text-muted-foreground">Revenue</CardTitle>
+              <Tabs
+                value={chartView}
+                onValueChange={(value) => setChartView(value as 'monthly' | 'daily')}
+                className="w-auto"
+              >
+                  <TabsList className="h-8">
+                      <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
+                      <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
+                  </TabsList>
+              </Tabs>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
