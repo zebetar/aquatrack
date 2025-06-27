@@ -1,7 +1,7 @@
 
 "use client"; 
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -9,7 +9,7 @@ import { format, subMonths, startOfMonth, endOfMonth, parseISO } from 'date-fns'
 import { getAllMockUsageRecords, getAllMockCustomers } from '@/lib/mock-data-store';
 import type { Customer } from '@/types';
 import { formatDurationFromHours, cn } from '@/lib/utils';
-import { Loader2, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react';
+import { Loader2, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert, Droplets } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 
@@ -262,23 +262,41 @@ export default function AdminReportsPage() {
         </CardContent>
       </Card>
       
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Financial Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="glassmorphism-card p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue ({selectedMonthLabel})</CardTitle>
-                <p className="text-2xl font-bold mt-1">PKR {totalRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</p>
-            </Card>
-             <Card className="glassmorphism-card p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Outstanding Balance</CardTitle>
-                <p className="text-2xl font-bold mt-1">PKR {outstandingBalance.toLocaleString('en-US', {maximumFractionDigits: 0})}</p>
-            </Card>
-             <Card className="glassmorphism-card p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Avg. Consumption ({selectedMonthLabel})</CardTitle>
-                <p className="text-2xl font-bold mt-1">{formatDurationFromHours(averageConsumption)}/customer</p>
-            </Card>
-        </div>
-      </div>
+      <Card className="glassmorphism-card">
+        <CardHeader>
+          <CardTitle>Financial Summary</CardTitle>
+          <CardDescription>Key financial metrics for {selectedMonthLabel}. Note: Outstanding balance is for all time.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center p-4 bg-muted/40 rounded-lg border border-border/50">
+            <div className="p-3 rounded-full bg-primary/10 text-primary mr-4">
+              <TrendingUp className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Monthly Revenue</p>
+              <p className="text-2xl font-bold">PKR {totalRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</p>
+            </div>
+          </div>
+          <div className="flex items-center p-4 bg-muted/40 rounded-lg border border-border/50">
+            <div className="p-3 rounded-full bg-destructive/10 text-destructive mr-4">
+              <BadgeAlert className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Outstanding Balance</p>
+              <p className="text-2xl font-bold">PKR {outstandingBalance.toLocaleString('en-US', {maximumFractionDigits: 0})}</p>
+            </div>
+          </div>
+          <div className="flex items-center p-4 bg-muted/40 rounded-lg border border-border/50">
+            <div className="p-3 rounded-full bg-primary/10 text-primary mr-4">
+              <Droplets className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Avg. Consumption</p>
+              <p className="text-2xl font-bold">{formatDurationFromHours(averageConsumption)}<span className="text-sm font-normal text-muted-foreground">/cust</span></p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
