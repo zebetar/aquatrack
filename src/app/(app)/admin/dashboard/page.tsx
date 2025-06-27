@@ -447,13 +447,10 @@ export default function AdminDashboardPage() {
       <div className="mt-8 animate-fade-in" style={{animationDelay: '0.1s'}}>
         <Card className="ai-summary-card">
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <CardTitle className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                        AI-Powered Summary
-                    </CardTitle>
-                    <p className="text-muted-foreground text-sm mt-1">Get an instant analysis of your key metrics.</p>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    AI-Powered Summary
+                </CardTitle>
                 <Button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="w-full sm:w-auto">
                     {isSummaryLoading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
