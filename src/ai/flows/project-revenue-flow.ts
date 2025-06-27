@@ -108,33 +108,27 @@ export async function projectRevenue(input: ProjectRevenueInput): Promise<Projec
   const randomFactor = 1 + (Math.random() - 0.5) * 0.05; // +/- 2.5% variance
   projectedAmount *= randomFactor;
 
-  // Construct final reasoning string
-  const isIncrease = projectedAmount > baseline * 1.02; // Use a small threshold to avoid "increase" for tiny changes
-  const isDecrease = projectedAmount < baseline * 0.98; // Use a small threshold
+  // Construct final reasoning string with percentage and clearer details
+  const percentageChange = baseline > 0 ? ((projectedAmount - baseline) / baseline) * 100 : (projectedAmount > 0 ? 100 : 0);
+  const roundedPercentage = Math.round(Math.abs(percentageChange));
   
+  const isIncrease = percentageChange > 2;
+  const isDecrease = percentageChange < -2;
+
+  let reasoningIntro = "";
   if (isIncrease) {
-    finalReasoning = "Revenue is projected to increase this month. ";
-    if (positiveFactors.length > 0) {
-      finalReasoning += `This is primarily due to ${positiveFactors.join(' and ')}. `;
-    }
-    if (negativeFactors.length > 0) {
-      finalReasoning += `However, this growth is tempered by ${negativeFactors.join(' and ')}.`;
-    }
+    reasoningIntro = `Revenue is projected to increase by approximately ${roundedPercentage}%. `;
   } else if (isDecrease) {
-    finalReasoning = "Revenue is projected to decrease this month. ";
-    if (negativeFactors.length > 0) {
-      finalReasoning += `This is primarily due to ${negativeFactors.join(' and ')}. `;
-    }
-    if (positiveFactors.length > 0) {
-      finalReasoning += `This decrease is partially offset by ${positiveFactors.join(' and ')}.`;
-    }
+    reasoningIntro = `Revenue is projected to decrease by approximately ${roundedPercentage}%. `;
   } else {
-     finalReasoning = "Revenue is expected to remain stable, based on historical performance and a balance of current factors.";
+    reasoningIntro = "Revenue is expected to remain stable this month. ";
   }
 
-  // Fallback for empty reasoning
-  if (positiveFactors.length === 0 && negativeFactors.length === 0) {
-    finalReasoning = "Projection based on historical performance.";
+  const allFactors = [...positiveFactors, ...negativeFactors];
+  if (allFactors.length > 0) {
+    finalReasoning = reasoningIntro + `This forecast is influenced by factors including: ${allFactors.join(', ')}.`;
+  } else {
+    finalReasoning = reasoningIntro + "This forecast is based on historical performance as no significant external factors were detected.";
   }
 
   // Ensure projection is not negative
