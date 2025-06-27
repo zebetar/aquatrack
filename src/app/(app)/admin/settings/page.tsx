@@ -230,7 +230,7 @@ export default function AdminSettingsPage() {
               <ApiKeyStatusChecker />
 
               <div className="space-y-2">
-                <Label htmlFor="apiKeyInput">Google AI API Key</Label>
+                <Label htmlFor="apiKeyInput">Google AI API Key (for convenience)</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="apiKeyInput"
@@ -245,22 +245,30 @@ export default function AdminSettingsPage() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  The key is stored in your browser's local storage for your convenience.
+                  Saves the key to your browser's local storage. This does not fix server errors.
                 </p>
               </div>
 
-              <div className="space-y-2 rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-amber-900 dark:text-amber-200">
-                <h4 className="font-semibold">Important: Server-Side AI Features</h4>
+              <div className="space-y-3 rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-amber-900 dark:text-amber-200">
+                <h4 className="font-semibold">Important: How to Fix Server AI Errors</h4>
                 <p className="text-sm">
-                  To enable server-side features like AI dashboard insights, you must also add your API key to a
-                  <code className="mx-1 font-mono text-sm font-semibold rounded-sm bg-amber-500/20 px-1 py-0.5">.env.local</code>
-                  file in the project's root directory.
+                  For server-side AI features to work, please follow these steps carefully:
                 </p>
-                <p className="text-sm">Create the file if it doesn't exist and add the following line:</p>
-                <pre className="mt-2 rounded-md bg-amber-500/20 p-3 text-sm">
-                  <code>GOOGLE_API_KEY={apiKey || 'YOUR_API_KEY_HERE'}</code>
-                </pre>
-                <p className="text-sm font-medium">You will need to restart the development server after creating or updating this file.</p>
+                <ol className="list-decimal list-inside space-y-2 text-sm">
+                    <li>
+                        In the file explorer, ensure you have a file named exactly <code className="font-mono text-sm font-semibold rounded-sm bg-amber-500/20 px-1.5 py-1">.env.local</code>. It must be in the project's root directory (at the same level as `package.json`).
+                    </li>
+                    <li>
+                        Add the following line to that file, pasting your own key:
+                        <pre className="mt-2 rounded-md bg-amber-500/20 p-3 text-sm">
+                            <code>GOOGLE_API_KEY={apiKey || 'YOUR_API_KEY_HERE'}</code>
+                        </pre>
+                    </li>
+                    <li>
+                        <span className="font-bold">You must restart the development server.</span> Use the restart button (🔄) at the top of the preview panel for the change to take effect.
+                    </li>
+                </ol>
+                <p className="text-sm mt-2">After restarting, the "Server API Key Status" above should change to "Detected".</p>
               </div>
             </div>
           </AccordionContent>
@@ -423,3 +431,5 @@ export default function AdminSettingsPage() {
     </>
   );
 }
+
+    
