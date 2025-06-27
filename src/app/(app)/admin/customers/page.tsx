@@ -118,12 +118,9 @@ export default function AdminCustomersPage() {
 
   const pageActions = (
     <div className="flex items-center gap-2">
-      <div className="relative hidden md:block">
-        {searchInput}
-      </div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button variant="outline" size="icon">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search Customers</span>
           </Button>
