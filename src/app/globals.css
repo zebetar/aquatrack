@@ -531,3 +531,24 @@
    background-size: 400% 400%;
    animation: gradient-move 15s ease infinite;
 }
+
+/* Splash Screen Animation */
+@keyframes splash-grow-and-shrink {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-splash-wrapper {
+  /* Animation duration must match the redirect timer in src/app/page.tsx */
+  animation: splash-grow-and-shrink 1.5s cubic-bezier(0.5, 0, 0.5, 1) forwards;
+}
