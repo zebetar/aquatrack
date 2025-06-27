@@ -91,8 +91,8 @@ export function CustomerListTable({
           customers.map((customer) => (
             <Card key={customer.id} className="glassmorphism-card" onClick={() => handleRowClick(customer.id)}>
               <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">{customer.name}</h3>
                     <Badge variant={customer.balance > 0 ? "destructive" : customer.balance < 0 ? "secondary" : "default"}>
                       {customer.balance > 0 ? "Due" : customer.balance < 0 ? "Credit" : "Settled"}
