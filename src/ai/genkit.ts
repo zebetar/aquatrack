@@ -6,7 +6,7 @@
  */
 
 import { genkit, type GenkitPlugin } from 'genkit';
-import { googleAI } from 'genkit/googleai';
+import { googleAI } from '@genkit-ai/googleai';
 import { firebase } from '@genkit-ai/firebase';
 
 const apiKey = process.env.GOOGLE_API_KEY;
