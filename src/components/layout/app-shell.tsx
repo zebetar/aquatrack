@@ -13,11 +13,19 @@ import Link from 'next/link';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { useSwipeable } from 'react-swipeable';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+
+  const handlers = useSwipeable({
+    onSwipedRight: () => isMobile && setOpenMobile(true),
+    onSwipedLeft: () => isMobile && setOpenMobile(false),
+    preventScrollOnSwipe: true,
+    trackMouse: false,
+  });
 
   if (loading) {
     return (
@@ -78,7 +86,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main Content Area */}
-      <div className={cn(
+      <div
+        {...(isMobile ? handlers : {})}
+        className={cn(
           "flex flex-1 flex-col",
           !isMobile && "md:ml-[var(--sidebar-collapsed-width)]",
           "overflow-x-hidden" 
