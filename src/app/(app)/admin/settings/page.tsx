@@ -1,7 +1,6 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -153,222 +152,206 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <Accordion type="multiple" className="w-full space-y-4 mt-6">
-        <AccordionItem value="water-rate" className="border-none">
-          <Card className="shadow-md glassmorphism-card">
-            <CardHeader className="p-4">
-              <AccordionTrigger className="p-0 hover:no-underline">
-                <CardTitle>Water Rate</CardTitle>
-              </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="space-y-4 p-4 pt-0">
-                <div className="space-y-2">
-                  <Label htmlFor="coreWaterRate">Core Water Rate (PKR/hour)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="coreWaterRate"
-                      type="number"
-                      value={newRateInput}
-                      onChange={(e) => setNewRateInput(e.target.value)}
-                      className="max-w-xs"
-                      placeholder="e.g., 1200"
-                    />
-                    <Button onClick={handleSaveWaterRate} disabled={isSavingRate}>
-                      {isSavingRate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Save Rate
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Current effective rate: PKR {currentRate}/hour. This rate is fundamental for calculating usage costs.
-                  </p>
-                </div>
-              </CardContent>
-            </AccordionContent>
-          </Card>
+      <Accordion type="multiple" collapsible className="w-full space-y-4 mt-6">
+        {/* Water Rate Section */}
+        <AccordionItem value="water-rate" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
+          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
+            <h3 className="text-lg font-semibold">Water Rate</h3>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="space-y-2">
+              <Label htmlFor="coreWaterRate">Core Water Rate (PKR/hour)</Label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  id="coreWaterRate"
+                  type="number"
+                  value={newRateInput}
+                  onChange={(e) => setNewRateInput(e.target.value)}
+                  className="max-w-xs"
+                  placeholder="e.g., 1200"
+                />
+                <Button onClick={handleSaveWaterRate} disabled={isSavingRate}>
+                  {isSavingRate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Rate
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Current effective rate: PKR {currentRate}/hour. This rate is fundamental for calculating usage costs.
+              </p>
+            </div>
+          </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="notification-prefs" className="border-none">
-          <Card className="shadow-md glassmorphism-card">
-            <CardHeader className="p-4">
-              <AccordionTrigger className="p-0 hover:no-underline">
-                <CardTitle>Notification Preferences</CardTitle>
-              </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="space-y-4 p-4 pt-0">
-                <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-                  <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
-                    <span>Email Notifications</span>
-                    <span className="font-normal leading-snug text-muted-foreground">
-                      Receive important updates via email.
-                    </span>
-                  </Label>
-                  <Switch
-                    id="email-notifications"
-                    checked={emailNotifications}
-                    onCheckedChange={setEmailNotifications}
-                    aria-label="Toggle email notifications"
-                  />
-                </div>
-                <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-                  <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
-                    <span>SMS Alerts</span>
-                    <span className="font-normal leading-snug text-muted-foreground">
-                      Get critical alerts via SMS (if configured).
-                    </span>
-                  </Label>
-                  <Switch
-                    id="sms-notifications"
-                    checked={smsNotifications}
-                    onCheckedChange={setSmsNotifications}
-                    aria-label="Toggle SMS alerts"
-                  />
-                </div>
-                 <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
-                  <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
-                    <span>Push Notifications</span>
-                    <span className="font-normal leading-snug text-muted-foreground">
-                      Receive real-time push notifications in-app.
-                    </span>
-                  </Label>
-                  <Switch
-                    id="push-notifications"
-                    checked={pushNotifications}
-                    onCheckedChange={setPushNotifications}
-                    aria-label="Toggle push notifications"
-                  />
-                </div>
-              </CardContent>
-            </AccordionContent>
-          </Card>
+        {/* Notification Preferences Section */}
+        <AccordionItem value="notification-prefs" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
+          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
+            <h3 className="text-lg font-semibold">Notification Preferences</h3>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
+                <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
+                  <span>Email Notifications</span>
+                  <span className="font-normal leading-snug text-muted-foreground">
+                    Receive important updates via email.
+                  </span>
+                </Label>
+                <Switch
+                  id="email-notifications"
+                  checked={emailNotifications}
+                  onCheckedChange={setEmailNotifications}
+                  aria-label="Toggle email notifications"
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
+                <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
+                  <span>SMS Alerts</span>
+                  <span className="font-normal leading-snug text-muted-foreground">
+                    Get critical alerts via SMS (if configured).
+                  </span>
+                </Label>
+                <Switch
+                  id="sms-notifications"
+                  checked={smsNotifications}
+                  onCheckedChange={setSmsNotifications}
+                  aria-label="Toggle SMS alerts"
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
+                <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
+                  <span>Push Notifications</span>
+                  <span className="font-normal leading-snug text-muted-foreground">
+                    Receive real-time push notifications in-app.
+                  </span>
+                </Label>
+                <Switch
+                  id="push-notifications"
+                  checked={pushNotifications}
+                  onCheckedChange={setPushNotifications}
+                  aria-label="Toggle push notifications"
+                />
+              </div>
+            </div>
+          </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="admin-account" className="border-none">
-          <Card className="shadow-md glassmorphism-card">
-            <CardHeader className="p-4">
-               <AccordionTrigger className="p-0 hover:no-underline">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="h-5 w-5" />
-                  <CardTitle>Edit Account</CardTitle>
-                </div>
-              </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="p-4 pt-0 space-y-6">
-
-                <div>
-                  <h4 className="text-md font-semibold mb-2">Change Admin Name</h4>
-                  <Form {...adminNameForm}>
-                    <form onSubmit={adminNameForm.handleSubmit(handleAdminNameChange)} className="space-y-4">
-                      <FormField
-                        control={adminNameForm.control}
-                        name="newAdminName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Admin Display Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., Site Administrator" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" disabled={isSavingName}>
-                        {isSavingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Name
-                      </Button>
-                    </form>
-                  </Form>
-                </div>
-
-                <Separator className="my-6 bg-border/50"/>
-
-                <div>
-                  <h4 className="text-md font-semibold mb-2">Change Admin Avatar</h4>
-                  <div className="space-y-4">
-                    {avatarPreview && (
-                      <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
-                        <Image src={avatarPreview} alt="Avatar Preview" layout="fill" objectFit="cover" />
-                      </div>
-                    )}
-                    <Input
-                      id="avatarFile"
-                      type="file"
-                      accept="image/png, image/jpeg, image/gif"
-                      onChange={handleAvatarFileChange}
-                      ref={fileInputRef}
-                      className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Select a PNG, JPG, or GIF image (max 2MB).
-                    </p>
-                    <div className="flex gap-2">
-                      <Button onClick={handleAdminAvatarChange} disabled={isSavingAvatar}>
-                        {isSavingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        <UploadCloud className="mr-2 h-4 w-4" />
-                        Save Avatar
-                      </Button>
-                       {avatarPreview && (
-                        <Button variant="outline" onClick={handleClearAvatar} disabled={isSavingAvatar}>
-                           Clear Preview
-                        </Button>
+        {/* Edit Account Section */}
+        <AccordionItem value="admin-account" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
+          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              <h3 className="text-lg font-semibold">Edit Account</h3>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-md font-semibold mb-2">Change Admin Name</h4>
+                <Form {...adminNameForm}>
+                  <form onSubmit={adminNameForm.handleSubmit(handleAdminNameChange)} className="space-y-4">
+                    <FormField
+                      control={adminNameForm.control}
+                      name="newAdminName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Admin Display Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Site Administrator" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
+                    />
+                    <Button type="submit" disabled={isSavingName}>
+                      {isSavingName && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Name
+                    </Button>
+                  </form>
+                </Form>
+              </div>
+
+              <Separator className="my-6 bg-border/50" />
+
+              <div>
+                <h4 className="text-md font-semibold mb-2">Change Admin Avatar</h4>
+                <div className="space-y-4">
+                  {avatarPreview && (
+                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
+                      <Image src={avatarPreview} alt="Avatar Preview" layout="fill" objectFit="cover" />
                     </div>
+                  )}
+                  <Input
+                    id="avatarFile"
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif"
+                    onChange={handleAvatarFileChange}
+                    ref={fileInputRef}
+                    className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Select a PNG, JPG, or GIF image (max 2MB).
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleAdminAvatarChange} disabled={isSavingAvatar}>
+                      {isSavingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      <UploadCloud className="mr-2 h-4 w-4" />
+                      Save Avatar
+                    </Button>
+                    {avatarPreview && (
+                      <Button variant="outline" onClick={handleClearAvatar} disabled={isSavingAvatar}>
+                        Clear Preview
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <Separator className="my-6 bg-border/50"/>
-                <div>
-                  <h4 className="text-md font-semibold mb-2">Admin Login Credentials</h4>
-                  <p className="text-sm text-muted-foreground">
-                    The admin login email (<code className="bg-muted p-1 rounded-sm">{user?.email || 'admin@aquatrack.com'}</code>) and password are fixed for this application and cannot be changed through this interface.
-                  </p>
-                </div>
-              </CardContent>
-            </AccordionContent>
-          </Card>
+              </div>
+              <Separator className="my-6 bg-border/50" />
+              <div>
+                <h4 className="text-md font-semibold mb-2">Admin Login Credentials</h4>
+                <p className="text-sm text-muted-foreground">
+                  The admin login email (<code className="bg-muted p-1 rounded-sm">{user?.email || 'admin@aquatrack.com'}</code>) and password are fixed for this application and cannot be changed through this interface.
+                </p>
+              </div>
+            </div>
+          </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="system-ops" className="border-none">
-          <Card className="shadow-md glassmorphism-card">
-            <CardHeader className="p-4">
-              <AccordionTrigger className="p-0 hover:no-underline">
-                <CardTitle>System Operations</CardTitle>
-              </AccordionTrigger>
-            </CardHeader>
-            <AccordionContent>
-              <CardContent className="space-y-4 p-4 pt-0">
-                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
-                  <div>
-                    <h3 className="font-medium">User Management</h3>
-                    <p className="text-sm text-muted-foreground">List and manage customer accounts. Deletion includes PDF statement download.</p>
-                  </div>
-                  <Button variant="outline" asChild>
-                    <Link href="/admin/users"><Users className="mr-2 h-4 w-4"/>Manage Users</Link>
-                  </Button>
+        {/* System Operations Section */}
+        <AccordionItem value="system-ops" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
+          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
+            <h3 className="text-lg font-semibold">System Operations</h3>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+                <div>
+                  <h3 className="font-medium">User Management</h3>
+                  <p className="text-sm text-muted-foreground">List and manage customer accounts. Deletion includes PDF statement download.</p>
                 </div>
-                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
-                  <div>
-                    <h3 className="font-medium">Data Export</h3>
-                    <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
-                  </div>
-                  <Button variant="outline" asChild>
-                    <Link href="/admin/data-export"><FileDown className="mr-2 h-4 w-4"/>Export Data</Link>
-                  </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/admin/users"><Users className="mr-2 h-4 w-4" />Manage Users</Link>
+                </Button>
+              </div>
+              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+                <div>
+                  <h3 className="font-medium">Data Export</h3>
+                  <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
                 </div>
-                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
-                  <div>
-                    <h3 className="font-medium">System Theme</h3>
-                    <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
-                  </div>
-                  <Button variant="outline" onClick={handleToggleTheme}><Palette className="mr-2 h-4 w-4"/>Toggle Theme</Button>
+                <Button variant="outline" asChild>
+                  <Link href="/admin/data-export"><FileDown className="mr-2 h-4 w-4" />Export Data</Link>
+                </Button>
+              </div>
+              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
+                <div>
+                  <h3 className="font-medium">System Theme</h3>
+                  <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
                 </div>
-              </CardContent>
-            </AccordionContent>
-          </Card>
+                <Button variant="outline" onClick={handleToggleTheme}><Palette className="mr-2 h-4 w-4" />Toggle Theme</Button>
+              </div>
+            </div>
+          </AccordionContent>
         </AccordionItem>
       </Accordion>
     </>
   );
 }
-    
