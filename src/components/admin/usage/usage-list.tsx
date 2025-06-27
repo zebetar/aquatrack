@@ -45,7 +45,7 @@ export function UsageList({ usageRecords }: UsageListProps) {
               </div>
               <div className="flex items-baseline justify-between gap-4 text-sm">
                 <p className="text-muted-foreground truncate">
-                  {`${format(new Date(record.date), 'PP')} at ${format(new Date(record.startTime), 'p')}`}
+                  {`${format(new Date(record.date), 'PP')}, ${format(new Date(record.startTime), 'p')} - ${format(new Date(record.endTime), 'p')}`}
                 </p>
                 <p className="font-medium whitespace-nowrap">{formatDurationFromHours(record.durationHours)}</p>
               </div>
