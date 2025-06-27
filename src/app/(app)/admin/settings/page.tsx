@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Label } from '@/components/ui/label';
@@ -152,7 +151,7 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <Accordion type="multiple" collapsible className="w-full space-y-4 mt-6">
+      <Accordion type="multiple" className="w-full space-y-4 mt-6">
         {/* Water Rate Section */}
         <AccordionItem value="water-rate" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
           <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
@@ -192,9 +191,6 @@ export default function AdminSettingsPage() {
               <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
                 <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
                   <span>Email Notifications</span>
-                  <span className="font-normal leading-snug text-muted-foreground">
-                    Receive important updates via email.
-                  </span>
                 </Label>
                 <Switch
                   id="email-notifications"
@@ -206,9 +202,6 @@ export default function AdminSettingsPage() {
               <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
                 <Label htmlFor="sms-notifications" className="flex flex-col space-y-1">
                   <span>SMS Alerts</span>
-                  <span className="font-normal leading-snug text-muted-foreground">
-                    Get critical alerts via SMS (if configured).
-                  </span>
                 </Label>
                 <Switch
                   id="sms-notifications"
@@ -220,9 +213,6 @@ export default function AdminSettingsPage() {
               <div className="flex items-center justify-between space-x-2 rounded-lg border border-border/50 p-4 bg-card/80">
                 <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
                   <span>Push Notifications</span>
-                  <span className="font-normal leading-snug text-muted-foreground">
-                    Receive real-time push notifications in-app.
-                  </span>
                 </Label>
                 <Switch
                   id="push-notifications"
@@ -288,9 +278,6 @@ export default function AdminSettingsPage() {
                     ref={fileInputRef}
                     className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Select a PNG, JPG, or GIF image (max 2MB).
-                  </p>
                   <div className="flex flex-wrap gap-2">
                     <Button onClick={handleAdminAvatarChange} disabled={isSavingAvatar}>
                       {isSavingAvatar && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -309,7 +296,7 @@ export default function AdminSettingsPage() {
               <div>
                 <h4 className="text-md font-semibold mb-2">Admin Login Credentials</h4>
                 <p className="text-sm text-muted-foreground">
-                  The admin login email (<code className="bg-muted p-1 rounded-sm">{user?.email || 'admin@aquatrack.com'}</code>) and password are fixed for this application and cannot be changed through this interface.
+                  The admin login email (<code className="bg-muted p-1 rounded-sm">{user?.email || 'admin@aquatrack.com'}</code>) and password are fixed for this application.
                 </p>
               </div>
             </div>
@@ -326,7 +313,6 @@ export default function AdminSettingsPage() {
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
                   <h3 className="font-medium">User Management</h3>
-                  <p className="text-sm text-muted-foreground">List and manage customer accounts. Deletion includes PDF statement download.</p>
                 </div>
                 <Button variant="outline" asChild>
                   <Link href="/admin/users"><Users className="mr-2 h-4 w-4" />Manage Users</Link>
@@ -335,7 +321,6 @@ export default function AdminSettingsPage() {
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
                   <h3 className="font-medium">Data Export</h3>
-                  <p className="text-sm text-muted-foreground">Export customer data, usage records, or payment histories.</p>
                 </div>
                 <Button variant="outline" asChild>
                   <Link href="/admin/data-export"><FileDown className="mr-2 h-4 w-4" />Export Data</Link>
@@ -344,7 +329,6 @@ export default function AdminSettingsPage() {
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
                   <h3 className="font-medium">System Theme</h3>
-                  <p className="text-sm text-muted-foreground">Toggle between light and dark mode for the application.</p>
                 </div>
                 <Button variant="outline" onClick={handleToggleTheme}><Palette className="mr-2 h-4 w-4" />Toggle Theme</Button>
               </div>
