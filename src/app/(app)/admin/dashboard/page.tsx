@@ -466,8 +466,8 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6 animate-fade-in">
-        {metrics.slice(0, 3).map(metric => (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6 animate-fade-in">
+        {metrics.map(metric => (
           <KeyMetricCard 
             key={metric.title} 
             title={metric.title}
@@ -486,191 +486,185 @@ export default function AdminDashboardPage() {
         />
       </div>
       
-      {/* AI Summary Section and Charts */}
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-            <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
-                <Card className="ai-summary-card">
-                    <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-primary" />
-                            AI-Powered Summary
-                        </CardTitle>
-                        <Button onClick={handleGenerateSummary} disabled={isSummaryLoading} size="sm">
-                            {isSummaryLoading ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <Sparkles className="mr-2 h-4 w-4" />
-                            )}
-                            Generate
-                        </Button>
-                    </CardHeader>
-                    {(isSummaryLoading || summaryError || summary) && (
-                        <CardContent>
-                            {isSummaryLoading && (
-                                <div className="space-y-4 pt-4 animate-pulse">
-                                    <p className="text-sm text-muted-foreground">Generating summary...</p>
-                                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                                    <div className="h-4 bg-muted rounded w-1/2" style={{ animationDelay: '0.1s' }}></div>
-                                    <div className="h-4 bg-muted rounded w-5/6" style={{ animationDelay: '0.2s' }}></div>
-                                </div>
-                            )}
-                            {summaryError && (
-                                <div className="border-l-4 border-destructive bg-destructive/10 p-4 rounded-r-md">
-                                    <h4 className="font-bold text-destructive flex items-center gap-2"><AlertTriangle className="h-5 w-5"/>Error</h4>
-                                    <p className="mt-2 text-sm text-destructive-foreground">{summaryError}</p>
-                                </div>
-                            )}
-                            {summary && !isSummaryLoading && !summaryError && (
-                                <div className="border-t pt-4 mt-4">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="font-semibold text-lg">Analysis Complete</h3>
-                                        <Badge variant={summary.overallStatus === 'positive' ? 'default' : summary.overallStatus === 'negative' ? 'destructive' : 'secondary'} className="capitalize">
-                                            {summary.overallStatus}
-                                        </Badge>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-6">
-                                        <div>
-                                            <h4 className="font-semibold mb-2 text-foreground">Key Takeaways</h4>
-                                            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                                {summary.keyTakeaways.map((item, index) => (
-                                                <li key={`takeaway-${index}`}>{item}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold mb-2 text-foreground">Improvement Suggestions</h4>
-                                            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                                {summary.improvementSuggestions.map((item, index) => (
-                                                <li key={`suggestion-${index}`}>{item}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </CardContent>
+      {/* Main Analysis Section in a 2x2 Grid */}
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
+          <Card className="glassmorphism-card interactive-card-hover h-full">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base font-medium text-muted-foreground">Supply Volume</CardTitle>
+              <Tabs
+                  value={supplyChartView}
+                  onValueChange={(value) => setSupplyChartView(value as 'monthly' | 'daily')}
+                  className="w-auto"
+              >
+                  <TabsList>
+                      <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
+                      <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
+                  </TabsList>
+              </Tabs>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{monthlySupply}</div>
+              <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
+                  <StatChangeIndicator value={supplyChange} />
+              </div>
+              <div className="h-[120px] mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={supplyChartData}>
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip cursor={{fill: 'hsl(var(--muted) / 0.5)'}} content={<FuturisticTooltip />} />
+                      <Bar dataKey="supply" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                  </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
+          <Card className="glassmorphism-card interactive-card-hover h-full">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base font-medium text-muted-foreground">Revenue</CardTitle>
+              <Tabs
+                  value={revenueChartView}
+                  onValueChange={(value) => setRevenueChartView(value as 'monthly' | 'daily')}
+                  className="w-auto"
+              >
+                  <TabsList>
+                      <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
+                      <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
+                  </TabsList>
+              </Tabs>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+              <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
+                  <StatChangeIndicator value={revenueChange} />
+              </div>
+              <div className="h-[120px] mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueChartData}>
+                      <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                      </defs>
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} content={<FuturisticTooltip />} />
+                      <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
+                  </AreaChart>
+                  </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="animate-fade-in" style={{animationDelay: '0.3s'}}>
+          <Card className="ai-summary-card h-full">
+            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    AI-Powered Summary
+                </CardTitle>
+                <Button onClick={handleGenerateSummary} disabled={isSummaryLoading} size="sm">
+                    {isSummaryLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
                     )}
-                </Card>
-            </div>
-             <KeyMetricCard 
-                title='Outstanding Bills'
-                value={`PKR ${outstandingBillsValue.toLocaleString('en-US')}`}
-                icon={BarChart3}
-                description={`${customersWithOutstandingBills.length} customers with dues`}
-                onClick={() => setIsOutstandingBillsDialogOpen(true)}
-            />
-        </div>
-
-        <div className="lg:col-span-3 space-y-6 animate-fade-in" style={{animationDelay: '0.2s'}}>
-            <Card className="glassmorphism-card interactive-card-hover">
-                <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base font-medium text-muted-foreground">Supply Volume</CardTitle>
-                <Tabs
-                    value={supplyChartView}
-                    onValueChange={(value) => setSupplyChartView(value as 'monthly' | 'daily')}
-                    className="w-auto"
-                >
-                    <TabsList>
-                        <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
-                        <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-                </CardHeader>
+                    Generate
+                </Button>
+            </CardHeader>
+            {(isSummaryLoading || summaryError || summary) && (
                 <CardContent>
-                <div className="text-3xl font-bold">{monthlySupply}</div>
-                <div className="flex items-center gap-2 mt-1">
-                    <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
-                    <StatChangeIndicator value={supplyChange} />
-                </div>
-                <div className="h-[120px] mt-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={supplyChartData}>
-                        <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip cursor={{fill: 'hsl(var(--muted) / 0.5)'}} content={<FuturisticTooltip />} />
-                        <Bar dataKey="supply" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                    </ResponsiveContainer>
-                </div>
+                    {isSummaryLoading && (
+                        <div className="space-y-4 pt-4 animate-pulse">
+                            <p className="text-sm text-muted-foreground">Generating summary...</p>
+                            <div className="h-4 bg-muted rounded w-3/4"></div>
+                            <div className="h-4 bg-muted rounded w-1/2" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="h-4 bg-muted rounded w-5/6" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                    )}
+                    {summaryError && (
+                        <div className="border-l-4 border-destructive bg-destructive/10 p-4 rounded-r-md">
+                            <h4 className="font-bold text-destructive flex items-center gap-2"><AlertTriangle className="h-5 w-5"/>Error</h4>
+                            <p className="mt-2 text-sm text-destructive-foreground">{summaryError}</p>
+                        </div>
+                    )}
+                    {summary && !isSummaryLoading && !summaryError && (
+                        <div className="border-t pt-4 mt-4">
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="font-semibold text-lg">Analysis Complete</h3>
+                                <Badge variant={summary.overallStatus === 'positive' ? 'default' : summary.overallStatus === 'negative' ? 'destructive' : 'secondary'} className="capitalize">
+                                    {summary.overallStatus}
+                                </Badge>
+                            </div>
+                            <div className="grid grid-cols-1 gap-6">
+                                <div>
+                                    <h4 className="font-semibold mb-2 text-foreground">Key Takeaways</h4>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                        {summary.keyTakeaways.map((item, index) => (
+                                        <li key={`takeaway-${index}`}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2 text-foreground">Improvement Suggestions</h4>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                        {summary.improvementSuggestions.map((item, index) => (
+                                        <li key={`suggestion-${index}`}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
-            </Card>
-
-            <Card className="glassmorphism-card interactive-card-hover">
-                <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base font-medium text-muted-foreground">Revenue</CardTitle>
-                <Tabs
-                    value={revenueChartView}
-                    onValueChange={(value) => setRevenueChartView(value as 'monthly' | 'daily')}
-                    className="w-auto"
-                >
-                    <TabsList>
-                        <TabsTrigger value="daily" className="text-xs px-3">Daily</TabsTrigger>
-                        <TabsTrigger value="monthly" className="text-xs px-3">Monthly</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-                </CardHeader>
-                <CardContent>
-                <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
-                <div className="flex items-center gap-2 mt-1">
-                    <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
-                    <StatChangeIndicator value={revenueChange} />
-                </div>
-                <div className="h-[120px] mt-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueChartData}>
-                        <defs>
-                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} content={<FuturisticTooltip />} />
-                        <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
-                    </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-                </CardContent>
-            </Card>
-        </div>
-      </div>
-
-
-      <div className="mt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
-        <Card className="glassmorphism-card">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Top Outstanding Bills</CardTitle>
-             <Button asChild variant="link" size="sm">
-                <Link href="/admin/reports/outstanding-bills">View All</Link>
-             </Button>
-          </CardHeader>
-          <CardContent>
-            {topOutstandingCustomers.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No outstanding bills. Great job!</p>
-            ) : (
-              <ul className="space-y-1">
-                {topOutstandingCustomers.map((customer) => (
-                  <li key={customer.id}>
-                    <Link href={`/admin/customers/${customer.id}`} className="flex items-center justify-between p-2 -m-2 rounded-lg hover:bg-muted transition-colors">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person avatar"/>
-                          <AvatarFallback>{customer.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <p className="font-semibold">{customer.name}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm text-destructive">PKR {customer.balance.toLocaleString()}</span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
             )}
-          </CardContent>
-        </Card>
+          </Card>
+        </div>
+        
+        <div className="animate-fade-in" style={{animationDelay: '0.4s'}}>
+            <Card className="glassmorphism-card h-full">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Top Outstanding Bills</CardTitle>
+                 <Button asChild variant="link" size="sm">
+                    <Link href="/admin/reports/outstanding-bills">View All</Link>
+                 </Button>
+              </CardHeader>
+              <CardContent>
+                {topOutstandingCustomers.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No outstanding bills. Great job!</p>
+                ) : (
+                  <ul className="space-y-1">
+                    {topOutstandingCustomers.map((customer) => (
+                      <li key={customer.id}>
+                        <Link href={`/admin/customers/${customer.id}`} className="flex items-center justify-between p-2 -m-2 rounded-lg hover:bg-muted transition-colors">
+                          <div className="flex items-center gap-4">
+                            <Avatar>
+                              <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person avatar"/>
+                              <AvatarFallback>{customer.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
+                            </Avatar>
+                            <p className="font-semibold">{customer.name}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-destructive">PKR {customer.balance.toLocaleString()}</span>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+        </div>
       </div>
+      
       <MonthlySupplyDetailsDialog
         isOpen={isMonthlySupplyDialogOpen}
         onClose={() => setIsMonthlySupplyDialogOpen(false)}
@@ -691,3 +685,5 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+
+    
