@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Pencil, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Customer } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -55,7 +54,7 @@ export function EditCustomerDialog({ customer, onCustomerUpdated, triggerButton 
   });
 
   // Function to reset form when dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       form.reset({
         name: customer.name || "",
