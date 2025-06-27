@@ -20,7 +20,6 @@ import { CalendarIcon, Droplets } from "lucide-react";
 import { cn, formatDurationFromHours } from "@/lib/utils";
 import { format, differenceInMinutes, set, parse, addDays } from "date-fns"; // Added addDays
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
-import { useToast } from "@/hooks/use-toast";
 import type { Customer, WaterUsageRecord } from "@/types";
 import { useState, useMemo, useEffect } from "react";
 
@@ -61,7 +60,6 @@ interface LogUsageFormProps {
 }
 
 export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LogUsageFormValues>({
@@ -140,10 +138,9 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
       createdAt: new Date(),
     };
     
-    toast({
-      title: "Usage Logged Successfully!",
-      description: `Logged ${formatDurationFromHours(finalDurationHours)} for ${customer.name}. Cost: PKR ${finalCost.toLocaleString('en-US')}.`,
-    });
+    // Toast removed to prefer persistent notifications.
+    // The parent component handles success feedback.
+
     setIsLoading(false);
     onSuccess?.(newUsageRecord); 
     form.reset({ 

@@ -75,7 +75,7 @@ export default function AdminNotificationsPage() {
   
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center mt-6">
         <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading notifications...</p>
       </div>

@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { getMockNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const NotificationIcon = ({ type }: { type: Notification['type']}) => {
   const iconProps = { className: "h-5 w-5" };
@@ -27,6 +28,7 @@ const NotificationIcon = ({ type }: { type: Notification['type']}) => {
 
 export default function ViewerNotificationsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,12 +62,13 @@ export default function ViewerNotificationsPage() {
   const handleMarkAllAsRead = () => {
     if (!viewerUserId) return;
     markAllNotificationsAsRead(viewerUserId);
+    toast({ title: "Success", description: "All notifications marked as read." });
     loadNotifications();
   };
 
   if (isLoading || authLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center mt-6">
         <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
         <p className="ml-2">Loading notifications...</p>
       </div>

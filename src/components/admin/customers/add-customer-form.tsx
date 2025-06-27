@@ -69,12 +69,11 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     }
     
     // The newCustomer object is now clean and ready for Firestore.
-    // The parent component will handle the actual database call.
+    // The parent component will handle the actual database call and notification.
     
-    toast({
-      title: "Customer Added Successfully!",
-      description: `${newCustomer.name} has been added. ${newCustomer.email ? `Login email: ${newCustomer.email}` : 'No login email set.'}`,
-    });
+    // Toast removed to prefer persistent notifications.
+    // The parent component handles success feedback.
+    
     setIsLoading(false);
     onSuccessCallback(newCustomer); 
     form.reset();
@@ -130,4 +129,3 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     </Form>
   );
 }
-    

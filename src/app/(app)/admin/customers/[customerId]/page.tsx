@@ -87,7 +87,7 @@ export default function CustomerDetailPage() {
       addMockNotification(adminNotification);
 
       fetchCustomerData();
-      toast({ title: "Usage Logged", description: `${formatDurationFromHours(newRecord.durationHours)} logged for ${newRecord.customerName}.` });
+      // Toast removed for a cleaner notification flow
     } catch (error) {
       console.error("Failed to log usage record:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not log water usage. Please try again." });
@@ -122,7 +122,7 @@ export default function CustomerDetailPage() {
       addMockNotification(adminNotification);
 
       fetchCustomerData();
-      toast({ title: "Payment Recorded", description: `PKR ${newPayment.amountPaid.toLocaleString()} recorded.`});
+      // Toast removed for a cleaner notification flow
     } catch (error) {
       console.error("Failed to record payment:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not record payment. Please try again." });
@@ -134,7 +134,7 @@ export default function CustomerDetailPage() {
     try {
       updateMockUsageRecord(updatedRecord);
       fetchCustomerData();
-      toast({ title: "Usage Record Updated", description: `Usage record for ${updatedRecord.customerName} has been updated.` });
+      // Toast removed for a cleaner notification flow
     } catch(error) {
       console.error("Failed to update usage record:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not update usage record." });
@@ -146,7 +146,7 @@ export default function CustomerDetailPage() {
     try {
       updateMockPaymentRecord(updatedPayment);
       fetchCustomerData();
-      toast({ title: "Payment Record Updated", description: `Payment record for ${updatedPayment.customerName} has been updated.` });
+      // Toast removed for a cleaner notification flow
     } catch (error) {
       console.error("Failed to update payment record:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not update payment record." });

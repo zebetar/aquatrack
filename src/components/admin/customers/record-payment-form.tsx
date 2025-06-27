@@ -19,7 +19,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Droplets } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
 import type { Customer, Payment } from "@/types";
 import { useState } from "react";
 
@@ -36,7 +35,6 @@ interface RecordPaymentFormProps {
 }
 
 export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProps) {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<RecordPaymentFormValues>({
@@ -59,13 +57,9 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
       recordedBy: "admin001", // Mock admin ID
       createdAt: new Date(),
     };
-
-    console.log("Record Payment Data (New Payment):", newPayment);
     
-    toast({
-      title: "Payment Recorded Successfully!",
-      description: `PKR ${values.amountPaid.toLocaleString('en-US')} recorded for ${customer.name}.`,
-    });
+    // Toast removed to prefer persistent notifications.
+    // The parent component handles success feedback.
 
     setIsLoading(false);
     onSuccess?.(newPayment); 
@@ -137,5 +131,3 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     </Form>
   );
 }
-
-    

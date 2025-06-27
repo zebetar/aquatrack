@@ -84,7 +84,7 @@ export default function ViewerDashboardPage() {
     }
 
     const notifications = getMockNotificationsByUserId(viewerUserId);
-    setRecentNotifications(notifications.slice(0, 3)); 
+    setRecentNotifications(notifications.slice(0, 5)); 
 
     setIsLoading(false);
   }, [viewerUserId, user?.customerId]); 
@@ -92,7 +92,7 @@ export default function ViewerDashboardPage() {
   useEffect(() => {
     if (!authLoading && viewerUserId) {
       loadDashboardData();
-      const intervalId = setInterval(loadDashboardData, 30000);
+      const intervalId = setInterval(loadDashboardData, 30000); // Refresh data every 30s
       return () => clearInterval(intervalId);
     } else if (!authLoading && !viewerUserId) {
         setIsLoading(false);
@@ -167,5 +167,3 @@ export default function ViewerDashboardPage() {
     </div>
   );
 }
-
-    

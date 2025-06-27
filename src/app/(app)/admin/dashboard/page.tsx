@@ -9,7 +9,8 @@ import {
   getAllMockCustomers,
   getAllMockUsageRecords,
   getMockOutstandingCustomers,
-  addMockNotification
+  addMockNotification,
+  getAllAdminNotifications
 } from '@/lib/mock-data-store';
 import type { Customer, WaterUsageRecord, CustomerMonthlyUsage, Notification, ProjectedRevenueOutput } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, isAfter, subHours } from 'date-fns';
@@ -176,6 +177,7 @@ export default function AdminDashboardPage() {
   const [customersWithOutstandingBills, setCustomersWithOutstandingBills] = useState<Customer[]>([]);
   const [monthlyUsageRecords, setMonthlyUsageRecords] = useState<WaterUsageRecord[]>([]);
   const [topOutstandingCustomers, setTopOutstandingCustomers] = useState<Customer[]>([]);
+  const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
 
   // Dialog open states
   const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
@@ -315,6 +317,10 @@ export default function AdminDashboardPage() {
       setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
       setRevenueChange(lastMonthRevenueCalc > 0 ? ((currentRevenue - lastMonthRevenueCalc) / lastMonthRevenueCalc) * 100 : (currentRevenue > 0 ? 100 : 0));
       
+      // Fetch recent notifications
+      const notifications = getAllAdminNotifications();
+      setRecentNotifications(notifications.slice(0, 5));
+
     } catch (error) {
       console.error("Failed to load dashboard data", error);
       toast({
@@ -769,6 +775,39 @@ export default function AdminDashboardPage() {
         </div>
       </div>
       
+      <div className="mt-6 animate-fade-in" style={{animationDelay: '0.5s'}}>
+        <Card className="shadow-md glassmorphism-card">
+          <CardHeader>
+            <CardTitle>Recent Notifications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentNotifications.length === 0 ? (
+              <p className="text-muted-foreground">No recent notifications.</p> 
+            ) : (
+               <ul className="space-y-3">
+                {recentNotifications.map(activity => (
+                  <li key={activity.id} className="flex items-start space-x-3 p-2 rounded-md hover:bg-muted/30">
+                    <BellRing className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-sm">{activity.message}</p>
+                      <p className="text-xs text-muted-foreground">{!isNaN(new Date(activity.createdAt).getTime()) ? format(new Date(activity.createdAt), 'PP p') : 'Invalid date'}</p>
+                       {activity.linkTo && (
+                         <Button variant="link" size="xs" asChild className="px-0 h-auto text-primary">
+                           <Link href={activity.linkTo}>View</Link>
+                         </Button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Button variant="outline" asChild className="mt-4">
+              <Link href="/admin/notifications">View All Notifications</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       <MonthlySupplyDetailsDialog
         isOpen={isMonthlySupplyDialogOpen}
         onClose={() => setIsMonthlySupplyDialogOpen(false)}
