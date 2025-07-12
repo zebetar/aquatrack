@@ -1,5 +1,8 @@
 
 import type { Customer, WaterUsageRecord, Payment, Notification } from '@/types';
+import { subMonths, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { CORE_WATER_RATE_PER_HOUR } from './constants';
+
 
 // This file is configured for a full MOCK data flow.
 // All data is stored in the browser's localStorage to simulate a database.
@@ -76,69 +79,89 @@ function saveStoreToLocalStorage(): void {
 }
 
 function createDefaultMockData(): void {
-    const customer1: Customer = {
-        id: 'cust-001',
-        name: 'Alice Johnson',
-        email: 'viewer@example.com',
-        contactInfo: '123-456-7890',
-        authUID: 'auth-001',
-        createdAt: new Date(),
-        balance: 1500,
-    };
-    const customer2: Customer = {
-        id: 'cust-002',
-        name: 'Bob Williams',
-        email: 'bob@example.com',
-        contactInfo: '098-765-4321',
-        authUID: 'auth-002',
-        createdAt: new Date(Date.now() - 86400000 * 5), // 5 days ago
-        balance: 0,
-    };
-    store.customers = [customer1, customer2];
+    const customers: Customer[] = [
+        { id: 'cust-001', name: 'Alice Johnson', email: 'viewer@example.com', contactInfo: '123-456-7890', authUID: 'auth-001', createdAt: new Date(Date.now() - 86400000 * 100), balance: 0 },
+        { id: 'cust-002', name: 'Bob Williams', email: 'bob@example.com', contactInfo: '098-765-4321', authUID: 'auth-002', createdAt: new Date(Date.now() - 86400000 * 90), balance: 0 },
+        { id: 'cust-003', name: 'Charlie Brown', email: 'charlie@example.com', contactInfo: '555-111-2222', authUID: 'auth-003', createdAt: new Date(Date.now() - 86400000 * 80), balance: 0 },
+        { id: 'cust-004', name: 'Diana Prince', email: 'diana@example.com', contactInfo: '555-333-4444', authUID: 'auth-004', createdAt: new Date(Date.now() - 86400000 * 70), balance: 0 },
+        { id: 'cust-005', name: 'Ethan Hunt', email: 'ethan@example.com', contactInfo: '555-555-6666', authUID: 'auth-005', createdAt: new Date(Date.now() - 86400000 * 60), balance: 0 },
+        { id: 'cust-006', name: 'Fiona Glenanne', email: 'fiona@example.com', contactInfo: '555-777-8888', authUID: 'auth-006', createdAt: new Date(Date.now() - 86400000 * 50), balance: 0 },
+    ];
 
-    const usage1: WaterUsageRecord = {
-        id: 'usage-001',
-        customerId: 'cust-001',
-        customerName: 'Alice Johnson',
-        date: new Date(Date.now() - 86400000 * 2), // 2 days ago
-        startTime: new Date(Date.now() - 86400000 * 2 - 3600000 * 2),
-        endTime: new Date(Date.now() - 86400000 * 2),
-        durationHours: 2,
-        cost: 2400,
-        recordedBy: 'admin001',
-        createdAt: new Date(),
-    };
-    store.usageRecords = [usage1];
+    const usageRecords: WaterUsageRecord[] = [];
+    const payments: Payment[] = [];
+    
+    const today = new Date();
 
-    const payment1: Payment = {
-        id: 'payment-001',
-        customerId: 'cust-001',
-        customerName: 'Alice Johnson',
-        paymentDate: new Date(Date.now() - 86400000), // yesterday
-        amountPaid: 900,
-        recordedBy: 'admin001',
-        createdAt: new Date(),
-    };
-    store.payments = [payment1];
+    customers.forEach((customer, custIndex) => {
+        let currentBalance = 0;
+        for (let monthIndex = 3; monthIndex >= 0; monthIndex--) {
+            const date = subMonths(today, monthIndex);
+            const start = startOfMonth(date);
+            const end = endOfMonth(date);
+            const daysInMonth = eachDayOfInterval({ start, end });
 
-    const notif1: Notification = {
-        id: 'noti-001-admin',
-        userId: 'admin001',
-        message: 'Welcome to AquaTrack! You can now manage your customers.',
-        type: 'ANNOUNCEMENT',
-        isRead: false,
-        createdAt: new Date(),
-    };
-    const notif2: Notification = {
-        id: 'noti-002-viewer',
-        userId: 'auth-001',
-        message: 'Welcome, Alice! Your account has been created.',
-        type: 'ANNOUNCEMENT',
-        isRead: false,
-        linkTo: '/viewer/profile',
-        createdAt: new Date(),
-    };
-    store.notifications = [notif1, notif2];
+            const usageCountThisMonth = 5 + Math.floor(Math.random() * 5);
+            for (let i = 0; i < usageCountThisMonth; i++) {
+                const usageDay = daysInMonth[Math.floor(Math.random() * daysInMonth.length)];
+                
+                const startHour = 8 + Math.floor(Math.random() * 10);
+                const durationHours = 1 + Math.random() * 3; // 1 to 4 hours
+                const cost = durationHours * (CORE_WATER_RATE_PER_HOUR - 100 + custIndex * 50);
+
+                const startTime = new Date(usageDay);
+                startTime.setHours(startHour, Math.floor(Math.random() * 60));
+                
+                const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+
+                usageRecords.push({
+                    id: `usage-${customer.id}-${monthIndex}-${i}`,
+                    customerId: customer.id,
+                    customerName: customer.name,
+                    date: usageDay,
+                    startTime,
+                    endTime,
+                    durationHours,
+                    cost,
+                    recordedBy: 'admin001',
+                    createdAt: new Date(),
+                });
+                currentBalance += cost;
+            }
+
+            const paymentCount = Math.random() > 0.3 ? 2 : 1; // 1 or 2 payments
+            for (let i = 0; i < paymentCount; i++) {
+                const paymentDay = daysInMonth[10 + Math.floor(Math.random() * 15)];
+                const paymentHour = 10 + Math.floor(Math.random() * 8);
+                const paymentDate = new Date(paymentDay);
+                paymentDate.setHours(paymentHour, Math.floor(Math.random() * 60));
+                
+                const paymentAmount = (currentBalance / paymentCount) * (0.8 + Math.random() * 0.3); // Pay ~80-110% of what's due
+                
+                if (paymentAmount > 100) {
+                    payments.push({
+                        id: `payment-${customer.id}-${monthIndex}-${i}`,
+                        customerId: customer.id,
+                        customerName: customer.name,
+                        paymentDate: paymentDate,
+                        amountPaid: paymentAmount,
+                        recordedBy: 'admin001',
+                        createdAt: new Date(),
+                    });
+                    currentBalance -= paymentAmount;
+                }
+            }
+        }
+        // Set final calculated balance on customer object
+        customer.balance = Math.round(currentBalance);
+    });
+
+    const notifications: Notification[] = [
+        { id: 'noti-001-admin', userId: 'admin001', message: 'Welcome to AquaTrack! Your mock database is seeded.', type: 'ANNOUNCEMENT', isRead: false, createdAt: new Date() },
+        { id: 'noti-002-viewer', userId: 'auth-001', message: 'Welcome, Alice! Your account has been created.', type: 'ANNOUNCEMENT', isRead: false, linkTo: '/viewer/profile', createdAt: new Date() }
+    ];
+
+    store = { customers, usageRecords, payments, notifications };
 }
 
 
