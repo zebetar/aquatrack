@@ -8,7 +8,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Droplets, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot, FileUp } from 'lucide-react';
+import { Droplets, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot, FileUp, DatabaseZap } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -22,7 +22,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Switch } from '@/components/ui/switch';
-import { exportMockDataAsJSON, importMockDataFromJSON } from '@/lib/mock-data-store';
+import { exportMockDataAsJSON, importMockDataFromJSON, seedAndOverwriteMockData } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 
 const adminChangeNameSchema = z.object({
@@ -250,6 +250,23 @@ export default function AdminSettingsPage() {
     reader.readAsText(file);
   };
 
+  const handleSeedData = () => {
+    try {
+      seedAndOverwriteMockData();
+      toast({
+        title: "Database Seeded",
+        description: "Rich mock data has been generated. Please reload the page to see the changes.",
+      });
+    } catch (error) {
+      console.error("Error seeding mock data:", error);
+      toast({
+        variant: "destructive",
+        title: "Seeding Failed",
+        description: "Could not generate mock data.",
+      });
+    }
+  };
+
 
   return (
     <>
@@ -406,6 +423,13 @@ export default function AdminSettingsPage() {
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <div className="space-y-4">
+               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                <div>
+                  <h3 className="font-medium flex items-center gap-2"><DatabaseZap className="text-destructive"/>Seed Mock Database</h3>
+                  <p className="text-sm text-muted-foreground">Overwrite all current data with a new, rich set of mock data. <span className="font-semibold">This cannot be undone.</span></p>
+                </div>
+                <Button variant="destructive" onClick={handleSeedData}>Seed Data</Button>
+              </div>
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
                   <h3 className="font-medium">User Management</h3>

@@ -57,8 +57,7 @@ function loadStoreFromLocalStorage(): void {
         })) || [];
       } else {
          // If no store exists, create some default data for a better first-run experience.
-         createDefaultMockData();
-         saveStoreToLocalStorage(); // Save the new default data
+         seedAndOverwriteMockData(); // Changed from createDefaultMockData
       }
     } catch (error) {
       console.error("Error loading or parsing mock data store from localStorage:", error);
@@ -78,7 +77,8 @@ function saveStoreToLocalStorage(): void {
   }
 }
 
-function createDefaultMockData(): void {
+// Renamed and exported for manual seeding
+export function seedAndOverwriteMockData(): void {
     const customers: Customer[] = [
         { id: 'cust-001', name: 'Alice Johnson', email: 'viewer@example.com', contactInfo: '123-456-7890', authUID: 'auth-001', createdAt: new Date(Date.now() - 86400000 * 100), balance: 0 },
         { id: 'cust-002', name: 'Bob Williams', email: 'bob@example.com', contactInfo: '098-765-4321', authUID: 'auth-002', createdAt: new Date(Date.now() - 86400000 * 90), balance: 0 },
@@ -95,6 +95,7 @@ function createDefaultMockData(): void {
 
     customers.forEach((customer, custIndex) => {
         let currentBalance = 0;
+        // Generate data for the last 4 months (0, 1, 2, 3)
         for (let monthIndex = 3; monthIndex >= 0; monthIndex--) {
             const date = subMonths(today, monthIndex);
             const start = startOfMonth(date);
@@ -161,7 +162,9 @@ function createDefaultMockData(): void {
         { id: 'noti-002-viewer', userId: 'auth-001', message: 'Welcome, Alice! Your account has been created.', type: 'ANNOUNCEMENT', isRead: false, linkTo: '/viewer/profile', createdAt: new Date() }
     ];
 
+    // Overwrite the store with the new data
     store = { customers, usageRecords, payments, notifications };
+    saveStoreToLocalStorage(); // Save the new default data
 }
 
 
