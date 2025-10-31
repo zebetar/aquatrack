@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { updateCustomer } from "@/lib/firebase-service";
+import { updateCustomerInDb } from "@/lib/firebase-service";
 
 
 const editCustomerFormSchema = z.object({
@@ -77,7 +77,7 @@ export function EditCustomerDialog({ customer, onCustomerUpdated, triggerButton 
     };
 
     try {
-        await updateCustomer(customer.id, updatedCustomerData);
+        await updateCustomerInDb(customer.id, updatedCustomerData);
         toast({
             title: "Customer Updated",
             description: `${values.name}'s details have been updated.`,

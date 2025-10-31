@@ -5,8 +5,20 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { User as AppUser, Customer } from '@/types';
-import { MOCK_USERS, MOCK_CUSTOMERS } from '@/lib/mock-data-store';
-import { getCustomerByAuthUID } from '@/lib/firebase-service'; // Still used for profile linking
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signOut,
+  updateEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db, firebaseAuth } from '@/lib/firebase-config';
+import { getCustomerByAuthUID, updateCustomerInDb } from '@/lib/firebase-service';
+
 
 interface AuthContextType {
   user: AppUser | null;
@@ -15,11 +27,18 @@ interface AuthContextType {
   logout: () => void;
   updateUserEmail: (newEmail: string, currentPassword?: string) => Promise<{ success: boolean; error?: string }>;
   updateUserPassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
-  updateAdminName: (newName: string) => void;
-  updateUserAvatarUrl: (newUrl: string | null) => void;
+  updateAdminName: (newName: string) => Promise<void>;
+  updateUserAvatarUrl: (newUrl: string | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+async function getUserProfile(userId: string): Promise<AppUser | null> {
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+    return userDoc.exists() ? (userDoc.data() as AppUser) : null;
+}
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -27,143 +46,134 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const loadUserFromStorage = useCallback(async () => {
-    setLoading(true);
-    const storedUser = localStorage.getItem('authUser');
-    if (storedUser) {
-      const parsedUser: AppUser = JSON.parse(storedUser);
-      // If user is a viewer, ensure their customerId is linked from the latest data
-      if (parsedUser.role === 'viewer') {
-          const customerProfile = await getCustomerByAuthUID(parsedUser.id);
-          if (customerProfile) {
-              parsedUser.customerId = customerProfile.id;
-          }
-      }
-      setUser(parsedUser);
+  const handleUserAuthChange = useCallback(async (firebaseUser: import('firebase/auth').User | null) => {
+    if (firebaseUser) {
+        let appUser = await getUserProfile(firebaseUser.uid);
+        
+        if (!appUser) {
+            // User exists in Auth, but not in Firestore 'users' collection.
+            // Let's create a basic profile for them.
+            const newUser: AppUser = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email || 'no-email@example.com',
+                role: 'viewer', // Default to viewer
+                name: firebaseUser.displayName || 'New User',
+            };
+            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+            appUser = newUser;
+        }
+
+        // For viewers, ensure their customerId is linked from the customers collection
+        if (appUser.role === 'viewer') {
+            const customerProfile = await getCustomerByAuthUID(appUser.id);
+            if (customerProfile) {
+                appUser.customerId = customerProfile.id;
+            }
+        }
+        
+        setUser(appUser);
+    } else {
+        setUser(null);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    loadUserFromStorage();
-  }, [loadUserFromStorage]);
+    const unsubscribe = onAuthStateChanged(firebaseAuth, handleUserAuthChange);
+    return () => unsubscribe();
+  }, [handleUserAuthChange]);
+
 
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
-    await new Promise(res => setTimeout(res, 500)); // Simulate network delay
-
-    const foundUser = MOCK_USERS.find(u => u.email === email && u.password === password);
-
-    if (foundUser) {
-      const appUser: AppUser = {
-        id: foundUser.id,
-        email: foundUser.email,
-        role: foundUser.role,
-        name: foundUser.name,
-        customerId: foundUser.customerId,
-      };
-
-      // If viewer, fetch full customer profile to get latest ID
-      if (appUser.role === 'viewer') {
-        const customerProfile = await getCustomerByAuthUID(appUser.id);
-        if(customerProfile){
-          appUser.customerId = customerProfile.id;
-        } else {
-           toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "Could not find a customer profile linked to this account.",
-          });
-          setLoading(false);
-          return;
-        }
-      }
-
-      setUser(appUser);
-      localStorage.setItem('authUser', JSON.stringify(appUser));
-      
+    try {
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
+      // onAuthStateChanged will handle setting user state and routing
       toast({ title: "Login Successful" });
-
-      if (appUser.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/viewer/dashboard');
-      }
-    } else {
+    } catch (error: any) {
+      console.error("Firebase Auth Error:", error.code, error.message);
       toast({
         variant: "destructive",
         title: "Login Failed",
         description: "Invalid email or password. Please try again.",
       });
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   };
 
   const logout = async () => {
     setLoading(true);
-    await new Promise(res => setTimeout(res, 200));
-    setUser(null);
-    localStorage.removeItem('authUser');
-    toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push('/login');
-    setLoading(false);
+    try {
+        await signOut(firebaseAuth);
+        setUser(null);
+        toast({ title: "Logged Out" });
+        router.push('/login');
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Logout Failed", description: error.message });
+    } finally {
+        setLoading(false);
+    }
   };
   
+  const reauthenticate = async (password: string) => {
+    const firebaseUser = firebaseAuth.currentUser;
+    if (!firebaseUser || !firebaseUser.email) throw new Error("User not found or email is missing.");
+    const credential = EmailAuthProvider.credential(firebaseUser.email, password);
+    await reauthenticateWithCredential(firebaseUser, credential);
+    return firebaseUser;
+  }
+
   const updateUserEmail = async (newEmail: string, currentPassword?: string): Promise<{ success: boolean; error?: string }> => {
-    if (!user || !currentPassword) {
-      toast({ variant: 'destructive', title: 'Error', description: 'User not logged in or password missing.' });
-      return { success: false, error: 'User not logged in or password missing.' };
+     if (!currentPassword) {
+        toast({ variant: 'destructive', title: 'Password Required', description: 'Your current password is required to change your email.' });
+        return { success: false, error: 'Password required' };
     }
-    const mockUser = MOCK_USERS.find(u => u.id === user.id);
-    if (mockUser && mockUser.password === currentPassword) {
-        mockUser.email = newEmail;
-        const updatedUser = { ...user, email: newEmail };
-        setUser(updatedUser);
-        localStorage.setItem('authUser', JSON.stringify(updatedUser));
-        toast({ title: 'Email Updated', description: 'Your email has been changed (mock).' });
+    try {
+        const firebaseUser = await reauthenticate(currentPassword);
+        await updateEmail(firebaseUser, newEmail);
+        
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        await setDoc(userDocRef, { email: newEmail }, { merge: true });
+
+        setUser(prevUser => prevUser ? { ...prevUser, email: newEmail } : null);
+        toast({ title: 'Email Updated', description: 'Your email has been successfully updated.' });
         return { success: true };
+    } catch (error: any) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Email Update Failed', description: error.message });
+        return { success: false, error: error.message };
     }
-    toast({ variant: 'destructive', title: 'Update Failed', description: 'Incorrect password.' });
-    return { success: false, error: 'Incorrect password.' };
   };
 
   const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
-    if (!user) {
-      toast({ variant: 'destructive', title: 'Error', description: 'User not logged in.' });
-      return { success: false, error: 'User not logged in.' };
-    }
-    const mockUser = MOCK_USERS.find(u => u.id === user.id);
-    if (mockUser && mockUser.password === currentPassword) {
-        mockUser.password = newPassword;
-        toast({ title: "Password Updated!", description: "Your password has been changed successfully (mock)." });
+    try {
+        const firebaseUser = await reauthenticate(currentPassword);
+        await updatePassword(firebaseUser, newPassword);
+        toast({ title: "Password Updated!", description: "Your password has been changed successfully." });
         return { success: true };
+    } catch (error: any) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Password Update Failed', description: error.message });
+        return { success: false, error: error.message };
     }
-    toast({ variant: 'destructive', title: 'Update Failed', description: 'Incorrect password.' });
-    return { success: false, error: 'Incorrect password.' };
   };
   
   const updateAdminName = async (newName: string) => {
     if(user && user.role === 'admin') {
       const trimmedName = newName.trim();
-      const mockUser = MOCK_USERS.find(u => u.id === user.id);
-      if(mockUser) mockUser.name = trimmedName;
-
-      const updatedUser = { ...user, name: trimmedName };
-      setUser(updatedUser);
-      localStorage.setItem('authUser', JSON.stringify(updatedUser));
-
+      const userDocRef = doc(db, 'users', user.id);
+      await setDoc(userDocRef, { name: trimmedName }, { merge: true });
+      setUser(prev => prev ? {...prev, name: trimmedName} : null);
       toast({ title: "Admin Name Updated", description: `Your display name is now ${trimmedName}.` });
     }
   };
   
   const updateUserAvatarUrl = async (newUrl: string | null) => {
      if(user) {
-      const mockUser = MOCK_USERS.find(u => u.id === user.id);
-      if(mockUser) mockUser.avatarUrl = newUrl || undefined;
-
-      const updatedUser = {...user, avatarUrl: newUrl || undefined};
-      setUser(updatedUser);
-      localStorage.setItem('authUser', JSON.stringify(updatedUser));
+      const userDocRef = doc(db, 'users', user.id);
+      await setDoc(userDocRef, { avatarUrl: newUrl || null }, { merge: true });
+      setUser(prev => prev ? {...prev, avatarUrl: newUrl || undefined} : null);
       toast({ title: "Avatar Updated", description: "Your profile picture has been updated." });
     }
   };

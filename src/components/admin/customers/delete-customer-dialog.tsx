@@ -61,7 +61,7 @@ export function DeleteCustomerDialog({
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the customer account for 
-            <span className="font-semibold"> {customer.name}</span> and remove all associated data, including water usage and payment records.
+            <span className="font-semibold"> {customer.name}</span> and remove all associated data from Firestore.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
