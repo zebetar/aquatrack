@@ -257,7 +257,7 @@ export default function AdminDashboardPage() {
             historicalMap.set(monthKey, { supply: 0, revenue: 0 });
         }
         allUsageRecords.forEach(record => {
-            const recordDate = record.date; // No new Date()
+            const recordDate = record.date;
             const monthKey = format(recordDate, 'yyyy-MM');
             if (historicalMap.has(monthKey)) {
                 const current = historicalMap.get(monthKey)!;
@@ -277,7 +277,7 @@ export default function AdminDashboardPage() {
             dailyMap.set(dayKey, { supply: 0, revenue: 0 });
         }
         allUsageRecords.forEach(record => {
-            const recordDate = record.date; // No new Date()
+            const recordDate = record.date;
             const dayKey = format(recordDate, 'yyyy-MM-dd');
             if (dailyMap.has(dayKey)) {
                 const current = dailyMap.get(dayKey)!;

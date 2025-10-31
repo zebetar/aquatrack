@@ -20,8 +20,10 @@ export default function OutstandingBillsPage() {
   const fetchOutstandingCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-        const customers = await getOutstandingCustomers();
-        const allUsageRecords = await getAllUsageRecords();
+        const [customers, allUsageRecords] = await Promise.all([
+          getOutstandingCustomers(),
+          getAllUsageRecords()
+        ]);
         
         const usageMap = new Map<string, number>();
         allUsageRecords.forEach(record => {

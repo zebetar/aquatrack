@@ -140,8 +140,8 @@ export default function AdminReportsPage() {
         const firstDayOfLastMonth = startOfMonth(lastMonthDate);
         const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-        const usageThisMonth = records.filter(r => new Date(r.date) >= firstDayOfMonth && new Date(r.date) <= lastDayOfMonth);
-        const usageLastMonth = records.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+        const usageThisMonth = records.filter(r => r.date >= firstDayOfMonth && r.date <= lastDayOfMonth);
+        const usageLastMonth = records.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
         
         const currentMonthSupply = usageThisMonth.reduce((sum, r) => sum + r.durationHours, 0);
         const currentMonthRevenue = usageThisMonth.reduce((sum, r) => sum + r.cost, 0);
@@ -195,7 +195,7 @@ export default function AdminReportsPage() {
               historicalMap.set(monthKey, { supply: 0, revenue: 0 });
           }
           allUsageRecords.forEach(record => {
-              const recordDate = record.date; // No new Date()
+              const recordDate = record.date;
               const monthKey = format(recordDate, 'yyyy-MM');
               if (historicalMap.has(monthKey)) {
                   const current = historicalMap.get(monthKey)!;
@@ -219,12 +219,12 @@ export default function AdminReportsPage() {
           }
 
           const usageInMonth = allUsageRecords.filter(r => {
-            const rDate = r.date; // No new Date()
+            const rDate = r.date;
             return rDate >= firstDay && rDate <= lastDay;
           });
 
           usageInMonth.forEach(record => {
-              const dayKey = format(record.date, 'yyyy-MM-dd'); // No new Date()
+              const dayKey = format(record.date, 'yyyy-MM-dd');
               if (dailyMap.has(dayKey)) {
                   const current = dailyMap.get(dayKey)!;
                   current.supply += record.durationHours;

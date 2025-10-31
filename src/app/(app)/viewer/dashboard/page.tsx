@@ -162,8 +162,8 @@ export default function ViewerDashboardPage() {
         const firstDayOfLastMonth = startOfMonth(lastMonthDate);
         const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-        const usageThisMonthRecords = usageRecords.filter(record => new Date(record.date) >= firstDay && new Date(record.date) <= lastDay);
-        const usageLastMonthRecords = usageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+        const usageThisMonthRecords = usageRecords.filter(record => record.date >= firstDay && record.date <= lastDay);
+        const usageLastMonthRecords = usageRecords.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
 
         const thisMonthTotalUsage = usageThisMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
         const thisMonthTotalCost = usageThisMonthRecords.reduce((sum, record) => sum + record.cost, 0);
@@ -204,7 +204,7 @@ export default function ViewerDashboardPage() {
             historicalMap.set(monthKey, { usage: 0, cost: 0 });
         }
         allUsageRecords.forEach(record => {
-            const recordDate = new Date(record.date);
+            const recordDate = record.date;
             const monthKey = format(recordDate, 'yyyy-MM');
             if (historicalMap.has(monthKey)) {
                 const current = historicalMap.get(monthKey)!;
@@ -224,7 +224,7 @@ export default function ViewerDashboardPage() {
             dailyMap.set(dayKey, { usage: 0, cost: 0 });
         }
         allUsageRecords.forEach(record => {
-            const recordDate = new Date(record.date);
+            const recordDate = record.date;
             const dayKey = format(recordDate, 'yyyy-MM-dd');
             if (dailyMap.has(dayKey)) {
                 const current = dailyMap.get(dayKey)!;

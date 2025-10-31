@@ -15,28 +15,19 @@ import {
     writeBatch,
     serverTimestamp,
     Timestamp,
-    setDoc
+    setDoc,
+    collectionGroup
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
 import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth';
 
 // Helper to convert Firestore Timestamps
-const fromFirestore = <T extends { createdAt?: any; date?: any; startTime?: any; endTime?: any; paymentDate?: any; }>(docData: T): Omit<T, 'createdAt' | 'date' | 'startTime' | 'endTime' | 'paymentDate'> & { createdAt?: Date; date?: Date; startTime?: Date; endTime?: Date; paymentDate?: Date; } => {
+const fromFirestore = <T extends { [key: string]: any }>(docData: T): T => {
     const data = { ...docData };
-    if (data.createdAt && data.createdAt instanceof Timestamp) {
-        data.createdAt = data.createdAt.toDate();
-    }
-    if (data.date && data.date instanceof Timestamp) {
-        data.date = data.date.toDate();
-    }
-    if (data.startTime && data.startTime instanceof Timestamp) {
-        data.startTime = data.startTime.toDate();
-    }
-     if (data.endTime && data.endTime instanceof Timestamp) {
-        data.endTime = data.endTime.toDate();
-    }
-    if (data.paymentDate && data.paymentDate instanceof Timestamp) {
-        data.paymentDate = data.paymentDate.toDate();
+    for (const key in data) {
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate();
+        }
     }
     return data;
 };
@@ -211,11 +202,12 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 }
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
-    const usageRecordsGroup = collection(db, 'usageRecords');
+    const usageRecordsGroup = collectionGroup(db, 'usageRecords');
     const q = query(usageRecordsGroup, orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
 }
+
 
 export async function getUsageRecordsByCustomerId(customerId: string): Promise<WaterUsageRecord[]> {
     const q = query(collection(db, `customers/${customerId}/usageRecords`), orderBy('startTime', 'desc'));
@@ -273,11 +265,12 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 
 export async function getAllPayments(): Promise<Payment[]> {
-    const paymentsGroup = collection(db, 'payments');
+    const paymentsGroup = collectionGroup(db, 'payments');
     const q = query(paymentsGroup, orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
 }
+
 
 export async function getPaymentsByCustomerId(customerId: string): Promise<Payment[]> {
     const q = query(collection(db, `customers/${customerId}/payments`), orderBy('paymentDate', 'desc'));

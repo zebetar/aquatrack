@@ -61,8 +61,10 @@ export default function AdminSettingsPage() {
   const fetchCustomers = useCallback(async () => {
     setIsLoadingCustomers(true);
     try {
-      const storedCustomers = await getAllCustomers();
-      const allUsageRecords = await getAllUsageRecords();
+      const [storedCustomers, allUsageRecords] = await Promise.all([
+        getAllCustomers(),
+        getAllUsageRecords()
+      ]);
 
       const usageMap = new Map<string, number>();
       allUsageRecords.forEach(record => {
