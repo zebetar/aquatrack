@@ -4,7 +4,7 @@
 import { PageHeader } from '@/components/shared/page-header';
 import { AddCustomerDialog } from '@/components/admin/customers/add-customer-dialog';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, Notification as TNotification } from '@/types';
+import type { Customer, Notification as TNotification, WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
+import { addCustomer, getAllCustomers, addNotification, getAllUsageRecords } from '@/lib/firebase-service';
 import { useFirebase } from '@/contexts/firebase-context';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
@@ -37,12 +37,19 @@ export default function AdminCustomersPage() {
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const storedCustomers = await getAllCustomers();
+      const [storedCustomers, allUsageRecords] = await Promise.all([
+        getAllCustomers(),
+        getAllUsageRecords()
+      ]);
       
-      const customersWithUsage: CustomerWithUsage[] = await Promise.all(storedCustomers.map(async (customer) => {
-        const usageRecords = await getUsageRecordsByCustomerId(customer.id);
-        const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-        return { ...customer, totalUsageHours };
+      const usageMap = new Map<string, number>();
+      allUsageRecords.forEach(record => {
+        usageMap.set(record.customerId, (usageMap.get(record.customerId) || 0) + record.durationHours);
+      });
+
+      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => ({
+        ...customer,
+        totalUsageHours: usageMap.get(customer.id) || 0
       }));
 
       setCustomers(customersWithUsage);

@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { getAllCustomers, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
+import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -33,12 +33,21 @@ export default function AdminUserManagementPage() {
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const storedCustomers = await getAllCustomers();
-      const customersWithUsage: CustomerWithUsage[] = await Promise.all(storedCustomers.map(async (customer) => {
-        const usageRecords = await getUsageRecordsByCustomerId(customer.id);
-        const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-        return { ...customer, totalUsageHours };
+      const [storedCustomers, allUsageRecords] = await Promise.all([
+        getAllCustomers(),
+        getAllUsageRecords()
+      ]);
+
+      const usageMap = new Map<string, number>();
+      allUsageRecords.forEach(record => {
+        usageMap.set(record.customerId, (usageMap.get(record.customerId) || 0) + record.durationHours);
+      });
+
+      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => ({
+        ...customer,
+        totalUsageHours: usageMap.get(customer.id) || 0
       }));
+
       setCustomers(customersWithUsage);
     } catch (error) {
       console.error("Failed to fetch customers:", error);

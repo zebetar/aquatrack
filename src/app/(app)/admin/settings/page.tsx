@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Droplets, UserCircle, Bot, FileDown, FileUp, Palette, UserCog, Search } from 'lucide-react';
@@ -26,7 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import type { Customer } from '@/types';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import { getAllCustomers, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
+import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 
 const adminChangeNameSchema = z.object({
   newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
@@ -61,11 +61,19 @@ export default function AdminSettingsPage() {
   const fetchCustomers = useCallback(async () => {
     setIsLoadingCustomers(true);
     try {
-      const storedCustomers = await getAllCustomers();
-      const customersWithUsage: CustomerWithUsage[] = await Promise.all(storedCustomers.map(async (customer) => {
-        const usageRecords = await getUsageRecordsByCustomerId(customer.id);
-        const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-        return { ...customer, totalUsageHours };
+      const [storedCustomers, allUsageRecords] = await Promise.all([
+        getAllCustomers(),
+        getAllUsageRecords()
+      ]);
+
+      const usageMap = new Map<string, number>();
+      allUsageRecords.forEach(record => {
+        usageMap.set(record.customerId, (usageMap.get(record.customerId) || 0) + record.durationHours);
+      });
+
+      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => ({
+        ...customer,
+        totalUsageHours: usageMap.get(customer.id) || 0
       }));
       setCustomers(customersWithUsage);
     } catch (error) {

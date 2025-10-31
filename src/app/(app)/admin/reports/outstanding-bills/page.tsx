@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Droplets, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { getOutstandingCustomers, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
+import { getOutstandingCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
@@ -20,12 +20,19 @@ export default function OutstandingBillsPage() {
   const fetchOutstandingCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-        const customers = await getOutstandingCustomers();
+        const [customers, allUsageRecords] = await Promise.all([
+            getOutstandingCustomers(),
+            getAllUsageRecords()
+        ]);
         
-        const augmentedCustomers = await Promise.all(customers.map(async (customer) => {
-          const usageRecords = await getUsageRecordsByCustomerId(customer.id);
-          const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-          return { ...customer, totalUsageHours };
+        const usageMap = new Map<string, number>();
+        allUsageRecords.forEach(record => {
+            usageMap.set(record.customerId, (usageMap.get(record.customerId) || 0) + record.durationHours);
+        });
+
+        const augmentedCustomers = customers.map(customer => ({
+            ...customer,
+            totalUsageHours: usageMap.get(customer.id) || 0,
         }));
 
         setOutstandingCustomers(augmentedCustomers);
