@@ -13,9 +13,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { Download, Droplets, Pencil, Trash2, Mail } from 'lucide-react';
+import { Download, Droplets, Pencil, Trash2 } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { getUsageRecordsByCustomerId, getPaymentsByCustomerId, resendPasswordReset } from '@/lib/firebase-service';
+import { getUsageRecordsByCustomerId, getPaymentsByCustomerId } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
@@ -51,7 +51,6 @@ export function CustomerListTable({
   const { toast } = useToast();
   const router = useRouter();
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
-  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
 
   const handleDownloadPdf = async (e: React.MouseEvent, customer: Customer) => {
     e.preventDefault();
@@ -77,28 +76,6 @@ export function CustomerListTable({
     }
   };
 
-  const handleResendInvite = async (e: React.MouseEvent, customer: Customer) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!customer.email) {
-        toast({ variant: 'destructive', title: 'Error', description: 'This customer does not have an email address.'});
-        return;
-    }
-    setResendingInviteId(customer.id);
-    try {
-        const result = await resendPasswordReset(customer.email);
-        if (result.success) {
-            toast({ title: 'Invite Sent', description: `A password setup link for ${customer.email} has been generated. Check server console.` });
-        } else {
-            throw new Error(result.error || 'Failed to resend invite.');
-        }
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not resend the invitation.'});
-    } finally {
-        setResendingInviteId(null);
-    }
-  };
-
   const handleRowClick = (customerId: string) => {
     router.push(`/admin/customers/${customerId}`);
   };
@@ -108,7 +85,7 @@ export function CustomerListTable({
     e.stopPropagation();
   };
 
-  const numberOfColumns = enableActions ? 7 : 4;
+  const numberOfColumns = enableActions ? 6 : 5;
 
   return (
     <>
@@ -162,21 +139,6 @@ export function CustomerListTable({
                         )}
                          <span className="sr-only">Download Statement</span>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full"
-                        title="Resend Invite"
-                        onClick={(e) => handleResendInvite(e, customer)}
-                        disabled={resendingInviteId === customer.id || !customer.email}
-                      >
-                        {resendingInviteId === customer.id ? (
-                          <Droplets className="h-4 w-4 animate-pulse-subtle" />
-                        ) : (
-                          <Mail className="h-4 w-4 text-primary" />
-                        )}
-                         <span className="sr-only">Resend Invite</span>
-                      </Button>
                       {enableActions && onCustomerUpdated && (
                        <>
                         <EditCustomerDialog
@@ -224,8 +186,7 @@ export function CustomerListTable({
               <TableHead className="text-right">Total Usage</TableHead>
               <TableHead className="text-right">Balance (PKR)</TableHead>
               <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-center">PDF</TableHead>
-              <TableHead className="text-center">Invite</TableHead>
+              <TableHead className="text-center">PDF Statement</TableHead>
               {enableActions && <TableHead className="text-center">Actions</TableHead>}
             </TableRow>
           </TableHeader>
@@ -264,22 +225,6 @@ export function CustomerListTable({
                         <Droplets className="h-4 w-4 animate-pulse-subtle" />
                       ) : (
                         <Download className="h-4 w-4 text-primary" />
-                      )}
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Resend Invite"
-                      onClick={(e) => handleResendInvite(e, customer)}
-                      disabled={resendingInviteId === customer.id || !customer.email}
-                      className="hover:bg-primary/20"
-                    >
-                      {resendingInviteId === customer.id ? (
-                        <Droplets className="h-4 w-4 animate-pulse-subtle" />
-                      ) : (
-                        <Mail className="h-4 w-4 text-primary" />
                       )}
                     </Button>
                   </TableCell>

@@ -29,7 +29,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { resendPasswordReset } from "@/lib/firebase-service";
+import { sendPasswordReset } from "@/lib/firebase-service";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -75,11 +75,11 @@ export function LoginForm() {
   async function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
       setIsSendingReset(true);
       try {
-          const result = await resendPasswordReset(values.email);
+          const result = await sendPasswordReset(values.email);
           if (result.success) {
               toast({
-                  title: "Password Reset Triggered",
-                  description: `If an account exists for ${values.email}, a reset link has been logged in the server console.`,
+                  title: "Password Reset Email Sent",
+                  description: `If an account exists for ${values.email}, a password reset link has been sent. Please check your inbox.`,
               });
               setForgotPasswordOpen(false);
           } else {
@@ -178,7 +178,7 @@ export function LoginForm() {
             <DialogHeader>
                 <DialogTitle>Reset Your Password</DialogTitle>
                 <DialogDescription>
-                    Enter your email. This will generate a password reset link in the server console for you to share.
+                    Enter your email address and we will send you a link to reset your password.
                 </DialogDescription>
             </DialogHeader>
             <Form {...forgotPasswordForm}>

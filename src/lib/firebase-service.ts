@@ -17,6 +17,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 // Helper to convert Firestore Timestamps
 const fromFirestore = <T extends { createdAt?: any; date?: any; startTime?: any; endTime?: any; paymentDate?: any; }>(docData: T): Omit<T, 'createdAt' | 'date' | 'startTime' | 'endTime' | 'paymentDate'> & { createdAt?: Date; date?: Date; startTime?: Date; endTime?: Date; paymentDate?: Date; } => {
@@ -287,13 +288,16 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
     await batch.commit();
 }
 
-
-// --- Admin Actions (via API route) ---
-export async function resendPasswordReset(email: string): Promise<{success: boolean, error?: string, message?: string}> {
-    const response = await fetch('/api/resend-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-    });
-    return response.json();
+// --- Auth Actions ---
+export async function sendPasswordReset(email: string): Promise<{success: boolean, error?: string}> {
+    const auth = getAuth();
+    try {
+        await sendPasswordResetEmail(auth, email);
+        return { success: true };
+    } catch(error: any) {
+        console.error("Password reset email failed:", error);
+        // It's better to return a generic message for security, 
+        // to not reveal if an email is registered or not.
+        return { success: false, error: "Failed to send password reset email." };
+    }
 }

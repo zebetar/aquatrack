@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId, resendPasswordReset } from '@/lib/firebase-service';
+import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -65,24 +65,10 @@ export default function AdminCustomersPage() {
     try {
         const newCustomer = await addCustomer(newCustomerData);
 
-        // Automatically send the password reset / invite email
-        if (newCustomerData.email) {
-            const inviteResult = await resendPasswordReset(newCustomerData.email);
-            if (inviteResult.success) {
-                 toast({
-                    title: "Customer Added & Invite Sent",
-                    description: `${newCustomerData.name} has been added. Check server logs for the invite link.`,
-                });
-            } else {
-                throw new Error(inviteResult.error || 'Failed to send invite email.');
-            }
-        } else {
-             toast({
-                title: "Customer Added",
-                description: `${newCustomerData.name} has been added. No email was provided for an invite.`,
-            });
-        }
-
+        toast({
+            title: "Customer Added",
+            description: `${newCustomerData.name} has been added. They can now use the 'Forgot Password' link to set up their account.`,
+        });
 
         const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
             userId: user.id, 
@@ -95,8 +81,8 @@ export default function AdminCustomersPage() {
         
         await fetchCustomers(); // Refresh the list
     } catch (error: any) {
-        console.error("Failed to add customer or send invite:", error);
-        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to create customer profile or send invite.' });
+        console.error("Failed to add customer:", error);
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to create customer profile.' });
     }
   };
 
