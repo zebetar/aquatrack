@@ -21,7 +21,6 @@ import type { Customer } from "@/types";
 const addCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
   email: z.string().email({ message: "A valid email is required for login." }).trim().toLowerCase(),
-  contactInfo: z.string().trim().optional(),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -33,7 +32,7 @@ const addCustomerFormSchema = z.object({
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => Promise<void>;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
@@ -46,7 +45,6 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     defaultValues: {
       name: "",
       email: "",
-      contactInfo: "",
       password: "",
       confirmPassword: "",
     },
@@ -58,11 +56,14 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'> = {
       name: values.name,
       email: values.email,
-      ...(values.contactInfo && { contactInfo: values.contactInfo }),
     };
     
-    onSuccessCallback(newCustomer, values.password); 
-    // We don't set isLoading to false here, as the parent dialog will close on success.
+    try {
+        await onSuccessCallback(newCustomer, values.password); 
+    } catch (error) {
+        // Parent will show toast. We just need to stop loading.
+        setIsLoading(false);
+    }
   }
   
   const PasswordVisibilityToggle = ({ isVisible, toggle }: { isVisible: boolean, toggle: () => void }) => (
@@ -135,19 +136,6 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
                 </FormControl>
                  <PasswordVisibilityToggle isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
               </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="contactInfo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contact Info (Phone/Address)</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., 9876543210 (optional)" {...field} />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}
