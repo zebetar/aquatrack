@@ -29,7 +29,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { sendPasswordReset } from "@/lib/firebase-service";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -78,16 +77,21 @@ export function LoginForm() {
   async function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
       setIsSendingReset(true);
       try {
-          const result = await sendPasswordReset(values.email);
-          if (result.success) {
-              toast({
-                  title: "Password Reset Email Sent",
-                  description: `If an account exists for ${values.email}, a password reset link has been sent. Please check your inbox.`,
-              });
-              setForgotPasswordOpen(false);
-          } else {
-              throw new Error(result.error || "An unknown error occurred.");
-          }
+        const response = await fetch('/api/resend-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: values.email }),
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+
+        toast({
+          title: "Password Reset Link Generated",
+          description: `A password reset link for ${values.email} has been logged to the server console.`,
+        });
+        setForgotPasswordOpen(false);
+
       } catch (error: any) {
           toast({
               variant: "destructive",
@@ -181,7 +185,7 @@ export function LoginForm() {
             <DialogHeader>
                 <DialogTitle>Reset Your Password</DialogTitle>
                 <DialogDescription>
-                    Enter your email address and we will send you a link to reset your password.
+                    Enter your email address and we will generate a password reset link in the server console for you to use.
                 </DialogDescription>
             </DialogHeader>
             <Form {...forgotPasswordForm}>
@@ -208,7 +212,7 @@ export function LoginForm() {
                         </DialogClose>
                         <Button type="submit" disabled={isSendingReset}>
                             {isSendingReset && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle"/>}
-                            Send Reset Link
+                            Generate Link
                         </Button>
                     </DialogFooter>
                 </form>

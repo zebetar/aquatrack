@@ -16,8 +16,17 @@ export async function POST(request: Request) {
     initializeAdminApp();
     const adminAuth = getAuth();
     
-    // Get the user by email to ensure they exist
-    await adminAuth.getUserByEmail(email);
+    // Check if user exists, if not, create one
+    let user;
+    try {
+        user = await adminAuth.getUserByEmail(email);
+    } catch (error: any) {
+        if (error.code === 'auth/user-not-found') {
+            user = await adminAuth.createUser({ email });
+        } else {
+            throw error; // Re-throw other errors
+        }
+    }
 
     // Generate the password reset link using the Admin SDK
     const link = await adminAuth.generatePasswordResetLink(email);
@@ -32,17 +41,20 @@ export async function POST(request: Request) {
     console.log("In a real app, this link would be sent in an email.");
 
 
-    return NextResponse.json({ success: true, message: "Password reset link generated and logged to the server console." });
+    return NextResponse.json({ success: true, message: "Password reset link generated and logged to the server console.", uid: user.uid });
 
   } catch (error: any) {
     console.error('Error in /api/resend-invite:', error);
     let errorMessage = 'An unexpected error occurred.';
     
-    if (error.code === 'auth/user-not-found') {
+    if (error.code === 'auth/invalid-email') {
+      errorMessage = 'The email provided is not a valid email address.';
+    } else if (error.code === 'auth/email-already-exists') {
+       errorMessage = 'A user with this email already exists.';
+    } else if (error.code === 'auth/user-not-found') {
       errorMessage = 'No user found with this email address.';
-    } else if (error.code === 'messaging/registration-token-not-registered' || error.message.includes('credential')) {
-      // This is a common error when the service account key is not set up correctly
-      errorMessage = "The server is not configured correctly to send this request. Please check the service account key environment variable."
+    } else if (error.message.includes('FIREBASE_SERVICE_ACCOUNT_KEY')) {
+      errorMessage = "The server is not configured correctly. Please check the service account key environment variable."
     }
 
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });

@@ -86,17 +86,20 @@ export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt
     if (!response.ok) {
         throw new Error(result.error || 'Failed to create authentication user.');
     }
-
-    const docRef = await addDoc(collection(db, 'customers'), {
+    
+    const docData = {
         ...customerData,
         balance: 0,
         createdAt: serverTimestamp(),
-        // authUID will be populated when user signs in, if needed, or linked via email
-    });
+        authUID: result.uid, 
+    };
+
+    const docRef = await addDoc(collection(db, 'customers'), docData);
 
     return {
         id: docRef.id,
         ...customerData,
+        authUID: result.uid,
         balance: 0,
         createdAt: new Date(), // Approximate, actual value is on server
     };
@@ -316,12 +319,7 @@ export async function sendPasswordReset(email: string): Promise<{success: boolea
         if (error.code === 'auth/invalid-email') {
             errorMessage = "The email address is not valid.";
         } else if (error.code === 'auth/user-not-found') {
-            // For security, we don't want to confirm if a user exists.
-            // The success message in the UI will handle this gracefully.
-            // But we can log the real error.
-            console.warn(`Password reset attempted for non-existent user: ${email}`);
-            // We can return success here so the UI shows the "email sent" message, preventing user enumeration.
-            return { success: true };
+            errorMessage = "No account found with this email address.";
         }
         return { success: false, error: errorMessage };
     }
