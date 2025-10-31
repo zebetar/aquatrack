@@ -64,6 +64,9 @@ export function LoginForm() {
 
   const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
       resolver: zodResolver(forgotPasswordSchema),
+      defaultValues: {
+          email: ""
+      }
   });
 
   async function onLoginSubmit(values: LoginFormValues) {
