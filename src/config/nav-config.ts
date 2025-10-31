@@ -27,12 +27,6 @@ export const adminNavItems: NavItem[] = [
     role: 'admin',
   },
   {
-    title: 'User Management',
-    href: '/admin/user-management',
-    icon: UserCog,
-    role: 'admin',
-  },
-  {
     title: 'Water Usage',
     href: '/admin/usage',
     icon: Droplets,
