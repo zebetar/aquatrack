@@ -39,9 +39,6 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
-          <DialogDescription>
-            This creates a customer profile and a viewer account with the password you set.
-          </DialogDescription>
         </DialogHeader>
         <AddCustomerForm onSuccessCallback={handleSuccess} />
       </DialogContent>
