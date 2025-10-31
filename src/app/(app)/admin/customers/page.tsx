@@ -111,7 +111,6 @@ export default function AdminCustomersPage() {
       <div className="mt-6">
         <PageHeader 
             title="Customer Profiles"
-            description="View customer details and their usage history."
             actions={<div className="flex items-center gap-2"><Skeleton className="h-10 w-10" /><Skeleton className="h-10 w-44" /></div>}
         />
         {/* Skeleton for mobile card view */}
@@ -201,7 +200,6 @@ export default function AdminCustomersPage() {
     <div className="mt-6">
       <PageHeader 
         title="Customer Profiles"
-        description="View customer details and their usage history."
         actions={pageActions}
       />
       
