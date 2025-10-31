@@ -5,19 +5,33 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { User as AppUser, Customer } from '@/types';
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  signOut,
-  updateEmail,
-  updatePassword,
-  reauthenticateWithCredential,
-  EmailAuthProvider
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db, firebaseAuth } from '@/lib/firebase-config';
-import { getCustomerByAuthUID, updateCustomerInDb } from '@/lib/firebase-service';
+import { authenticateUser, getCustomerByAuthUID } from '@/lib/firebase-service';
+
+// Helper to manage user session in localStorage
+const setSession = (user: AppUser | null) => {
+  try {
+    if (user) {
+      localStorage.setItem('user-session', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user-session');
+    }
+  } catch (error) {
+    console.error("Could not access localStorage.", error);
+  }
+};
+
+const getSession = (): AppUser | null => {
+  try {
+    const sessionStr = localStorage.getItem('user-session');
+    if (!sessionStr) return null;
+    const sessionUser = JSON.parse(sessionStr);
+    // Add logic here to check if session is expired if needed
+    return sessionUser;
+  } catch (error) {
+    console.error("Could not access localStorage.", error);
+    return null;
+  }
+};
 
 
 interface AuthContextType {
@@ -33,147 +47,111 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-async function getUserProfile(userId: string): Promise<AppUser | null> {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    return userDoc.exists() ? (userDoc.data() as AppUser) : null;
-}
-
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleUserAuthChange = useCallback(async (firebaseUser: import('firebase/auth').User | null) => {
-    if (firebaseUser) {
-        let appUser = await getUserProfile(firebaseUser.uid);
-        
-        if (!appUser) {
-            // User exists in Auth, but not in Firestore 'users' collection.
-            // Let's create a basic profile for them.
-            const newUser: AppUser = {
-                id: firebaseUser.uid,
-                email: firebaseUser.email || 'no-email@example.com',
-                role: 'viewer', // Default to viewer
-                name: firebaseUser.displayName || 'New User',
-            };
-            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-            appUser = newUser;
-        }
-
-        // For viewers, ensure their customerId is linked from the customers collection
-        if (appUser.role === 'viewer') {
-            const customerProfile = await getCustomerByAuthUID(appUser.id);
-            if (customerProfile) {
-                appUser.customerId = customerProfile.id;
-            }
-        }
-        
-        setUser(appUser);
-    } else {
-        setUser(null);
+  useEffect(() => {
+    // On initial load, check for a persisted session
+    const sessionUser = getSession();
+    if (sessionUser) {
+      setUser(sessionUser);
     }
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, handleUserAuthChange);
-    return () => unsubscribe();
-  }, [handleUserAuthChange]);
-
-
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(firebaseAuth, email, password);
-      // onAuthStateChanged will handle setting user state and routing
-      toast({ title: "Login Successful" });
+      const authenticatedUser = await authenticateUser(email, password);
+      if (authenticatedUser) {
+        let finalUser = authenticatedUser;
+        // For viewers, ensure their customerId is linked from the customers collection
+        if (finalUser.role === 'viewer') {
+            const customerProfile = await getCustomerByAuthUID(finalUser.id);
+            if (customerProfile) {
+                finalUser.customerId = customerProfile.id;
+            }
+        }
+        
+        setUser(finalUser);
+        setSession(finalUser);
+
+        toast({ title: "Login Successful" });
+        // Redirect after successful login
+        const redirectPath = finalUser.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard';
+        router.push(redirectPath);
+      } else {
+        throw new Error("Invalid email or password.");
+      }
     } catch (error: any) {
-      console.error("Firebase Auth Error:", error.code, error.message);
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
+        description: error.message || "Invalid email or password. Please try again.",
       });
+      setSession(null);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
   const logout = async () => {
-    setLoading(true);
-    try {
-        await signOut(firebaseAuth);
-        setUser(null);
-        toast({ title: "Logged Out" });
-        router.push('/login');
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: "Logout Failed", description: error.message });
-    } finally {
-        setLoading(false);
-    }
+    setUser(null);
+    setSession(null);
+    toast({ title: "Logged Out" });
+    router.push('/login');
   };
   
-  const reauthenticate = async (password: string) => {
-    const firebaseUser = firebaseAuth.currentUser;
-    if (!firebaseUser || !firebaseUser.email) throw new Error("User not found or email is missing.");
-    const credential = EmailAuthProvider.credential(firebaseUser.email, password);
-    await reauthenticateWithCredential(firebaseUser, credential);
-    return firebaseUser;
-  }
-
   const updateUserEmail = async (newEmail: string, currentPassword?: string): Promise<{ success: boolean; error?: string }> => {
-     if (!currentPassword) {
-        toast({ variant: 'destructive', title: 'Password Required', description: 'Your current password is required to change your email.' });
-        return { success: false, error: 'Password required' };
+    if (!user) return { success: false, error: 'Not logged in' };
+    // This is a mock implementation. In a real app, you'd re-authenticate.
+    if (!currentPassword) {
+      toast({variant: 'destructive', title: 'Password Required', description: 'Password is required to change email.'});
+      return { success: false, error: 'Password required' };
     }
-    try {
-        const firebaseUser = await reauthenticate(currentPassword);
-        await updateEmail(firebaseUser, newEmail);
-        
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        await setDoc(userDocRef, { email: newEmail }, { merge: true });
-
-        setUser(prevUser => prevUser ? { ...prevUser, email: newEmail } : null);
-        toast({ title: 'Email Updated', description: 'Your email has been successfully updated.' });
-        return { success: true };
-    } catch (error: any) {
-        console.error(error);
-        toast({ variant: 'destructive', title: 'Email Update Failed', description: error.message });
-        return { success: false, error: error.message };
+    // Mock password check
+    if (currentPassword !== 'password') {
+      toast({variant: 'destructive', title: 'Incorrect Password', description: 'The password you entered is incorrect.'});
+      return { success: false, error: 'Incorrect password' };
     }
+    
+    const updatedUser = { ...user, email: newEmail };
+    setUser(updatedUser);
+    setSession(updatedUser);
+    toast({ title: 'Email Updated', description: 'Your email has been successfully updated.' });
+    return { success: true };
   };
 
   const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-        const firebaseUser = await reauthenticate(currentPassword);
-        await updatePassword(firebaseUser, newPassword);
-        toast({ title: "Password Updated!", description: "Your password has been changed successfully." });
-        return { success: true };
-    } catch (error: any) {
-        console.error(error);
-        toast({ variant: 'destructive', title: 'Password Update Failed', description: error.message });
-        return { success: false, error: error.message };
+     if (!user) return { success: false, error: 'Not logged in' };
+    // Mock password check
+    if (currentPassword !== 'password') {
+      toast({variant: 'destructive', title: 'Incorrect Password', description: 'The password you entered is incorrect.'});
+      return { success: false, error: 'Incorrect password' };
     }
+    toast({ title: "Password Updated!", description: "Your password has been changed successfully." });
+    // In mock, we don't actually store the new password, just simulate success.
+    return { success: true };
   };
   
   const updateAdminName = async (newName: string) => {
     if(user && user.role === 'admin') {
       const trimmedName = newName.trim();
-      const userDocRef = doc(db, 'users', user.id);
-      await setDoc(userDocRef, { name: trimmedName }, { merge: true });
-      setUser(prev => prev ? {...prev, name: trimmedName} : null);
+      const updatedUser = { ...user, name: trimmedName };
+      setUser(updatedUser);
+      setSession(updatedUser);
       toast({ title: "Admin Name Updated", description: `Your display name is now ${trimmedName}.` });
     }
   };
   
   const updateUserAvatarUrl = async (newUrl: string | null) => {
      if(user) {
-      const userDocRef = doc(db, 'users', user.id);
-      await setDoc(userDocRef, { avatarUrl: newUrl || null }, { merge: true });
-      setUser(prev => prev ? {...prev, avatarUrl: newUrl || undefined} : null);
+      const updatedUser = { ...user, avatarUrl: newUrl || undefined };
+      setUser(updatedUser);
+      setSession(updatedUser);
       toast({ title: "Avatar Updated", description: "Your profile picture has been updated." });
     }
   };

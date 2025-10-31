@@ -1,234 +1,191 @@
 
-import { db } from './firebase-config';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  serverTimestamp,
-  orderBy,
-  writeBatch,
-  Timestamp
-} from 'firebase/firestore';
-import type { Customer, WaterUsageRecord, Payment, Notification, User } from '@/types';
 
-// Helper to convert Firestore Timestamps to Dates in objects
-function convertTimestamps<T>(obj: any): T {
-    for (const key in obj) {
-        if (obj[key] instanceof Timestamp) {
-            obj[key] = obj[key].toDate();
-        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-            convertTimestamps(obj[key]);
-        }
+import { MOCK_USERS, MOCK_CUSTOMERS, MOCK_USAGE_RECORDS, MOCK_PAYMENTS, MOCK_NOTIFICATIONS } from './mock-data-store';
+import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
+import { addDays, addHours, differenceInMinutes } from 'date-fns';
+import { CORE_WATER_RATE_PER_HOUR } from './constants';
+
+
+// --- User Management ---
+export async function authenticateUser(email: string, password: string): Promise<User | null> {
+    console.log(`Attempting to authenticate ${email}`);
+    const user = MOCK_USERS.find(u => u.email === email && u.password === password);
+    if (user) {
+        console.log(`Authentication successful for ${user.name}`);
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
     }
-    return obj as T;
+    console.log("Authentication failed");
+    return null;
 }
 
-
-// --- User Functions ---
 export async function getUserProfile(userId: string): Promise<User | null> {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    if (!userDoc.exists()) return null;
-    return { id: userDoc.id, ...convertTimestamps<Omit<User, 'id'>>(userDoc.data()) };
+  const user = MOCK_USERS.find(u => u.id === userId);
+  if (!user) return null;
+  const { password, ...userToReturn } = user;
+  return userToReturn;
 }
+
 
 // --- Customer Functions ---
 export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>): Promise<Customer> {
-    const newCustomerRef = await addDoc(collection(db, 'customers'), {
-        ...customerData,
-        balance: 0,
-        createdAt: serverTimestamp(),
-    });
-    return {
-        id: newCustomerRef.id,
+    const newCustomer: Customer = {
+        id: `cust_${Date.now()}`,
         ...customerData,
         balance: 0,
         createdAt: new Date(),
     };
+    MOCK_CUSTOMERS.push(newCustomer);
+    return newCustomer;
 }
 
 export async function getAllCustomers(): Promise<Customer[]> {
-    const q = query(collection(db, 'customers'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => convertTimestamps<Customer>({ id: doc.id, ...doc.data() }));
+    return [...MOCK_CUSTOMERS].sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function getCustomerById(customerId: string): Promise<Customer | null> {
-    const docRef = doc(db, 'customers', customerId);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return null;
-    return convertTimestamps<Customer>({ id: docSnap.id, ...docSnap.data() });
+    return MOCK_CUSTOMERS.find(c => c.id === customerId) || null;
 }
 
 export async function getCustomerByAuthUID(authUID: string): Promise<Customer | null> {
-    const q = query(collection(db, 'customers'), where('authUID', '==', authUID));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    const doc = snapshot.docs[0];
-    return convertTimestamps<Customer>({ id: doc.id, ...doc.data() });
+    return MOCK_CUSTOMERS.find(c => c.authUID === authUID) || null;
 }
 
 export async function updateCustomerInDb(customerId: string, customerUpdate: Partial<Omit<Customer, 'id'>>): Promise<void> {
-    const docRef = doc(db, 'customers', customerId);
-    await updateDoc(docRef, customerUpdate);
+    const index = MOCK_CUSTOMERS.findIndex(c => c.id === customerId);
+    if (index !== -1) {
+        MOCK_CUSTOMERS[index] = { ...MOCK_CUSTOMERS[index], ...customerUpdate };
+    }
 }
 
-
 export async function deleteCustomer(customerId: string): Promise<void> {
-    // This is a simplified delete. A real app might handle this in a Cloud Function
-    // to ensure all sub-collections are deleted.
-    await deleteDoc(doc(db, 'customers', customerId));
+    const index = MOCK_CUSTOMERS.findIndex(c => c.id === customerId);
+    if (index > -1) {
+        MOCK_CUSTOMERS.splice(index, 1);
+        // Also remove their usage, payments etc. in a real scenario
+    }
 }
 
 export async function getOutstandingCustomers(): Promise<Customer[]> {
-    const q = query(collection(db, 'customers'), where('balance', '>', 0), orderBy('balance', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => convertTimestamps<Customer>({ id: doc.id, ...doc.data() }));
+    return MOCK_CUSTOMERS.filter(c => c.balance > 0).sort((a, b) => b.balance - a.balance);
 }
 
 
 // --- Usage Record Functions ---
 export async function addUsageRecord(recordData: Omit<WaterUsageRecord, 'id' | 'createdAt'>): Promise<WaterUsageRecord> {
-    const batch = writeBatch(db);
+    const newRecord: WaterUsageRecord = {
+        id: `usage_${Date.now()}`,
+        ...recordData,
+        createdAt: new Date(),
+    };
+    MOCK_USAGE_RECORDS.push(newRecord);
 
-    const newRecordRef = doc(collection(db, 'usageRecords'));
-    batch.set(newRecordRef, { ...recordData, createdAt: serverTimestamp() });
-
-    const customerRef = doc(db, 'customers', recordData.customerId);
-    const customerDoc = await getDoc(customerRef);
-    if (customerDoc.exists()) {
-        const currentBalance = customerDoc.data().balance || 0;
-        batch.update(customerRef, { balance: currentBalance + recordData.cost });
+    const customerIndex = MOCK_CUSTOMERS.findIndex(c => c.id === recordData.customerId);
+    if (customerIndex !== -1) {
+        MOCK_CUSTOMERS[customerIndex].balance += recordData.cost;
     }
-
-    await batch.commit();
-    return { id: newRecordRef.id, ...recordData, createdAt: new Date() };
+    return newRecord;
 }
 
 export async function updateUsageRecord(recordId: string, updatedData: Partial<Omit<WaterUsageRecord, 'id'>>): Promise<void> {
-    const batch = writeBatch(db);
-    const recordRef = doc(db, 'usageRecords', recordId);
-    const oldRecordSnap = await getDoc(recordRef);
-    
-    if (!oldRecordSnap.exists()) throw new Error("Record not found");
-    const oldRecord = oldRecordSnap.data() as WaterUsageRecord;
+    const index = MOCK_USAGE_RECORDS.findIndex(r => r.id === recordId);
+    if (index !== -1) {
+        const oldRecord = MOCK_USAGE_RECORDS[index];
+        const costDifference = (updatedData.cost ?? oldRecord.cost) - oldRecord.cost;
+        
+        MOCK_USAGE_RECORDS[index] = { ...oldRecord, ...updatedData };
 
-    const costDifference = (updatedData.cost ?? oldRecord.cost) - oldRecord.cost;
-
-    batch.update(recordRef, updatedData);
-
-    if (costDifference !== 0) {
-        const customerRef = doc(db, 'customers', oldRecord.customerId);
-        const customerSnap = await getDoc(customerRef);
-        if (customerSnap.exists()) {
-            const currentBalance = customerSnap.data().balance || 0;
-            batch.update(customerRef, { balance: currentBalance + costDifference });
+        if (costDifference !== 0) {
+            const customerIndex = MOCK_CUSTOMERS.findIndex(c => c.id === oldRecord.customerId);
+            if (customerIndex !== -1) {
+                MOCK_CUSTOMERS[customerIndex].balance += costDifference;
+            }
         }
     }
-    await batch.commit();
 }
 
-
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
-    const q = query(collection(db, 'usageRecords'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => convertTimestamps<WaterUsageRecord>({ id: doc.id, ...doc.data() }));
+    return [...MOCK_USAGE_RECORDS].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function getUsageRecordsByCustomerId(customerId: string): Promise<WaterUsageRecord[]> {
-    const q = query(collection(db, 'usageRecords'), where('customerId', '==', customerId), orderBy('startTime', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => convertTimestamps<WaterUsageRecord>({ id: doc.id, ...doc.data() }));
+    return MOCK_USAGE_RECORDS
+        .filter(r => r.customerId === customerId)
+        .sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
 }
 
 
 // --- Payment Functions ---
 export async function addPayment(paymentData: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment> {
-    const batch = writeBatch(db);
+    const newPayment: Payment = {
+        id: `pay_${Date.now()}`,
+        ...paymentData,
+        createdAt: new Date(),
+    };
+    MOCK_PAYMENTS.push(newPayment);
 
-    const newPaymentRef = doc(collection(db, 'payments'));
-    batch.set(newPaymentRef, { ...paymentData, createdAt: serverTimestamp() });
-    
-    const customerRef = doc(db, 'customers', paymentData.customerId);
-    const customerDoc = await getDoc(customerRef);
-    if (customerDoc.exists()) {
-        const currentBalance = customerDoc.data().balance || 0;
-        batch.update(customerRef, { balance: currentBalance - paymentData.amountPaid });
+    const customerIndex = MOCK_CUSTOMERS.findIndex(c => c.id === paymentData.customerId);
+    if (customerIndex !== -1) {
+        MOCK_CUSTOMERS[customerIndex].balance -= paymentData.amountPaid;
     }
-
-    await batch.commit();
-    return { id: newPaymentRef.id, ...paymentData, createdAt: new Date() };
+    return newPayment;
 }
 
 export async function updatePaymentRecord(paymentId: string, updatedData: Partial<Omit<Payment, 'id'>>): Promise<void> {
-    const batch = writeBatch(db);
-    const paymentRef = doc(db, 'payments', paymentId);
-    const oldPaymentSnap = await getDoc(paymentRef);
+    const index = MOCK_PAYMENTS.findIndex(p => p.id === paymentId);
+    if (index !== -1) {
+        const oldPayment = MOCK_PAYMENTS[index];
+        const balanceAdjustment = oldPayment.amountPaid - (updatedData.amountPaid ?? oldPayment.amountPaid);
+        
+        MOCK_PAYMENTS[index] = { ...oldPayment, ...updatedData };
 
-    if (!oldPaymentSnap.exists()) throw new Error("Payment record not found");
-    const oldPayment = oldPaymentSnap.data() as Payment;
-    
-    // amountPaid is positive, so a larger new payment means balance should decrease more
-    // (old - new)
-    const balanceAdjustment = oldPayment.amountPaid - (updatedData.amountPaid ?? oldPayment.amountPaid);
-    
-    batch.update(paymentRef, updatedData);
-
-    if (balanceAdjustment !== 0) {
-        const customerRef = doc(db, 'customers', oldPayment.customerId);
-        const customerSnap = await getDoc(customerRef);
-        if (customerSnap.exists()) {
-            const currentBalance = customerSnap.data().balance || 0;
-            batch.update(customerRef, { balance: currentBalance + balanceAdjustment });
+        if (balanceAdjustment !== 0) {
+            const customerIndex = MOCK_CUSTOMERS.findIndex(c => c.id === oldPayment.customerId);
+            if (customerIndex !== -1) {
+                MOCK_CUSTOMERS[customerIndex].balance += balanceAdjustment;
+            }
         }
     }
-    await batch.commit();
 }
 
+
 export async function getAllPayments(): Promise<Payment[]> {
-    const q = query(collection(db, 'payments'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => convertTimestamps<Payment>({ id: doc.id, ...doc.data() }));
+    return [...MOCK_PAYMENTS].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function getPaymentsByCustomerId(customerId: string): Promise<Payment[]> {
-    const q = query(collection(db, 'payments'), where('customerId', '==', customerId), orderBy('paymentDate', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => convertTimestamps<Payment>({ id: doc.id, ...doc.data() }));
+    return MOCK_PAYMENTS
+        .filter(p => p.customerId === customerId)
+        .sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
 }
 
 // --- Notification Functions ---
 export async function addNotification(notificationData: Omit<Notification, 'id' | 'createdAt'>): Promise<void> {
-  await addDoc(collection(db, 'notifications'), {
-    ...notificationData,
-    createdAt: serverTimestamp(),
-  });
+    const newNotification: Notification = {
+        id: `notif_${Date.now()}`,
+        ...notificationData,
+        createdAt: new Date(),
+    };
+    MOCK_NOTIFICATIONS.unshift(newNotification);
 }
 
 export async function getNotificationsByUserId(userId: string): Promise<Notification[]> {
-    const q = query(collection(db, 'notifications'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => convertTimestamps<Notification>({ id: doc.id, ...doc.data() }));
+    return MOCK_NOTIFICATIONS
+        .filter(n => n.userId === userId)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
-    const docRef = doc(db, 'notifications', notificationId);
-    await updateDoc(docRef, { isRead: true });
+    const notification = MOCK_NOTIFICATIONS.find(n => n.id === notificationId);
+    if (notification) {
+        notification.isRead = true;
+    }
 }
 
 export async function markAllNotificationsAsRead(userId: string): Promise<void> {
-    const q = query(collection(db, 'notifications'), where('userId', '==', userId), where('isRead', '==', false));
-    const snapshot = await getDocs(q);
-    
-    const batch = writeBatch(db);
-    snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { isRead: true });
+    MOCK_NOTIFICATIONS.forEach(n => {
+        if (n.userId === userId && !n.isRead) {
+            n.isRead = true;
+        }
     });
-    await batch.commit();
 }
