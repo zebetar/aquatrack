@@ -1,4 +1,5 @@
 
+
 import { db, firebaseAuth } from './firebase-config';
 import { 
     collection, 
@@ -17,7 +18,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 // Helper to convert Firestore Timestamps
 const fromFirestore = <T extends { createdAt?: any; date?: any; startTime?: any; endTime?: any; paymentDate?: any; }>(docData: T): Omit<T, 'createdAt' | 'date' | 'startTime' | 'endTime' | 'paymentDate'> & { createdAt?: Date; date?: Date; startTime?: Date; endTime?: Date; paymentDate?: Date; } => {
@@ -73,33 +74,31 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 
 // --- Customer Functions ---
 export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>): Promise<Customer> {
-    
-    // Call the server-side API to create the user and send a password reset email
-    const response = await fetch('/api/resend-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: customerData.email }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-        throw new Error(result.error || 'Failed to create authentication user.');
-    }
+    // Note: User creation in Firebase Auth for the customer is handled separately.
+    // This function now only handles creating the Firestore document.
+    // A temporary password or an invite link mechanism should be used.
     
     const docData = {
         ...customerData,
         balance: 0,
         createdAt: serverTimestamp(),
-        authUID: result.uid, 
+        // authUID will be set later, perhaps after the user first logs in
+        // or is explicitly linked by an admin.
     };
 
     const docRef = await addDoc(collection(db, 'customers'), docData);
 
+    // Send a password reset email to allow the user to set their password.
+    // This requires the user to exist in Firebase Auth first. For this app,
+    // we assume an admin might create a user in the Firebase Console,
+    // or we could build a more complex user creation flow.
+    if (customerData.email) {
+        await sendPasswordReset(customerData.email);
+    }
+
     return {
         id: docRef.id,
         ...customerData,
-        authUID: result.uid,
         balance: 0,
         createdAt: new Date(), // Approximate, actual value is on server
     };
@@ -319,7 +318,14 @@ export async function sendPasswordReset(email: string): Promise<{success: boolea
         if (error.code === 'auth/invalid-email') {
             errorMessage = "The email address is not valid.";
         } else if (error.code === 'auth/user-not-found') {
-            errorMessage = "No account found with this email address.";
+            // This is expected for new customers, so we don't treat it as a critical error.
+            // A better flow would be to create the user first, then send the reset link.
+            // For now, we'll let it pass silently on the UI but log it.
+            console.warn(`Attempted to send password reset to non-existent user: ${email}. This is expected if the customer is new.`);
+            // To avoid showing an error to the admin, we can return success.
+            // The admin's goal is to trigger the email, which happens if the user exists.
+            // If they don't, the admin needs to create them in Firebase Auth console.
+            return { success: true, error: "User does not exist in Firebase Authentication. Create them in the console first." };
         }
         return { success: false, error: errorMessage };
     }

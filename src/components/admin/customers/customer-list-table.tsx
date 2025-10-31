@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Download, Droplets, Pencil, Trash2, Mail } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { getUsageRecordsByCustomerId, getPaymentsByCustomerId } from '@/lib/firebase-service';
+import { getUsageRecordsByCustomerId, getPaymentsByCustomerId, sendPasswordReset } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
@@ -64,32 +64,20 @@ export function CustomerListTable({
     }
 
     setSendingInviteId(customer.id);
-    try {
-      const response = await fetch('/api/resend-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: customer.email }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'An unexpected error occurred.');
-      }
-
-      toast({
-        title: 'Password Reset Link Generated',
-        description: `A password reset link for ${customer.email} has been logged to the server console.`,
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Failed to Send Invite',
-        description: error.message,
-      });
-    } finally {
-      setSendingInviteId(null);
+    const { success, error } = await sendPasswordReset(customer.email);
+    if (success) {
+        toast({
+            title: 'Password Reset Email Sent',
+            description: `If an account exists for ${customer.email}, an email has been sent.`,
+        });
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Send Invite',
+            description: error,
+        });
     }
+    setSendingInviteId(null);
   };
 
 

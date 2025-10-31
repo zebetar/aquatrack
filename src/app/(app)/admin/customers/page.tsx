@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
+import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId, sendPasswordReset } from '@/lib/firebase-service';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -64,11 +64,30 @@ export default function AdminCustomersPage() {
     
     try {
         const newCustomer = await addCustomer(newCustomerData);
+        
+        if (newCustomer.email) {
+            // NOTE: This will only work if the user already exists in Firebase Authentication.
+            // For a new user, you must first create them in the Firebase Console.
+            const { success, error } = await sendPasswordReset(newCustomer.email);
+            if (success) {
+                 toast({
+                    title: "Customer Added & Invite Sent",
+                    description: `${newCustomerData.name} has been added. If they have an account, a password setup email has been sent.`,
+                });
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "Customer Added, But Invite Failed",
+                    description: error || "Could not send password reset email. Please ensure the user exists in Firebase Authentication.",
+                });
+            }
+        } else {
+            toast({
+                title: "Customer Added (No Email)",
+                description: `${newCustomerData.name} has been added without an email.`,
+            });
+        }
 
-        toast({
-            title: "Customer Added & Invite Sent",
-            description: `${newCustomerData.name} has been added. A password setup link has been generated in the server console.`,
-        });
 
         const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
             userId: user.id, 
