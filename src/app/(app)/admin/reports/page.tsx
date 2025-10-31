@@ -3,10 +3,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, getDaysInMonth } from 'date-fns';
-import type { Customer, WaterUsageRecord } from '@/types';
+import type { Customer, WaterUsageRecord, ChartConfig } from '@/types';
 import { formatDurationFromHours, cn } from '@/lib/utils';
 import { Droplets, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +15,17 @@ import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
+
+const chartConfig = {
+  supply: {
+    label: "Supply",
+    color: "hsl(var(--chart-1))",
+  },
+  revenue: {
+    label: "Revenue",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -288,13 +300,13 @@ export default function AdminReportsPage() {
               <StatChangeIndicator value={supplyChange} />
             </div>
             <div className="h-[120px] mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={supplyChartData}>
+              <ChartContainer config={chartConfig} className="w-full h-full">
+                <BarChart accessibilityLayer data={supplyChartData}>
                   <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip cursor={{fill: 'hsl(var(--muted) / 0.5)'}} content={<FuturisticTooltip />} />
-                  <Bar dataKey="supply" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
+                  <Bar dataKey="supply" fill="var(--color-supply)" radius={[4, 4, 0, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>
@@ -320,19 +332,19 @@ export default function AdminReportsPage() {
               <StatChangeIndicator value={revenueChange} />
             </div>
             <div className="h-[120px] mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                 <AreaChart data={revenueChartData}>
-                    <defs>
-                      <linearGradient id="colorRevenueReports" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} content={<FuturisticTooltip />} />
-                    <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenueReports)" strokeWidth={2} />
-                 </AreaChart>
-              </ResponsiveContainer>
+              <ChartContainer config={chartConfig} className="w-full h-full">
+                <AreaChart accessibilityLayer data={revenueChartData}>
+                  <defs>
+                    <linearGradient id="colorRevenueReports" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                  <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--color-revenue)" fillOpacity={1} fill="url(#colorRevenueReports)" strokeWidth={2} />
+                </AreaChart>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>

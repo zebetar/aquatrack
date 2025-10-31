@@ -81,6 +81,16 @@ export interface CommandItem {
   action?: () => void;
 }
 
+export type ChartConfig = {
+  [k in string]: {
+    label?: React.ReactNode
+    icon?: React.ComponentType
+  } & (
+    | { color?: string; theme?: never }
+    | { color?: never; theme: Record<"light" | "dark", string> }
+  )
+}
+
 // Schemas and Types for Revenue Projection
 export const ProjectRevenueInputSchema = z.object({
   lastMonthRevenue: z.number().describe("The total revenue from the previous month."),

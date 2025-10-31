@@ -7,13 +7,25 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, memo } from 'react'; 
 import { useAuth } from '@/contexts/auth-context';
-import type { Customer, WaterUsageRecord } from '@/types';
+import type { Customer, WaterUsageRecord, ChartConfig } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getCustomerByAuthUID, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
+
+const chartConfig = {
+  usage: {
+    label: "Usage",
+    color: "hsl(var(--chart-1))",
+  },
+  cost: {
+    label: "Cost",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -306,13 +318,13 @@ export default function ViewerDashboardPage() {
                   <StatChangeIndicator value={usageChange} />
               </div>
               <div className="h-[120px] mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={usageChartData}>
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip cursor={{fill: 'hsl(var(--muted) / 0.5)'}} content={<FuturisticTooltip />} />
-                      <Bar dataKey="usage" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <BarChart accessibilityLayer data={usageChartData}>
+                    <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                    <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
+                    <Bar dataKey="usage" fill="var(--color-usage)" radius={[4, 4, 0, 0]} />
                   </BarChart>
-                  </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
         </Card>
@@ -338,19 +350,19 @@ export default function ViewerDashboardPage() {
                   <StatChangeIndicator value={costChange} />
               </div>
               <div className="h-[120px] mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={costChartData}>
-                      <defs>
-                          <linearGradient id="colorCostViewer" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                          </linearGradient>
-                      </defs>
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip cursor={{stroke: 'hsl(var(--primary))', strokeDasharray: '3 3'}} content={<FuturisticTooltip />} />
-                      <Area type="monotone" dataKey="cost" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorCostViewer)" strokeWidth={2} />
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <AreaChart accessibilityLayer data={costChartData}>
+                    <defs>
+                        <linearGradient id="colorCostViewer" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-cost)" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="var(--color-cost)" stopOpacity={0}/>
+                        </linearGradient>
+                    </defs>
+                    <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                    <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
+                    <Area type="monotone" dataKey="cost" stroke="var(--color-cost)" fillOpacity={1} fill="url(#colorCostViewer)" strokeWidth={2} />
                   </AreaChart>
-                  </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
