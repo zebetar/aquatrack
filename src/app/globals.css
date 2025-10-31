@@ -540,15 +540,16 @@
     transform: scale(1);
     opacity: 1;
   }
-  50% {
-    transform: scale(1.2);
-    opacity: 1;
+  80% {
+    transform: scale(1.5);
+    opacity: 0.5;
   }
   100% {
-    transform: scale(0.5);
+    transform: scale(2);
     opacity: 0;
   }
 }
+
 
 .animate-icon-pop {
   /* Animation duration must match the redirect timer in src/app/page.tsx */
