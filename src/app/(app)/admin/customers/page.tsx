@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId, updateCustomerInDb } from '@/lib/firebase-service';
+import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId, resendPasswordReset } from '@/lib/firebase-service';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -65,6 +65,25 @@ export default function AdminCustomersPage() {
     try {
         const newCustomer = await addCustomer(newCustomerData);
 
+        // Automatically send the password reset / invite email
+        if (newCustomerData.email) {
+            const inviteResult = await resendPasswordReset(newCustomerData.email);
+            if (inviteResult.success) {
+                 toast({
+                    title: "Customer Added & Invite Sent",
+                    description: `${newCustomerData.name} has been added. A password setup email has been sent to them.`,
+                });
+            } else {
+                throw new Error(inviteResult.error || 'Failed to send invite email.');
+            }
+        } else {
+             toast({
+                title: "Customer Added",
+                description: `${newCustomerData.name} has been added. No email was provided for an invite.`,
+            });
+        }
+
+
         const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
             userId: user.id, 
             message: `New customer ${newCustomerData.name} was added.`,
@@ -73,16 +92,11 @@ export default function AdminCustomersPage() {
             linkTo: `/admin/customers/${newCustomer.id}`,
         };
         await addNotification(adminNotification);
-
-        toast({
-            title: "Customer Added",
-            description: `${newCustomerData.name} has been added. They can now log in using the 'Forgot Password' link.`,
-        });
         
         await fetchCustomers(); // Refresh the list
-    } catch (error) {
-        console.error("Failed to add customer to Firestore:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to create the customer profile in Firestore.' });
+    } catch (error: any) {
+        console.error("Failed to add customer or send invite:", error);
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to create customer profile or send invite.' });
     }
   };
 

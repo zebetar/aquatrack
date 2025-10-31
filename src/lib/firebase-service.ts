@@ -287,15 +287,8 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
     await batch.commit();
 }
 
-// --- Admin Actions (Server-side) ---
-// These functions call a Next.js API route that uses the Firebase Admin SDK.
-export async function createAuthUserAndSendInvite(email: string, name: string): Promise<{success: boolean, uid?: string, error?: string}> {
-    // This function is now deprecated in favor of the new workflow.
-    // It can be removed or left for future server-side implementations.
-    console.warn("createAuthUserAndSendInvite is deprecated.");
-    return { success: false, error: "This function is deprecated." };
-}
 
+// --- Admin Actions (via API route) ---
 export async function resendPasswordReset(email: string): Promise<{success: boolean, error?: string}> {
     const response = await fetch('/api/resend-invite', {
         method: 'POST',
