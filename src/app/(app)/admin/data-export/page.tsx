@@ -1,11 +1,11 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { FileDown, CalendarIcon, Search, Download, Droplets } from 'lucide-react'; // Removed unused icons
-import { exportMockDataAsJSON, getAllMockCustomers, getMockCustomerById, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
+import { FileDown, CalendarIcon, Search, Download, Droplets } from 'lucide-react';
+import { db } from '@/lib/firebase-config';
+import { collection, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
@@ -40,54 +40,38 @@ export default function DataExportPage() {
   const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
-    setIsLoadingCustomers(true);
-    const allCustomers = getAllMockCustomers();
-    setCustomers(allCustomers.sort((a,b) => a.name.localeCompare(b.name)));
-    setIsLoadingCustomers(false);
-  }, []);
+    const fetchCustomers = async () => {
+      setIsLoadingCustomers(true);
+      try {
+        const customersQuery = query(collection(db, 'customers'), orderBy('name', 'asc'));
+        const querySnapshot = await getDocs(customersQuery);
+        const allCustomers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+        setCustomers(allCustomers);
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch customers.' });
+      } finally {
+        setIsLoadingCustomers(false);
+      }
+    };
+    fetchCustomers();
+  }, [toast]);
 
   const handleDataExport = (dataType: string, formatType: string) => {
     toast({
-      title: "Export Initiated",
-      description: `${dataType} data export to ${formatType} has started.`,
+      title: "Coming Soon!",
+      description: `Exporting ${dataType} to ${formatType} is not yet implemented.`,
     });
   };
 
   const handleDownloadAllData = () => {
-    try {
-      const jsonData = exportMockDataAsJSON();
-      if (jsonData === "{\n  \"customers\": [],\n  \"usageRecords\": [],\n  \"payments\": [],\n  \"notifications\": []\n}") {
-         toast({
-          variant: "default",
-          title: "No Data to Export",
-          description: "The data store is currently empty.",
-        });
-        return;
-      }
-      const blob = new Blob([jsonData], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `AquaTrack_data_export_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast({
-        title: "Data Exported",
-        description: "All current data from localStorage has been downloaded as a JSON file.",
-      });
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      toast({
-        variant: "destructive",
-        title: "Export Failed",
-        description: "Could not export the data.",
-      });
-    }
+    toast({
+      title: "Coming Soon!",
+      description: `A full data backup feature will be available in a future update.`,
+    });
   };
 
-  const handlePreviewFilteredData = () => {
+  const handlePreviewFilteredData = async () => {
     if (!selectedCustomerId || !startDate || !endDate) {
       toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer, start date, and end date." });
       return;
@@ -100,28 +84,49 @@ export default function DataExportPage() {
     setIsPreviewing(true);
     setShowPreview(false);
 
-    const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+    try {
+      const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+      
+      const usageQuery = query(
+        collection(db, `customers/${selectedCustomerId}/usageRecords`),
+        where('startTime', '>=', startDate),
+        where('startTime', '<=', endOfDayEndDate),
+        orderBy('startTime', 'desc')
+      );
+      const usageSnap = await getDocs(usageQuery);
+      const usageData = usageSnap.docs.map(d => ({ 
+        id: d.id, 
+        ...d.data(), 
+        date: (d.data().date as Timestamp).toDate(),
+        startTime: (d.data().startTime as Timestamp).toDate(),
+        endTime: (d.data().endTime as Timestamp).toDate(),
+      } as WaterUsageRecord));
+      setFilteredUsage(usageData);
 
-    const usage = getMockUsageRecordsByCustomerId(selectedCustomerId)
-      .filter(record => {
-        const recordDate = new Date(record.date);
-        return recordDate >= startDate && recordDate <= endOfDayEndDate;
-      })
-      .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const paymentsQuery = query(
+        collection(db, `customers/${selectedCustomerId}/payments`),
+        where('paymentDate', '>=', startDate),
+        where('paymentDate', '<=', endOfDayEndDate),
+        orderBy('paymentDate', 'desc')
+      );
+      const paymentSnap = await getDocs(paymentsQuery);
+      const paymentData = paymentSnap.docs.map(d => ({ 
+        id: d.id, 
+        ...d.data(),
+        paymentDate: (d.data().paymentDate as Timestamp).toDate(),
+      } as Payment));
+      setFilteredPayments(paymentData);
+      
+      setShowPreview(true);
+      if (usageData.length === 0 && paymentData.length === 0) {
+          toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria and date range." });
+      }
 
-    const payments = getMockPaymentsByCustomerId(selectedCustomerId)
-      .filter(payment => {
-        const paymentDate = new Date(payment.paymentDate);
-        return paymentDate >= startDate && paymentDate <= endOfDayEndDate;
-      })
-      .sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
-
-    setFilteredUsage(usage);
-    setFilteredPayments(payments);
-    setIsPreviewing(false);
-    setShowPreview(true);
-    if (usage.length === 0 && payments.length === 0) {
-        toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria and date range." });
+    } catch (error) {
+      console.error("Error fetching filtered data: ", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch data for preview.' });
+    } finally {
+      setIsPreviewing(false);
     }
   };
 
@@ -139,7 +144,7 @@ export default function DataExportPage() {
         return;
     }
 
-    const customer = getMockCustomerById(selectedCustomerId);
+    const customer = customers.find(c => c.id === selectedCustomerId);
     if (!customer) {
       toast({ variant: "destructive", title: "Error", description: "Could not find selected customer." });
       return;
@@ -348,7 +353,7 @@ export default function DataExportPage() {
                 <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80 hover:bg-muted/50 transition-colors">
                   <div className="mb-2 sm:mb-0">
                     <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Download Data Backup</h3>
-                    <p className="text-sm text-muted-foreground">Download all current data from localStorage as a single JSON file. This is useful for backup or migration.</p>
+                    <p className="text-sm text-muted-foreground">Download all app data as a single JSON file. This is useful for backup or migration.</p>
                   </div>
                   <Button onClick={handleDownloadAllData} variant="outline">
                     Download All Data (JSON)

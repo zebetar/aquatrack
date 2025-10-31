@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +13,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import { Droplets } from "lucide-react";
 import { useState } from "react";
 import type { Customer } from "@/types";
@@ -28,11 +26,10 @@ const addCustomerFormSchema = z.object({
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Customer) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => void;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<AddCustomerFormValues>({
@@ -47,35 +44,21 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     
-    // Base customer object with required fields.
-    // This prevents sending 'undefined' values to Firestore, which is not allowed.
-    const newCustomer: Customer = {
-      id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> = {
       name: values.name,
-      createdAt: new Date(),
-      balance: 0,
     };
 
-    // Conditionally add optional fields only if they have a value.
-    const customerEmail = values.email?.trim();
-    if (customerEmail) {
-      newCustomer.email = customerEmail.toLowerCase();
-      newCustomer.authUID = `authuid-${Math.random().toString(36).substring(2, 9)}`;
+    if (values.email) {
+      newCustomer.email = values.email;
     }
-
-    const contactInfo = values.contactInfo?.trim();
-    if (contactInfo) {
-      newCustomer.contactInfo = contactInfo;
+    if (values.contactInfo) {
+      newCustomer.contactInfo = values.contactInfo;
     }
     
-    // The newCustomer object is now clean and ready for Firestore.
-    // The parent component will handle the actual database call and notification.
-    
-    // Toast removed to prefer persistent notifications.
-    // The parent component handles success feedback.
+    // The parent component now handles the database call
+    onSuccessCallback(newCustomer); 
     
     setIsLoading(false);
-    onSuccessCallback(newCustomer); 
     form.reset();
   }
 

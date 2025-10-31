@@ -1,10 +1,10 @@
-
 "use client";
 
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer } from '@/types'; 
 import { useState, useEffect, useCallback } from 'react';
-import { getMockOutstandingCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store'; 
+import { collection, query, where, getDocs, collectionGroup } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
 import { Droplets, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,11 +17,16 @@ export default function OutstandingBillsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchOutstandingCustomers = useCallback(() => {
+  const fetchOutstandingCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-        const customers = getMockOutstandingCustomers();
-        const usageRecords = getAllMockUsageRecords();
+        const customersQuery = query(collection(db, 'customers'), where('balance', '>', 0));
+        const customersSnap = await getDocs(customersQuery);
+        const customers = customersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+
+        const usageRecordsQuery = query(collectionGroup(db, 'usageRecords'));
+        const usageRecordsSnap = await getDocs(usageRecordsQuery);
+        const usageRecords = usageRecordsSnap.docs.map(d => d.data());
         
         const augmentedCustomers = customers.map(customer => {
             const customerUsage = usageRecords
@@ -30,9 +35,9 @@ export default function OutstandingBillsPage() {
             return { ...customer, totalUsageHours: customerUsage };
         });
 
-        setOutstandingCustomers(augmentedCustomers);
+        setOutstandingCustomers(augmentedCustomers.sort((a, b) => b.balance - a.balance));
     } catch (error) {
-        console.error("Failed to fetch outstanding customers from mock store:", error);
+        console.error("Failed to fetch outstanding customers from Firestore:", error);
         toast({
           variant: "destructive",
           title: "Failed to load report",

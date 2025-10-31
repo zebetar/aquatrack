@@ -1,4 +1,3 @@
-
 "use client"; 
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,7 +5,8 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, getDaysInMonth } from 'date-fns';
-import { getAllMockUsageRecords, getAllMockCustomers } from '@/lib/mock-data-store';
+import { collection, collectionGroup, getDocs, query, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
 import type { Customer, WaterUsageRecord } from '@/types';
 import { formatDurationFromHours, cn } from '@/lib/utils';
 import { Droplets, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert } from 'lucide-react';
@@ -108,11 +108,25 @@ export default function AdminReportsPage() {
     return options;
   }, []);
 
-  const loadReportsData = useCallback(() => {
+  const loadReportsData = useCallback(async () => {
     setIsLoading(true);
     
-    const records = getAllMockUsageRecords();
-    const customers = getAllMockCustomers();
+    const usageQuery = query(collectionGroup(db, 'usageRecords'));
+    const usageSnap = await getDocs(usageQuery);
+    const records = usageSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        date: (data.date as Timestamp).toDate(),
+        startTime: (data.startTime as Timestamp).toDate(),
+        endTime: (data.endTime as Timestamp).toDate(),
+      } as WaterUsageRecord;
+    });
+
+    const customersQuery = query(collection(db, 'customers'));
+    const customersSnap = await getDocs(customersQuery);
+    const customers = customersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+
     setAllUsageRecords(records);
     
     const selectedDate = parseISO(selectedMonth);
@@ -123,8 +137,8 @@ export default function AdminReportsPage() {
     const firstDayOfLastMonth = startOfMonth(lastMonthDate);
     const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-    const usageThisMonth = records.filter(r => new Date(r.date) >= firstDayOfMonth && new Date(r.date) <= lastDayOfMonth);
-    const usageLastMonth = records.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+    const usageThisMonth = records.filter(r => r.date >= firstDayOfMonth && r.date <= lastDayOfMonth);
+    const usageLastMonth = records.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
     
     const currentMonthSupply = usageThisMonth.reduce((sum, r) => sum + r.durationHours, 0);
     const currentMonthRevenue = usageThisMonth.reduce((sum, r) => sum + r.cost, 0);
@@ -169,7 +183,7 @@ export default function AdminReportsPage() {
       const createMonthlyData = () => {
           const historicalMap = new Map<string, { supply: number; revenue: number }>();
           for (let i = 5; i >= 0; i--) {
-              const date = subMonths(selectedDate, i);
+              const date = subMonths(new Date(), i);
               const monthKey = format(date, 'yyyy-MM');
               historicalMap.set(monthKey, { supply: 0, revenue: 0 });
           }

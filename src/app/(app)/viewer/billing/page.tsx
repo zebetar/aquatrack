@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Payment, Customer } from '@/types'; 
@@ -8,11 +7,14 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { getMockPaymentsByCustomerId, getMockCustomerById } from '@/lib/mock-data-store';
+import { db } from '@/lib/firebase-config';
+import { collection, doc, getDoc, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { Droplets } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ViewerBillingPage() {
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [customerProfile, setCustomerProfile] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,13 +25,31 @@ export default function ViewerBillingPage() {
       return;
     }
     setIsLoading(true);
-    const paymentData = getMockPaymentsByCustomerId(user.customerId);
-    const profileData = getMockCustomerById(user.customerId);
-    
-    setPayments(paymentData.sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())); // Sort here
-    setCustomerProfile(profileData || null);
-    setIsLoading(false);
-  }, [user]);
+    try {
+      // Fetch customer profile
+      const customerRef = doc(db, 'customers', user.customerId);
+      const customerSnap = await getDoc(customerRef);
+      if (customerSnap.exists()) {
+        setCustomerProfile({ id: customerSnap.id, ...customerSnap.data() } as Customer);
+      }
+
+      // Fetch payments
+      const paymentsQuery = query(collection(db, `customers/${user.customerId}/payments`), orderBy('paymentDate', 'desc'));
+      const paymentsSnap = await getDocs(paymentsQuery);
+      const paymentData = paymentsSnap.docs.map(d => ({ 
+        id: d.id, 
+        ...d.data(), 
+        paymentDate: (d.data().paymentDate as Timestamp).toDate()
+      } as Payment));
+      setPayments(paymentData);
+
+    } catch (error) {
+      console.error("Error fetching billing data:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch your billing information.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     if (!authLoading) {

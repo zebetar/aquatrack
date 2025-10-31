@@ -1,7 +1,6 @@
-
 "use client";
 
-import type { Notification } from '@/types';
+import type { Notification as TNotification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,12 +8,13 @@ import { BellRing, CheckCircle2, Droplets, CreditCard, UserCog, Palette, AlertTr
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { getMockNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
+import { db } from '@/lib/firebase-config';
+import { collection, query, where, orderBy, getDocs, doc, writeBatch, Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-const NotificationIcon = ({ type }: { type: Notification['type']}) => {
+const NotificationIcon = ({ type }: { type: TNotification['type']}) => {
   const iconProps = { className: "h-5 w-5" };
   switch(type) {
     case 'USAGE_LOGGED': return <Droplets {...iconProps} />;
@@ -30,7 +30,7 @@ const NotificationIcon = ({ type }: { type: Notification['type']}) => {
 export default function ViewerNotificationsPage() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<TNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const viewerUserId = user?.id; 
@@ -41,10 +41,29 @@ export default function ViewerNotificationsPage() {
       return;
     }
     setIsLoading(true);
-    const fetchedNotifications = getMockNotificationsByUserId(viewerUserId);
-    setNotifications(fetchedNotifications || []);
-    setIsLoading(false);
-  }, [viewerUserId]);
+    try {
+      const q = query(
+        collection(db, "notifications"),
+        where("userId", "==", viewerUserId),
+        orderBy("createdAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const fetchedNotifications = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: (data.createdAt as Timestamp).toDate(),
+        } as TNotification;
+      });
+      setNotifications(fetchedNotifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch notifications.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [viewerUserId, toast]);
 
   useEffect(() => {
     if (!authLoading && viewerUserId) {
@@ -54,17 +73,36 @@ export default function ViewerNotificationsPage() {
     }
   }, [authLoading, loadNotifications, viewerUserId]);
 
-  const handleMarkAsRead = (notificationId: string) => {
+  const handleMarkAsRead = async (notificationId: string) => {
     if (!viewerUserId) return;
-    markNotificationAsRead(notificationId, viewerUserId);
-    loadNotifications(); 
+    try {
+      const notifRef = doc(db, 'notifications', notificationId);
+      await writeBatch(db).update(notifRef, { isRead: true }).commit();
+      loadNotifications(); 
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not update notification.' });
+    }
   };
   
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
     if (!viewerUserId) return;
-    markAllNotificationsAsRead(viewerUserId);
-    toast({ title: "Success", description: "All notifications marked as read." });
-    loadNotifications();
+    const unread = notifications.filter(n => !n.isRead);
+    if (unread.length === 0) return;
+
+    try {
+      const batch = writeBatch(db);
+      unread.forEach(n => {
+        const notifRef = doc(db, 'notifications', n.id);
+        batch.update(notifRef, { isRead: true });
+      });
+      await batch.commit();
+      toast({ title: "Success", description: "All notifications marked as read." });
+      loadNotifications();
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not update all notifications.' });
+    }
   };
 
   if (isLoading || authLoading) {

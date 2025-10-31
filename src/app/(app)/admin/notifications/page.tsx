@@ -1,23 +1,20 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BellRing, CheckCircle2, Droplets, CreditCard, UserPlus, UserCog, Palette, AlertTriangle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import type { Notification } from '@/types';
+import type { Notification as TNotification } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  getAllAdminNotifications, 
-  markNotificationAsRead, 
-  markAllNotificationsAsRead 
-} from '@/lib/mock-data-store';
+import { collection, query, where, orderBy, getDocs, doc, writeBatch } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/auth-context';
 
-const NotificationIcon = ({ type }: { type: Notification['type']}) => {
+const NotificationIcon = ({ type }: { type: TNotification['type']}) => {
   const iconProps = { className: "h-5 w-5" };
   switch(type) {
     case 'USAGE_LOGGED': return <Droplets {...iconProps} />;
@@ -32,30 +29,35 @@ const NotificationIcon = ({ type }: { type: Notification['type']}) => {
 };
 
 export default function AdminNotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<TNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const fetchNotifications = useCallback(() => {
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
-      const adminNotifications = getAllAdminNotifications();
-      setNotifications(adminNotifications);
+      const q = query(collection(db, "notifications"), where("userId", "==", user.id), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      const fetchedNotifications = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TNotification));
+      setNotifications(fetchedNotifications);
     } catch(error) {
-      console.error("Failed to load notifications from mock store", error);
+      console.error("Failed to load notifications from Firestore", error);
       toast({ variant: "destructive", title: "Error", description: "Could not load notifications. Check console for details." });
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, user]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  const handleMarkAsRead = (notificationId: string) => {
+  const handleMarkAsRead = async (notificationId: string) => {
     try {
-      markNotificationAsRead(notificationId, 'admin001');
+      const notificationRef = doc(db, "notifications", notificationId);
+      await writeBatch(db).update(notificationRef, { isRead: true }).commit();
       fetchNotifications();
     } catch(error) {
       console.error("Failed to mark notification as read:", error);
@@ -63,9 +65,18 @@ export default function AdminNotificationsPage() {
     }
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
     try {
-      markAllNotificationsAsRead('admin001');
+      const unreadNotifications = notifications.filter(n => !n.isRead);
+      if(unreadNotifications.length === 0) return;
+
+      const batch = writeBatch(db);
+      unreadNotifications.forEach(notification => {
+        const notificationRef = doc(db, "notifications", notification.id);
+        batch.update(notificationRef, { isRead: true });
+      });
+      await batch.commit();
+
       fetchNotifications();
       toast({ title: "Success", description: "All notifications marked as read." });
     } catch(error) {
@@ -134,7 +145,7 @@ export default function AdminNotificationsPage() {
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground/80 mt-1">
-                        {format(new Date(notification.createdAt), 'PP p')}
+                        {format(new Date(notification.createdAt.seconds * 1000), 'PP p')}
                       </p>
                       {notification.linkTo && (
                          <Button variant="link" size="sm" asChild className="px-0 h-auto mt-1 text-primary">

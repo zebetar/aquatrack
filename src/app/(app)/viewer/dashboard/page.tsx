@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, memo } from 'react'; 
 import { useAuth } from '@/contexts/auth-context';
-import { getMockCustomerById, getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
+import { db } from '@/lib/firebase-config';
+import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
 import type { Customer, WaterUsageRecord } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
@@ -130,39 +130,46 @@ export default function ViewerDashboardPage() {
       return;
     }
     setIsLoading(true);
+    try {
+        const profileRef = doc(db, 'customers', user.customerId);
+        const profileSnap = await getDoc(profileRef);
+        if(profileSnap.exists()) {
+            setCustomerProfile({ id: profileSnap.id, ...profileSnap.data() } as Customer);
+        }
 
-    const profile = getMockCustomerById(user.customerId);
-    setCustomerProfile(profile);
+        const usageQuery = query(collection(db, `customers/${user.customerId}/usageRecords`));
+        const usageSnap = await getDocs(usageQuery);
+        const usageRecords = usageSnap.docs.map(d => {
+            const data = d.data();
+            return { ...data, date: (data.date as Timestamp).toDate() } as WaterUsageRecord;
+        });
+        setAllUsageRecords(usageRecords);
+        
+        const today = new Date();
+        const firstDay = startOfMonth(today);
+        const lastDay = endOfMonth(today);
+        const lastMonthDate = subMonths(today, 1);
+        const firstDayOfLastMonth = startOfMonth(lastMonthDate);
+        const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-    const usageRecords = getMockUsageRecordsByCustomerId(user.customerId);
-    setAllUsageRecords(usageRecords);
-    
-    const today = new Date();
-    const firstDay = startOfMonth(today);
-    const lastDay = endOfMonth(today);
-    const lastMonthDate = subMonths(today, 1);
-    const firstDayOfLastMonth = startOfMonth(lastMonthDate);
-    const lastDayOfLastMonth = endOfMonth(lastMonthDate);
+        const usageThisMonthRecords = usageRecords.filter(record => record.date >= firstDay && record.date <= lastDay);
+        const usageLastMonthRecords = usageRecords.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
 
-    const usageThisMonthRecords = usageRecords.filter(record => {
-      const recordDate = new Date(record.date);
-      return recordDate >= firstDay && recordDate <= lastDay;
-    });
-
-    const usageLastMonthRecords = usageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
-
-    const thisMonthTotalUsage = usageThisMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
-    const thisMonthTotalCost = usageThisMonthRecords.reduce((sum, record) => sum + record.cost, 0);
-    const lastMonthTotalUsage = usageLastMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
-    const lastMonthTotalCost = usageLastMonthRecords.reduce((sum, record) => sum + record.cost, 0);
-    
-    setCurrentMonthUsage(thisMonthTotalUsage);
-    setCurrentMonthCost(thisMonthTotalCost);
-    
-    setUsageChange(lastMonthTotalUsage > 0 ? ((thisMonthTotalUsage - lastMonthTotalUsage) / lastMonthTotalUsage) * 100 : (thisMonthTotalUsage > 0 ? 100 : 0));
-    setCostChange(lastMonthTotalCost > 0 ? ((thisMonthTotalCost - lastMonthTotalCost) / lastMonthTotalCost) * 100 : (thisMonthTotalCost > 0 ? 100 : 0));
-
-    setIsLoading(false);
+        const thisMonthTotalUsage = usageThisMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
+        const thisMonthTotalCost = usageThisMonthRecords.reduce((sum, record) => sum + record.cost, 0);
+        const lastMonthTotalUsage = usageLastMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
+        const lastMonthTotalCost = usageLastMonthRecords.reduce((sum, record) => sum + record.cost, 0);
+        
+        setCurrentMonthUsage(thisMonthTotalUsage);
+        setCurrentMonthCost(thisMonthTotalCost);
+        
+        setUsageChange(lastMonthTotalUsage > 0 ? ((thisMonthTotalUsage - lastMonthTotalUsage) / lastMonthTotalUsage) * 100 : (thisMonthTotalUsage > 0 ? 100 : 0));
+        setCostChange(lastMonthTotalCost > 0 ? ((thisMonthTotalCost - lastMonthTotalCost) / lastMonthTotalCost) * 100 : (thisMonthTotalCost > 0 ? 100 : 0));
+    } catch (error) {
+        console.error("Failed to load viewer dashboard data", error);
+    } finally {
+        setIsLoading(false);
+    }
   }, [viewerUserId, user?.customerId]); 
 
   useEffect(() => {

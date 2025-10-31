@@ -1,17 +1,12 @@
-
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
 import { AddCustomerDialog } from '@/components/admin/customers/add-customer-dialog';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, Notification, WaterUsageRecord } from '@/types';
+import type { Customer, Notification as TNotification } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  getAllMockCustomers, 
-  addMockCustomer,
-  addMockNotification,
-  getAllMockUsageRecords 
-} from '@/lib/mock-data-store';
+import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, getDoc, doc, collectionGroup } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
 import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -26,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/auth-context';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -34,12 +30,18 @@ export default function AdminCustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuth();
   
-  const fetchCustomers = useCallback(() => {
+  const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const storedCustomers = getAllMockCustomers();
-      const usageRecords = getAllMockUsageRecords();
+      const customersQuery = query(collection(db, 'customers'), orderBy('createdAt', 'desc'));
+      const customersSnapshot = await getDocs(customersQuery);
+      const storedCustomers = customersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+
+      const usageRecordsQuery = query(collectionGroup(db, 'usageRecords'));
+      const usageRecordsSnapshot = await getDocs(usageRecordsQuery);
+      const usageRecords = usageRecordsSnapshot.docs.map(d => d.data());
 
       const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
         const customerUsage = usageRecords
@@ -49,7 +51,7 @@ export default function AdminCustomersPage() {
       });
       setCustomers(customersWithUsage);
     } catch (error) {
-        console.error("Failed to fetch customers from mock store:", error);
+        console.error("Failed to fetch customers from Firestore:", error);
         toast({
           variant: "destructive",
           title: "Failed to load customers",
@@ -64,24 +66,32 @@ export default function AdminCustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = (newCustomer: Customer) => {
+  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => {
+    if (!user) {
+        toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a customer." });
+        return;
+    }
     try {
-      addMockCustomer(newCustomer);
+      const customerWithMetadata = {
+        ...newCustomerData,
+        balance: 0,
+        createdAt: serverTimestamp(),
+      };
       
-      const adminNotification: Notification = {
-          id: `noti-${Date.now()}-admin-newcust`,
-          userId: 'admin001', 
-          message: `New customer added: ${newCustomer.name}.`,
+      const docRef = await addDoc(collection(db, "customers"), customerWithMetadata);
+      
+      const adminNotification: Omit<TNotification, 'id'|'createdAt'> = {
+          userId: user.id, 
+          message: `New customer added: ${newCustomerData.name}.`,
           type: 'CUSTOMER_ADDED',
           isRead: false,
-          linkTo: `/admin/customers/${newCustomer.id}`,
-          createdAt: new Date(),
+          linkTo: `/admin/customers/${docRef.id}`,
       };
-      addMockNotification(adminNotification);
+      await addDoc(collection(db, "notifications"), { ...adminNotification, createdAt: serverTimestamp() });
 
       fetchCustomers();
     } catch (error) {
-        console.error("Failed to add customer to mock store:", error);
+        console.error("Failed to add customer to Firestore:", error);
         toast({
           variant: "destructive",
           title: "Failed to add customer",

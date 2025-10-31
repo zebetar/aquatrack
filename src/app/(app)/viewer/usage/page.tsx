@@ -1,19 +1,18 @@
-
 "use client";
 
-import type { WaterUsageRecord, Notification } from '@/types';
+import type { WaterUsageRecord, Notification as TNotification } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { getMockUsageRecordsByCustomerId, addMockNotification } from '@/lib/mock-data-store';
+import { db } from '@/lib/firebase-config';
+import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { Droplets, AlertTriangle } from 'lucide-react';
 import { formatDurationFromHours } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-
 
 export default function ViewerUsagePage() {
   const { user, loading: authLoading } = useAuth();
@@ -27,11 +26,30 @@ export default function ViewerUsagePage() {
       return;
     }
     setIsLoading(true);
-    const records = getMockUsageRecordsByCustomerId(user.customerId);
-    records.sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-    setUsageRecords(records || []);
-    setIsLoading(false);
-  }, [user]);
+    try {
+      const q = query(
+        collection(db, `customers/${user.customerId}/usageRecords`),
+        orderBy('startTime', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const records = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+              id: doc.id,
+              ...data,
+              date: (data.date as Timestamp).toDate(),
+              startTime: (data.startTime as Timestamp).toDate(),
+              endTime: (data.endTime as Timestamp).toDate(),
+          } as WaterUsageRecord
+      });
+      setUsageRecords(records);
+    } catch (error) {
+      console.error("Error fetching usage records:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch usage history.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -39,24 +57,30 @@ export default function ViewerUsagePage() {
     }
   }, [authLoading, loadUsageData]);
 
-  const handleReportIssue = (record: WaterUsageRecord) => {
+  const handleReportIssue = async (record: WaterUsageRecord) => {
     if (!user || !user.customerId) return;
     
-    const issueNotification: Notification = {
-        id: `noti-issue-${Date.now()}-${record.id}`,
-        userId: 'admin001',
-        message: `Issue reported by ${user.name} for usage on ${format(new Date(record.date), 'PP')}.`,
-        type: 'ISSUE_REPORTED',
-        isRead: false,
-        linkTo: `/admin/customers/${user.customerId}`,
-        createdAt: new Date(),
-    };
-    addMockNotification(issueNotification);
+    try {
+      const issueNotification: Omit<TNotification, 'id' | 'createdAt'> = {
+          userId: 'admin-user-id', // In a real app, this would be a specific admin's ID
+          message: `Issue reported by ${user.name} for usage on ${format(new Date(record.date), 'PP')}.`,
+          type: 'ISSUE_REPORTED',
+          isRead: false,
+          linkTo: `/admin/customers/${user.customerId}`,
+      };
+      await addDoc(collection(db, 'notifications'), {
+        ...issueNotification,
+        createdAt: serverTimestamp()
+      });
 
-    toast({
-        title: "Issue Reported",
-        description: "Your report has been sent to the admin for review.",
-    });
+      toast({
+          title: "Issue Reported",
+          description: "Your report has been sent to the admin for review.",
+      });
+    } catch (error) {
+      console.error("Error reporting issue:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not report issue.' });
+    }
   };
 
   if (isLoading || authLoading) {

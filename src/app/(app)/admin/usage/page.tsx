@@ -1,10 +1,10 @@
-
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
 import type { WaterUsageRecord } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getAllMockUsageRecords } from '@/lib/mock-data-store';
+import { collectionGroup, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
 import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UsageList } from '@/components/admin/usage/usage-list';
@@ -24,13 +24,24 @@ export default function AdminUsagePage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const loadUsageData = useCallback(() => {
+  const loadUsageData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const records = getAllMockUsageRecords();
+      const usageQuery = query(collectionGroup(db, 'usageRecords'), orderBy('startTime', 'desc'));
+      const querySnapshot = await getDocs(usageQuery);
+      const records = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: (data.date as Timestamp).toDate(),
+          startTime: (data.startTime as Timestamp).toDate(),
+          endTime: (data.endTime as Timestamp).toDate(),
+        } as WaterUsageRecord;
+      });
       setUsageRecords(records);
     } catch(error) {
-       console.error("Failed to fetch usage records from mock store:", error);
+       console.error("Failed to fetch usage records from Firestore:", error);
         toast({
           variant: "destructive",
           title: "Failed to load usage records",

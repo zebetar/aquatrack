@@ -1,15 +1,11 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Droplets, CreditCard, BarChart3, ChevronRight, ArrowUp, ArrowDown, Info } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
-import { 
-  getAllMockCustomers,
-  getAllMockUsageRecords,
-  getMockOutstandingCustomers
-} from '@/lib/mock-data-store';
+import { collection, collectionGroup, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
 import type { Customer, WaterUsageRecord, CustomerMonthlyUsage } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
@@ -173,7 +169,7 @@ export default function AdminDashboardPage() {
   const [supplyChartData, setSupplyChartData] = useState<ChartDataPoint[]>([]);
   const [revenueChartData, setRevenueChartData] = useState<ChartDataPoint[]>([]);
   const [supplyChange, setSupplyChange] = useState(0);
-  const [revenueChange, setRevenueChange] = useState(0);
+const [revenueChange, setRevenueChange] = useState(0);
 
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
@@ -182,7 +178,7 @@ export default function AdminDashboardPage() {
   }, [customersWithMonthlyUsageData]);
 
 
-  const loadDashboardData = useCallback(() => {
+  const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
       const today = new Date();
@@ -192,16 +188,25 @@ export default function AdminDashboardPage() {
       const firstDayOfLastMonth = startOfMonth(lastMonthDate);
       const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-      const allCustomers = getAllMockCustomers();
-      const allUsageRecordsData = getAllMockUsageRecords();
+      const customersQuery = query(collection(db, 'customers'));
+      const allCustomersSnapshot = await getDocs(customersQuery);
+      const allCustomers = allCustomersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+
+      const usageRecordsQuery = query(collectionGroup(db, 'usageRecords'));
+      const allUsageRecordsSnapshot = await getDocs(usageRecordsQuery);
+      const allUsageRecordsData = allUsageRecordsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          date: (data.date as Timestamp).toDate(),
+          startTime: (data.startTime as Timestamp).toDate(),
+          endTime: (data.endTime as Timestamp).toDate(),
+        } as WaterUsageRecord;
+      });
       setAllUsageRecords(allUsageRecordsData);
       
-      const usageRecordsThisMonth = allUsageRecordsData.filter(record => {
-        const recordDate = new Date(record.date);
-        return recordDate >= firstDay && recordDate <= lastDay;
-      });
-      
-      const usageLastMonth = allUsageRecordsData.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+      const usageRecordsThisMonth = allUsageRecordsData.filter(record => record.date >= firstDay && record.date <= lastDay);
+      const usageLastMonth = allUsageRecordsData.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
 
       const outstandingCustomers = allCustomers.filter(c => c.balance > 0);
 
@@ -221,7 +226,6 @@ export default function AdminDashboardPage() {
       setMonthlyRevenue(currentRevenue);
       setOutstandingBillsValue(totalDue);
 
-      // Calculate changes for cards
       const lastMonthRevenueCalc = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
       const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
       setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
@@ -297,11 +301,13 @@ export default function AdminDashboardPage() {
   }, [allUsageRecords, supplyChartView, revenueChartView]);
 
 
-  const loadAndProcessDialogData = useCallback(() => {
+  const loadAndProcessDialogData = useCallback(async () => {
     setIsDialogDataLoading(true);
 
     try {
-      const customers = getAllMockCustomers();
+      const customersQuery = query(collection(db, 'customers'));
+      const customersSnapshot = await getDocs(customersQuery);
+      const customers = customersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
       
       const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
       customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));

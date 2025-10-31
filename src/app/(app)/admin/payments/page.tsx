@@ -1,10 +1,10 @@
-
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
 import type { Payment } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getAllMockPayments } from '@/lib/mock-data-store';
+import { collectionGroup, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
 import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentList } from '@/components/admin/payments/payment-list';
@@ -24,13 +24,22 @@ export default function AdminPaymentsPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const loadPaymentData = useCallback(() => {
+  const loadPaymentData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const records = getAllMockPayments();
+      const paymentsQuery = query(collectionGroup(db, 'payments'), orderBy('paymentDate', 'desc'));
+      const querySnapshot = await getDocs(paymentsQuery);
+      const records = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          paymentDate: (data.paymentDate as Timestamp).toDate(),
+        } as Payment;
+      });
       setPayments(records);
     } catch (error) {
-      console.error("Failed to fetch payments from mock store:", error);
+      console.error("Failed to fetch payments from Firestore:", error);
       toast({
         variant: "destructive",
         title: "Failed to load payments",

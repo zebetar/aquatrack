@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +30,7 @@ type RecordPaymentFormValues = z.infer<typeof recordPaymentFormSchema>;
 
 interface RecordPaymentFormProps {
   customer: Customer;
-  onSuccess?: (newPayment: Payment) => void;
+  onSuccess?: (newPayment: Omit<Payment, 'id' | 'createdAt' | 'recordedBy' | 'customerName'>) => void;
 }
 
 export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProps) {
@@ -41,29 +40,23 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     resolver: zodResolver(recordPaymentFormSchema),
     defaultValues: {
       paymentDate: new Date(),
-      amountPaid: customer.balance > 0 ? customer.balance : 0, // Pre-fill with balance if due
+      amountPaid: customer.balance > 0 ? customer.balance : 0,
     },
   });
 
   async function onSubmit(values: RecordPaymentFormValues) {
     setIsLoading(true);
     
-    const newPayment: Payment = {
-      id: `payment-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
+    const newPayment = {
       customerId: customer.id,
-      customerName: customer.name,
       paymentDate: values.paymentDate,
       amountPaid: values.amountPaid,
-      recordedBy: "admin001", // Mock admin ID
-      createdAt: new Date(),
     };
     
-    // Toast removed to prefer persistent notifications.
-    // The parent component handles success feedback.
+    onSuccess?.(newPayment);
 
     setIsLoading(false);
-    onSuccess?.(newPayment); 
-    form.reset({ // Reset form to defaults after submission
+    form.reset({
         paymentDate: new Date(),
         amountPaid: 0, 
     });

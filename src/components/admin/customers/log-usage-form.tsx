@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,10 +17,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Droplets } from "lucide-react";
 import { cn, formatDurationFromHours } from "@/lib/utils";
-import { format, differenceInMinutes, set, parse, addDays } from "date-fns"; // Added addDays
+import { format, differenceInMinutes, set, addDays } from "date-fns";
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
 import type { Customer, WaterUsageRecord } from "@/types";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 
 const logUsageFormSchema = z.object({
   date: z.date({ required_error: "Date is required." }),
@@ -32,8 +31,7 @@ const logUsageFormSchema = z.object({
   const [endH, endM] = data.endTime.split(':').map(Number);
 
   let effectiveEndDate = new Date(data.date);
-  // If end time string suggests it's on the next day compared to start time string
-  if (endH < startH || (endH === startH && endM <= startM)) { // endM <= startM to catch same time on next day
+  if (endH < startH || (endH === startH && endM <= startM)) {
     effectiveEndDate = addDays(effectiveEndDate, 1);
   }
 
@@ -41,22 +39,21 @@ const logUsageFormSchema = z.object({
   const endDateTime = set(effectiveEndDate, { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
   
   if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-    return false; // Invalid date construction
+    return false;
   }
 
   const diffMinutes = differenceInMinutes(endDateTime, startDateTime);
-  // Ensure duration is positive and not excessively long (e.g., max 24 hours for a single entry)
   return diffMinutes > 0 && diffMinutes <= 24 * 60; 
 }, {
   message: "End time must be after start time. Max duration 24 hours.",
-  path: ["endTime"], // Error reported on endTime field
+  path: ["endTime"],
 });
 
 type LogUsageFormValues = z.infer<typeof logUsageFormSchema>;
 
 interface LogUsageFormProps {
   customer: Customer;
-  onSuccess?: (newRecord: WaterUsageRecord) => void; 
+  onSuccess?: (newRecord: Omit<WaterUsageRecord, 'id' | 'createdAt' | 'recordedBy' | 'customerName'>) => void; 
 }
 
 export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
@@ -67,16 +64,16 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     defaultValues: {
       date: new Date(),
       startTime: format(new Date(), "HH:mm"),
-      endTime: format(new Date(Date.now() + 60 * 60 * 1000), "HH:mm"), // Default to 1 hour later
+      endTime: format(new Date(Date.now() + 60 * 60 * 1000), "HH:mm"),
     },
     mode: "onChange", 
   });
 
-  const { getValues, watch, formState } = form;
+  const { getValues, watch } = form;
   const watchedValues = watch(); 
 
   const calculatedMetrics = useMemo(() => {
-    const currentValues = getValues(); // Get current form values
+    const currentValues = getValues();
     const parseResult = logUsageFormSchema.safeParse(currentValues);
 
     if (!parseResult.success || !currentValues.date || !currentValues.startTime || !currentValues.endTime) {
@@ -90,20 +87,19 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     const actualStartTime = set(new Date(date), { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 });
     let actualEndTime = set(new Date(date), { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 });
     
-    // Adjust for overnight usage: if end time is earlier or same on the selected date, assume it's the next day
     if (actualEndTime <= actualStartTime) { 
       actualEndTime = addDays(actualEndTime, 1);
     }
     
     if (isNaN(actualStartTime.getTime()) || isNaN(actualEndTime.getTime()) || actualEndTime <= actualStartTime) {
-      return { durationHours: 0, cost: 0 }; // Recalculate validity check
+      return { durationHours: 0, cost: 0 };
     }
 
     const durationMinutes = differenceInMinutes(actualEndTime, actualStartTime);
     const durationHours = durationMinutes / 60;
     const cost = durationHours * CORE_WATER_RATE_PER_HOUR;
     return { durationHours, cost };
-  }, [watchedValues, getValues]); // Depend on watchedValues to re-trigger calculation
+  }, [watchedValues, getValues]); 
 
   const { durationHours, cost } = calculatedMetrics;
   
@@ -125,24 +121,18 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
     const finalDurationHours = finalDurationMinutes / 60;
     const finalCost = finalDurationHours * CORE_WATER_RATE_PER_HOUR;
 
-    const newUsageRecord: WaterUsageRecord = {
-      id: `usage-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
+    const newUsageRecord = {
       customerId: customer.id,
-      customerName: customer.name,
-      date: values.date, // This is the start date of the usage
+      date: values.date,
       startTime: actualStartTime, 
       endTime: actualEndTime,  
       durationHours: finalDurationHours,
       cost: finalCost,
-      recordedBy: "admin001", 
-      createdAt: new Date(),
     };
     
-    // Toast removed to prefer persistent notifications.
-    // The parent component handles success feedback.
+    onSuccess?.(newUsageRecord);
 
     setIsLoading(false);
-    onSuccess?.(newUsageRecord); 
     form.reset({ 
         date: new Date(),
         startTime: format(new Date(), "HH:mm"),
