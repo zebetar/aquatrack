@@ -70,10 +70,9 @@ export default function AdminPaymentsPage() {
 
   const pageActions = (
      <div className="flex items-center gap-2">
-       <div className="hidden sm:block w-64">{searchInput}</div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="icon" className="sm:hidden">
+          <Button variant="outline" size="icon">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search Payments</span>
           </Button>
