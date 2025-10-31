@@ -1,5 +1,5 @@
 
-import { db } from './firebase-config';
+import { db, firebaseAuth } from './firebase-config';
 import { 
     collection, 
     getDocs, 
@@ -17,7 +17,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
-import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 // Helper to convert Firestore Timestamps
 const fromFirestore = <T extends { createdAt?: any; date?: any; startTime?: any; endTime?: any; paymentDate?: any; }>(docData: T): Omit<T, 'createdAt' | 'date' | 'startTime' | 'endTime' | 'paymentDate'> & { createdAt?: Date; date?: Date; startTime?: Date; endTime?: Date; paymentDate?: Date; } => {
@@ -72,7 +72,7 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 
 
 // --- Customer Functions ---
-export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>): Promise<Customer> {
+export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>): Promise<Customer> {
     const docRef = await addDoc(collection(db, 'customers'), {
         ...customerData,
         balance: 0,
@@ -290,14 +290,23 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
 
 // --- Auth Actions ---
 export async function sendPasswordReset(email: string): Promise<{success: boolean, error?: string}> {
-    const auth = getAuth();
     try {
-        await sendPasswordResetEmail(auth, email);
+        await sendPasswordResetEmail(firebaseAuth, email);
         return { success: true };
     } catch(error: any) {
         console.error("Password reset email failed:", error);
-        // It's better to return a generic message for security, 
-        // to not reveal if an email is registered or not.
-        return { success: false, error: "Failed to send password reset email." };
+        
+        let errorMessage = "An unknown error occurred. Please try again.";
+        if (error.code === 'auth/invalid-email') {
+            errorMessage = "The email address is not valid.";
+        } else if (error.code === 'auth/user-not-found') {
+            // For security, we don't want to confirm if a user exists.
+            // The success message in the UI will handle this gracefully.
+            // But we can log the real error.
+            console.warn(`Password reset attempted for non-existent user: ${email}`);
+            // We can return success here so the UI shows the "email sent" message, preventing user enumeration.
+            return { success: true };
+        }
+        return { success: false, error: errorMessage };
     }
 }
