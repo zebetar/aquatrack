@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId, updateCustomerInDb, createAuthUserAndSendInvite } from '@/lib/firebase-service';
+import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId, updateCustomerInDb } from '@/lib/firebase-service';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -56,36 +56,18 @@ export default function AdminCustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance'> & { email: string }) => {
+  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => {
     if (!user) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a customer." });
         return;
     }
     
-    // Step 1: Create the Auth user in Firebase via Server Action
-    const authResult = await createAuthUserAndSendInvite(newCustomerData.email, newCustomerData.name);
-
-    if (!authResult.success || !authResult.uid) {
-        toast({
-            variant: "destructive",
-            title: "Account Creation Failed",
-            description: authResult.error || "Could not create the user account in Firebase Authentication.",
-        });
-        return; // Stop the process
-    }
-
-    // Step 2: If Auth user is created, proceed to create Firestore customer document
     try {
-        const customerToCreate = {
-            ...newCustomerData,
-            authUID: authResult.uid, // Link Firestore doc to Auth user
-        };
-
-        const newCustomer = await addCustomer(customerToCreate);
+        const newCustomer = await addCustomer(newCustomerData);
 
         const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
             userId: user.id, 
-            message: `New customer ${newCustomerData.name} was added and an invite was sent.`,
+            message: `New customer ${newCustomerData.name} was added.`,
             type: 'CUSTOMER_ADDED',
             isRead: false,
             linkTo: `/admin/customers/${newCustomer.id}`,
@@ -93,14 +75,14 @@ export default function AdminCustomersPage() {
         await addNotification(adminNotification);
 
         toast({
-            title: "Customer Added & Invited",
-            description: `${newCustomerData.name} has been added and an invitation email has been sent.`,
+            title: "Customer Added",
+            description: `${newCustomerData.name} has been added. They can now log in using the 'Forgot Password' link.`,
         });
         
         await fetchCustomers(); // Refresh the list
     } catch (error) {
         console.error("Failed to add customer to Firestore:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Firebase Auth user was created, but failed to create the customer profile in Firestore.' });
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to create the customer profile in Firestore.' });
     }
   };
 

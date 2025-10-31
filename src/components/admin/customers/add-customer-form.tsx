@@ -27,7 +27,7 @@ const addCustomerFormSchema = z.object({
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'> & { email: string }) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => void;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
@@ -45,18 +45,14 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     
-    // The email is now required by the schema, so we can assert it.
-    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> & { email: string } = {
+    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> = {
       name: values.name,
-      email: values.email!,
+      email: values.email,
       contactInfo: values.contactInfo || undefined,
     };
     
     onSuccessCallback(newCustomer); 
-    
-    // The parent dialog will handle loading state and closing.
-    // We can keep the form in a loading state until the process is complete.
-    // If you want the form to reset, the parent must handle it.
+    setIsLoading(false);
   }
 
   return (
@@ -103,7 +99,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
-          Add Customer & Send Invite
+          Add Customer
         </Button>
       </form>
     </Form>
