@@ -31,19 +31,21 @@ export default function ApplicationLayout({ children }: { children: ReactNode })
     return () => window.removeEventListener('open-command-palette', onOpen);
   }, []);
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [loading, user, router]);
+
+
+  if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Droplets className="h-12 w-12 animate-pulse-subtle text-primary" />
       </div>
     );
   }
-
-  if (!user) {
-    router.replace('/login');
-    return null; // Don't render anything while redirecting
-  }
-
+  
   return (
     <>
       <CommandPalette open={isCommandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
