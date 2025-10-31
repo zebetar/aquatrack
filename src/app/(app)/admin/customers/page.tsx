@@ -84,7 +84,15 @@ export default function AdminCustomersPage() {
         await fetchCustomers(); // Refresh the list
     } catch (error: any) {
         console.error("Failed to add customer:", error);
-        toast({ variant: 'destructive', title: 'Error Creating Customer', description: error.message || 'An unexpected error occurred.' });
+        
+        let errorMessage = 'An unexpected error occurred.';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'This email is already in use. Please use a different email.';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        toast({ variant: 'destructive', title: 'Error Creating Customer', description: errorMessage });
         // Re-throw the error to prevent the dialog from closing on failure
         throw error;
     }

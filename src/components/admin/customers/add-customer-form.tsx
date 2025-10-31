@@ -17,8 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Droplets, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import type { Customer } from "@/types";
-import { checkEmailExists } from "@/lib/firebase-service";
-import { useFirebase } from "@/contexts/firebase-context";
 
 
 const addCustomerFormSchema = z.object({
@@ -42,36 +40,16 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { auth } = useFirebase();
 
   const form = useForm<AddCustomerFormValues>({
-    resolver: async (data, context, options) => {
-        const schemaResult = await zodResolver(addCustomerFormSchema)(data, context, options);
-        if (!auth || !data.email || !schemaResult.errors.email) {
-            return schemaResult;
-        }
-
-        const emailExists = await checkEmailExists(auth, data.email);
-        if (emailExists) {
-            const fieldErrors = schemaResult.errors;
-            if (!fieldErrors.email) {
-                fieldErrors.email = { type: 'manual', message: '' };
-            }
-            fieldErrors.email.message = 'This email is already in use. Please use a different email.';
-             return {
-                values: data,
-                errors: fieldErrors,
-            };
-        }
-        return schemaResult;
-    },
+    resolver: zodResolver(addCustomerFormSchema),
     defaultValues: {
       name: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
-    mode: 'onBlur', // Validate on blur to check email
+    mode: 'onBlur',
   });
 
   async function onSubmit(values: AddCustomerFormValues) {
@@ -83,9 +61,12 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     };
     
     try {
-        await onSuccessCallback(newCustomer, values.password); 
+        await onSuccessCallback(newCustomer, values.password);
+        // If successful, the dialog will be closed by the parent.
+        // If it fails, the parent will show a toast, and we just need to stop loading.
     } catch (error) {
-        // Parent will show toast. We just need to stop loading.
+        // The parent component (`customers/page.tsx`) is responsible for showing the error toast.
+        // We just need to stop the loading indicator here.
         setIsLoading(false);
     }
   }
