@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
 import { AddCustomerForm } from "./add-customer-form";
