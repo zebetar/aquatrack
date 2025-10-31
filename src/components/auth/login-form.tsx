@@ -18,7 +18,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Droplets, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -44,7 +43,7 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
-    await login(values.email, values.password, 'admin'); // Role is determined by backend now
+    await login(values.email, values.password);
     setIsSubmitting(false);
   }
 
