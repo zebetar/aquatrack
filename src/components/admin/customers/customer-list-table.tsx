@@ -124,48 +124,50 @@ export function CustomerListTable({
                       <p className="font-medium">{formatDurationFromHours(customer.totalUsageHours ?? 0)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-2 pt-2" onClick={handleActionClick}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full"
-                        title="Download Statement PDF"
-                        onClick={(e) => handleDownloadPdf(e, customer)}
-                        disabled={generatingPdfId === customer.id}
-                      >
-                        {generatingPdfId === customer.id ? (
-                          <Droplets className="h-4 w-4 animate-pulse-subtle" />
-                        ) : (
-                          <Download className="h-4 w-4 text-primary" />
+                  {enableActions && (
+                    <div className="flex items-center justify-end gap-2 pt-2" onClick={handleActionClick}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          title="Download Statement PDF"
+                          onClick={(e) => handleDownloadPdf(e, customer)}
+                          disabled={generatingPdfId === customer.id}
+                        >
+                          {generatingPdfId === customer.id ? (
+                            <Droplets className="h-4 w-4 animate-pulse-subtle" />
+                          ) : (
+                            <Download className="h-4 w-4 text-primary" />
+                          )}
+                           <span className="sr-only">Download Statement</span>
+                        </Button>
+                        {onCustomerUpdated && (
+                         <>
+                          <EditCustomerDialog
+                              customer={customer}
+                              onCustomerUpdated={onCustomerUpdated}
+                              triggerButton={
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                  <Pencil className="h-4 w-4 text-primary" />
+                                  <span className="sr-only">Edit</span>
+                                  </Button>
+                              }
+                              />
+                              <DeleteCustomerDialog
+                              customer={customer}
+                              onDeleteConfirm={() => onCustomerDeleted(customer.id)}
+                              isDeleting={deletingCustomerId === customer.id}
+                              triggerButton={
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                  {deletingCustomerId === customer.id ? <Droplets className="h-4 h-4 animate-pulse-subtle" /> : <Trash2 className="h-4 h-4 text-destructive" />}
+                                  <span className="sr-only">Delete</span>
+                                  </Button>
+                              }
+                              />
+                          </>
                         )}
-                         <span className="sr-only">Download Statement</span>
-                      </Button>
-                      {enableActions && onCustomerUpdated && (
-                       <>
-                        <EditCustomerDialog
-                            customer={customer}
-                            onCustomerUpdated={onCustomerUpdated}
-                            triggerButton={
-                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                <Pencil className="h-4 w-4 text-primary" />
-                                <span className="sr-only">Edit</span>
-                                </Button>
-                            }
-                            />
-                            <DeleteCustomerDialog
-                            customer={customer}
-                            onDeleteConfirm={() => onCustomerDeleted(customer.id)}
-                            isDeleting={deletingCustomerId === customer.id}
-                            triggerButton={
-                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                {deletingCustomerId === customer.id ? <Droplets className="h-4 h-4 animate-pulse-subtle" /> : <Trash2 className="h-4 h-4 text-destructive" />}
-                                <span className="sr-only">Delete</span>
-                                </Button>
-                            }
-                            />
-                        </>
-                      )}
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </Link>

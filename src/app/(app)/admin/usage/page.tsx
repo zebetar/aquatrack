@@ -69,9 +69,10 @@ export default function AdminUsagePage() {
 
   const pageActions = (
     <div className="flex items-center gap-2">
+       <div className="hidden sm:block w-64">{searchInput}</div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="sm:hidden">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search Usage Records</span>
           </Button>
