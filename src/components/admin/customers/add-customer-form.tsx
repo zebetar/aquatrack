@@ -48,7 +48,8 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> = {
       name: values.name,
       email: values.email,
-      contactInfo: values.contactInfo || undefined,
+      // This is the fix: only include contactInfo if it has a value.
+      ...(values.contactInfo && { contactInfo: values.contactInfo }),
     };
     
     onSuccessCallback(newCustomer); 
