@@ -1,3 +1,4 @@
+
 'use server';
 
 // This file is intentionally empty. The database seeding functionality has been removed 

@@ -5,23 +5,23 @@ import type { User, Customer } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { auth as firebaseAuth, db } from '@/lib/firebase-config';
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut, updateEmail, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { getMockCustomerByEmail, updateCustomerEmail as updateMockCustomerEmail } from '@/lib/mock-data-store';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string, role: 'admin' | 'viewer') => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUserEmail: (newEmail: string, currentPassword?: string) => Promise<{ success: boolean, error?: string }>;
-  updateUserPassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean, error?: string }>;
+  updateUserEmail: (newEmail: string, currentPassword?: string) => Promise<{ success: boolean; error?: string }>;
+  updateUserPassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   updateAdminName: (newName: string) => void;
   updateUserAvatarUrl: (newUrl: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// This is a mock password. In a real app, you'd use Firebase Auth.
+export const MOCK_ADMIN_PASSWORD = "password"; 
 export const MOCK_VIEWER_PASSWORD = "password"; 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -31,140 +31,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { toast } = useToast();
 
-  const handleUserAuthChange = useCallback(async (firebaseUser: import('firebase/auth').User | null) => {
-    if (firebaseUser) {
-        const idTokenResult = await firebaseUser.getIdTokenResult();
-        const role = idTokenResult.claims.role as 'admin' | 'viewer' || 'viewer'; // Default to viewer
-        
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        let appUser: User;
-
-        if (userDocSnap.exists()) {
-            // User document exists, use it as the source of truth
-            const userData = userDocSnap.data();
-            appUser = {
-                id: firebaseUser.uid,
-                email: firebaseUser.email!,
-                name: userData.name || firebaseUser.displayName || 'User',
-                role: role,
-                avatarUrl: userData.avatarUrl || undefined,
-                customerId: userData.customerId || undefined,
-            };
-        } else {
-            // User is authenticated but has no Firestore document.
-            // Create a temporary user object to allow the app to function.
-            // This is crucial for users created manually in the Firebase Auth console.
-            console.warn(`User document not found for UID ${firebaseUser.uid}. Creating a temporary profile.`);
-            appUser = {
-                id: firebaseUser.uid,
-                email: firebaseUser.email!,
-                name: firebaseUser.displayName || 'New User',
-                role: role,
-            };
-        }
-        
-        setUser(appUser);
-        localStorage.setItem('authUser', JSON.stringify(appUser));
-
-        // Redirect after setting user
-        const targetPath = role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard';
-        if (pathname !== targetPath) {
-          router.replace(targetPath);
-        }
-
-    } else {
-        setUser(null);
-        localStorage.removeItem('authUser');
-        if (!['/login', '/'].includes(pathname)) {
-            router.push('/login');
-        }
-    }
-    setLoading(false);
-  }, [router, pathname]);
-
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, handleUserAuthChange);
-    return () => unsubscribe();
-  }, [handleUserAuthChange]);
+    try {
+      const storedUser = localStorage.getItem('authUser');
+      if (storedUser) {
+        const parsedUser: User = JSON.parse(storedUser);
+        setUser(parsedUser);
+
+        // Determine target path based on user role
+        const targetPath = parsedUser.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard';
+
+        // Redirect if not on a login-related page and not on the correct dashboard
+        if (!['/login', '/'].includes(pathname) && !pathname.startsWith(`/${parsedUser.role}`)) {
+            router.replace(targetPath);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse auth user from localStorage", error);
+      localStorage.removeItem('authUser');
+    } finally {
+      setLoading(false);
+    }
+  }, [router, pathname]);
 
 
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
-    try {
-      await signInWithEmailAndPassword(firebaseAuth, email, password);
-      // onAuthStateChanged will handle setting user state and routing
-      toast({ title: "Login Successful" });
-    } catch (error: any) {
-      console.error("Firebase login error:", error);
-      let description = "An unknown error occurred.";
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-          description = "Invalid email or password. Please try again.";
-      } else if (error.code === 'auth/invalid-api-key') {
-          description = "Firebase API Key is invalid. Please check your configuration.";
-      }
-      toast({ variant: "destructive", title: "Login Failed", description });
-    } finally {
-      setLoading(false);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const processedEmail = email.trim().toLowerCase();
+
+    if (processedEmail === 'admin@example.com' && password === MOCK_ADMIN_PASSWORD) {
+      const adminUser: User = {
+        id: 'admin001',
+        email: processedEmail,
+        name: 'Administrator',
+        role: 'admin',
+      };
+      setUser(adminUser);
+      localStorage.setItem('authUser', JSON.stringify(adminUser));
+      toast({ title: "Login Successful", description: "Welcome back, Admin!" });
+      router.replace('/admin/dashboard');
+    } else {
+        const customerProfile: Customer | null = getMockCustomerByEmail(processedEmail);
+        if (customerProfile && password === MOCK_VIEWER_PASSWORD) {
+            const viewerUser: User = {
+                id: customerProfile.authUID || `user-${customerProfile.id}`,
+                email: processedEmail,
+                name: customerProfile.name,
+                role: 'viewer',
+                customerId: customerProfile.id,
+            };
+            setUser(viewerUser);
+            localStorage.setItem('authUser', JSON.stringify(viewerUser));
+            toast({ title: "Login Successful", description: `Welcome, ${customerProfile.name}!` });
+            router.replace('/viewer/dashboard');
+        } else {
+            toast({ variant: "destructive", title: "Login Failed", description: "Invalid email or password." });
+        }
     }
+    setLoading(false);
   };
   
   const logout = async () => {
-    await signOut(firebaseAuth);
-    // onAuthStateChanged will handle cleanup
-    toast({ title: "Logged Out" });
+    setUser(null);
+    localStorage.removeItem('authUser');
+    await new Promise(resolve => setTimeout(resolve, 200)); // Short delay for effect
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
     router.push('/login');
   };
 
- const updateUserEmail = async (newEmail: string, currentPassword?: string): Promise<{ success: boolean, error?: string }> => {
-    const firebaseUser = firebaseAuth.currentUser;
-    if (!firebaseUser || !currentPassword) {
-      return { success: false, error: "User not authenticated or password not provided." };
+  const updateUserEmail = async (newEmail: string, currentPassword?: string): Promise<{ success: boolean; error?: string }> => {
+    if (!user || !user.customerId) return { success: false, error: 'Not a viewer account.' };
+    // In mock mode, we don't need the password, but we check its presence to match the function signature
+    if (!currentPassword) {
+      toast({ variant: 'destructive', title: 'Password Required', description: 'Please enter your current password to change email.' });
+      return { success: false, error: 'Password required.' };
     }
-    try {
-      const credential = EmailAuthProvider.credential(firebaseUser.email!, currentPassword);
-      await reauthenticateWithCredential(firebaseUser, credential);
-      await updateEmail(firebaseUser, newEmail);
-      // Also update the user document in Firestore if necessary (handled in firebase-service)
-      if (user) {
-        const updatedUser = { ...user, email: newEmail };
-        setUser(updatedUser);
-        localStorage.setItem('authUser', JSON.stringify(updatedUser));
-      }
-      toast({ title: "Email Updated", description: "Your email has been successfully updated." });
-      return { success: true };
-    } catch (error: any) {
-      console.error("Error updating email:", error);
-      const message = error.code === 'auth/wrong-password' ? 'Incorrect current password.' : 'Failed to update email.';
-      toast({ variant: 'destructive', title: 'Error', description: message });
-      return { success: false, error: message };
-    }
+    
+    updateMockCustomerEmail(user.customerId, newEmail);
+    const updatedUser = { ...user, email: newEmail };
+    setUser(updatedUser);
+    localStorage.setItem('authUser', JSON.stringify(updatedUser));
+    toast({ title: "Email Updated", description: `Your email is now ${newEmail}.` });
+    return { success: true };
   };
 
-  const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean, error?: string }> => {
-    const firebaseUser = firebaseAuth.currentUser;
-    if (!firebaseUser) {
-      return { success: false, error: "User not authenticated." };
+  const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    if (!user) return { success: false, error: 'User not logged in.' };
+    // This is a mock. In a real app, this would be a secure Firebase operation.
+    if (user.role === 'admin' && currentPassword !== MOCK_ADMIN_PASSWORD) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Incorrect current password for admin.' });
+      return { success: false, error: 'Incorrect password.' };
     }
-    try {
-      const credential = EmailAuthProvider.credential(firebaseUser.email!, currentPassword);
-      await reauthenticateWithCredential(firebaseUser, credential);
-      await updatePassword(firebaseUser, newPassword);
-      toast({ title: "Password Updated", description: "Your password has been successfully updated." });
-      return { success: true };
-    } catch (error: any) {
-      console.error("Error updating password:", error);
-      const message = error.code === 'auth/wrong-password' ? 'Incorrect current password.' : 'Failed to update password.';
-      toast({ variant: 'destructive', title: 'Error', description: message });
-      return { success: false, error: message };
+    if (user.role === 'viewer' && currentPassword !== MOCK_VIEWER_PASSWORD) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Incorrect current password.' });
+      return { success: false, error: 'Incorrect password.' };
     }
+
+    // In a real app, you would now update the password in Firebase Auth.
+    // Here, we just show a success message.
+    toast({ title: "Password Updated!", description: "Your password has been changed." });
+    return { success: true };
   };
 
 
   const updateAdminName = (newName: string) => {
-    // This is a mock implementation as admin details are not in a 'users' collection by default
     if (user && user.role === 'admin') {
       const trimmedName = newName.trim();
       if (trimmedName) {
@@ -177,7 +150,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const updateUserAvatarUrl = (newAvatarUrl: string | null) => {
-    // This is a mock implementation
     if (user) {
       const updatedUser = { ...user, avatarUrl: newAvatarUrl || undefined };
       setUser(updatedUser);
@@ -188,9 +160,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-
   return (
-    <AuthContext.Provider value={{ user, loading, login: (email, pass, role) => login(email, pass), logout, updateUserEmail, updateAdminName, updateUserAvatarUrl, updateUserPassword }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUserEmail, updateAdminName, updateUserAvatarUrl, updateUserPassword }}>
       {children}
     </AuthContext.Provider>
   );

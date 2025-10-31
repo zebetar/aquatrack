@@ -16,8 +16,9 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Droplets, Eye, EyeOff } from "lucide-react";
+import { Droplets, Eye, EyeOff, Database } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -31,6 +32,7 @@ export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const toast = useToast();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
