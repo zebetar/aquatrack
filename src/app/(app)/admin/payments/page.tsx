@@ -1,3 +1,4 @@
+
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
@@ -14,19 +15,28 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { getAllMockPayments } from '@/lib/mock-data-store';
+import { getAllPayments } from '@/lib/firebase-service';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
-  const loadPaymentData = useCallback(() => {
+  const loadPaymentData = useCallback(async () => {
     setIsLoading(true);
-    const records = getAllMockPayments();
-    setPayments(records);
-    setIsLoading(false);
-  }, []);
+    try {
+        const records = await getAllPayments();
+        setPayments(records);
+    } catch (error) {
+        console.error("Failed to load payment data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load payment records.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     loadPaymentData();

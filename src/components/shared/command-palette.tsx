@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, User, File, Command as CommandIcon, LogOut } from 'lucide-react';
+import { Search, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { adminNavItems, viewerNavItems } from '@/config/nav-config';
 import type { Customer, CommandItem } from '@/types';
-import { getAllMockCustomers } from '@/lib/mock-data-store';
+import { getAllCustomers } from '@/lib/firebase-service';
+import { useToast } from '@/hooks/use-toast';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -22,45 +23,57 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [commands, setCommands] = useState<CommandItem[]>([]);
   const { user, logout } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      const navItems = user.role === 'admin' ? adminNavItems : viewerNavItems;
-      const customers = user.role === 'admin' ? getAllMockCustomers() : [];
+    if (user && open) {
+      const loadCommands = async () => {
+        const navItems = user.role === 'admin' ? adminNavItems : viewerNavItems;
+        
+        const pageCommands: CommandItem[] = navItems.map(item => ({
+          id: `page-${item.href}`,
+          type: 'page',
+          title: item.title,
+          icon: item.icon,
+          href: item.href,
+        }));
 
-      const pageCommands: CommandItem[] = navItems.map(item => ({
-        id: `page-${item.href}`,
-        type: 'page',
-        title: item.title,
-        icon: item.icon,
-        href: item.href,
-      }));
-
-      const customerCommands: CommandItem[] = customers.map((c: Customer) => ({
-        id: `customer-${c.id}`,
-        type: 'customer',
-        title: c.name,
-        description: c.email || 'No email',
-        icon: User,
-        href: `/admin/customers/${c.id}`,
-      }));
-      
-      const actionCommands: CommandItem[] = [
-        {
-            id: 'action-logout',
-            type: 'action',
-            title: 'Logout',
-            icon: LogOut,
-            action: () => {
-                logout();
-                onOpenChange(false);
+        let customerCommands: CommandItem[] = [];
+        if (user.role === 'admin') {
+            try {
+                const customers = await getAllCustomers();
+                customerCommands = customers.map((c: Customer) => ({
+                    id: `customer-${c.id}`,
+                    type: 'customer',
+                    title: c.name,
+                    description: c.email || 'No email',
+                    icon: User,
+                    href: `/admin/customers/${c.id}`,
+                }));
+            } catch (error) {
+                console.error("Failed to load customers for command palette:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load customer list.' });
             }
         }
-      ]
+        
+        const actionCommands: CommandItem[] = [
+          {
+              id: 'action-logout',
+              type: 'action',
+              title: 'Logout',
+              icon: LogOut,
+              action: () => {
+                  logout();
+                  onOpenChange(false);
+              }
+          }
+        ];
 
-      setCommands([...pageCommands, ...customerCommands, ...actionCommands]);
+        setCommands([...pageCommands, ...customerCommands, ...actionCommands]);
+      };
+      loadCommands();
     }
-  }, [user, open]); // Re-calculate commands when user changes or palette opens
+  }, [user, open, toast, logout, onOpenChange]);
 
   const filteredCommands = search
     ? commands.filter(cmd =>

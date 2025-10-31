@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Customer, WaterUsageRecord, Payment, Notification as TNotification } from '@/types';
@@ -11,17 +12,17 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { formatDurationFromHours } from '@/lib/utils';
-import {
-  getMockCustomerById,
-  getMockUsageRecordsByCustomerId,
-  getMockPaymentsByCustomerId,
-  addMockUsageRecord,
-  addMockPayment,
-  addMockNotification,
-  updateMockUsageRecord,
-  updateMockPaymentRecord
-} from '@/lib/mock-data-store';
 import { useAuth } from '@/contexts/auth-context';
+import { 
+    getCustomerById, 
+    getUsageRecordsByCustomerId, 
+    getPaymentsByCustomerId,
+    addUsageRecord,
+    addPayment,
+    addNotification,
+    updateUsageRecord as fbUpdateUsageRecord,
+    updatePaymentRecord as fbUpdatePaymentRecord,
+} from '@/lib/firebase-service';
 
 export default function CustomerDetailPage() {
   const routeParams = useParams<{ customerId: string }>();
@@ -34,121 +35,123 @@ export default function CustomerDetailPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchCustomerData = useCallback(() => {
+  const fetchCustomerData = useCallback(async () => {
     if (!customerId) return;
     setIsLoading(true);
     
-    const custData = getMockCustomerById(customerId);
-    setCustomer(custData);
+    try {
+        const [custData, usageData, paymentData] = await Promise.all([
+            getCustomerById(customerId),
+            getUsageRecordsByCustomerId(customerId),
+            getPaymentsByCustomerId(customerId)
+        ]);
 
-    if (custData) {
-      const usageData = getMockUsageRecordsByCustomerId(customerId);
-      const paymentData = getMockPaymentsByCustomerId(customerId);
-      setUsageRecords(usageData);
-      setPayments(paymentData);
+        setCustomer(custData);
+        setUsageRecords(usageData);
+        setPayments(paymentData);
+
+    } catch (error) {
+        console.error("Failed to fetch customer data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load customer data.' });
+    } finally {
+        setIsLoading(false);
     }
-    
-    setIsLoading(false);
-  }, [customerId]);
+  }, [customerId, toast]);
 
   useEffect(() => {
     fetchCustomerData();
   }, [fetchCustomerData]);
 
-  const handleAddUsageRecord = (newRecordData: Omit<WaterUsageRecord, 'id' | 'createdAt' | 'recordedBy' | 'customerName'>) => {
+  const handleAddUsageRecord = async (newRecordData: Omit<WaterUsageRecord, 'id' | 'createdAt'>) => {
     if (!customer || !user) return;
-
-    const newRecord: WaterUsageRecord = {
-      ...newRecordData,
-      id: `usage-${Date.now()}`,
-      customerName: customer.name,
-      recordedBy: user.id,
-      createdAt: new Date(),
-    };
     
-    addMockUsageRecord(newRecord);
+    try {
+      await addUsageRecord(newRecordData);
 
-    const viewerNotification: TNotification = {
-      id: `notif-${Date.now()}-viewer`,
-      userId: customer.authUID || customer.id,
-      message: `New water usage logged: ${formatDurationFromHours(newRecord.durationHours)}, Cost: PKR ${newRecord.cost.toLocaleString()}.`,
-      type: 'USAGE_LOGGED',
-      isRead: false,
-      linkTo: `/viewer/usage`,
-      createdAt: new Date(),
-    };
-    addMockNotification(viewerNotification);
+      const viewerNotification: Omit<TNotification, 'id' | 'createdAt'> = {
+        userId: customer.authUID || customer.id,
+        message: `New water usage logged: ${formatDurationFromHours(newRecordData.durationHours)}, Cost: PKR ${newRecordData.cost.toLocaleString()}.`,
+        type: 'USAGE_LOGGED',
+        isRead: false,
+        linkTo: `/viewer/usage`,
+      };
+      await addNotification(viewerNotification);
 
-    const adminNotification: TNotification = {
-      id: `notif-${Date.now()}-admin`,
-      userId: user.id,
-      message: `Water usage logged for ${customer.name}: ${formatDurationFromHours(newRecord.durationHours)}.`,
-      type: 'USAGE_LOGGED',
-      isRead: false,
-      linkTo: `/admin/customers/${customer.id}`,
-      createdAt: new Date(),
-    };
-    addMockNotification(adminNotification);
+      const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
+        userId: user.id,
+        message: `Water usage logged for ${customer.name}: ${formatDurationFromHours(newRecordData.durationHours)}.`,
+        type: 'USAGE_LOGGED',
+        isRead: false,
+        linkTo: `/admin/customers/${customer.id}`,
+      };
+      await addNotification(adminNotification);
 
-    toast({
-      title: "Usage Logged!",
-      description: `Water usage for ${customer.name} has been successfully recorded.`,
-    });
-    fetchCustomerData(); // Refresh data from mock store
+      toast({
+        title: "Usage Logged!",
+        description: `Water usage for ${customer.name} has been successfully recorded.`,
+      });
+      await fetchCustomerData(); // Refresh data
+    } catch(error) {
+      console.error("Failed to add usage record:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to log usage.' });
+    }
   };
 
-  const handleAddPaymentRecord = (newPaymentData: Omit<Payment, 'id' | 'createdAt' | 'recordedBy' | 'customerName'>) => {
+  const handleAddPaymentRecord = async (newPaymentData: Omit<Payment, 'id' | 'createdAt'>) => {
     if (!customer || !user) return;
 
-    const newPayment: Payment = {
-      ...newPaymentData,
-      id: `payment-${Date.now()}`,
-      customerName: customer.name,
-      recordedBy: user.id,
-      createdAt: new Date(),
-    };
+    try {
+        await addPayment(newPaymentData);
 
-    addMockPayment(newPayment);
+        const viewerNotification: Omit<TNotification, 'id' | 'createdAt'> = {
+            userId: customer.authUID || customer.id,
+            message: `Payment of PKR ${newPaymentData.amountPaid.toLocaleString()} has been recorded.`,
+            type: 'PAYMENT_RECORDED',
+            isRead: false,
+            linkTo: `/viewer/billing`,
+        };
+        await addNotification(viewerNotification);
 
-     const viewerNotification: TNotification = {
-      id: `notif-${Date.now()}-viewer`,
-      userId: customer.authUID || customer.id,
-      message: `Payment of PKR ${newPayment.amountPaid.toLocaleString()} has been recorded.`,
-      type: 'PAYMENT_RECORDED',
-      isRead: false,
-      linkTo: `/viewer/billing`,
-      createdAt: new Date(),
-    };
-    addMockNotification(viewerNotification);
+        const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
+            userId: user.id,
+            message: `Payment of PKR ${newPaymentData.amountPaid.toLocaleString()} recorded for ${customer.name}.`,
+            type: 'PAYMENT_RECORDED',
+            isRead: false,
+            linkTo: `/admin/customers/${customer.id}`,
+        };
+        await addNotification(adminNotification);
 
-    const adminNotification: TNotification = {
-      id: `notif-${Date.now()}-admin`,
-      userId: user.id,
-      message: `Payment of PKR ${newPayment.amountPaid.toLocaleString()} recorded for ${customer.name}.`,
-      type: 'PAYMENT_RECORDED',
-      isRead: false,
-      linkTo: `/admin/customers/${customer.id}`,
-      createdAt: new Date(),
-    };
-    addMockNotification(adminNotification);
-
-    toast({
-      title: "Payment Recorded!",
-      description: `Payment for ${customer.name} has been successfully recorded.`,
-    });
-    fetchCustomerData(); // Refresh data
+        toast({
+            title: "Payment Recorded!",
+            description: `Payment for ${customer.name} has been successfully recorded.`,
+        });
+        await fetchCustomerData(); // Refresh data
+    } catch(error) {
+        console.error("Failed to add payment record:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to record payment.' });
+    }
   };
   
-  const handleUpdateUsageRecord = (updatedRecord: WaterUsageRecord) => {
-    updateMockUsageRecord(updatedRecord);
-    fetchCustomerData();
-    toast({ title: "Success", description: "Usage record updated." });
+  const handleUpdateUsageRecord = async (updatedRecord: WaterUsageRecord) => {
+    try {
+        await fbUpdateUsageRecord(updatedRecord.id, updatedRecord);
+        await fetchCustomerData();
+        toast({ title: "Success", description: "Usage record updated." });
+    } catch (error) {
+        console.error("Failed to update usage record:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to update usage record.' });
+    }
   };
 
-  const handleUpdatePaymentRecord = (updatedPayment: Payment) => {
-    updateMockPaymentRecord(updatedPayment);
-    fetchCustomerData();
-    toast({ title: "Success", description: "Payment record updated." });
+  const handleUpdatePaymentRecord = async (updatedPayment: Payment) => {
+    try {
+        await fbUpdatePaymentRecord(updatedPayment.id, updatedPayment);
+        await fetchCustomerData();
+        toast({ title: "Success", description: "Payment record updated." });
+    } catch (error) {
+        console.error("Failed to update payment record:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to update payment record.' });
+    }
   };
 
 

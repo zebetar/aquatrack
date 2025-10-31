@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Download, Droplets, Pencil, Trash2 } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
+import { getUsageRecordsByCustomerId, getPaymentsByCustomerId } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
@@ -57,8 +57,8 @@ export function CustomerListTable({
     e.stopPropagation();
     setGeneratingPdfId(customer.id);
     try {
-      const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
-      const payments = getMockPaymentsByCustomerId(customer.id);
+      const usageRecords = await getUsageRecordsByCustomerId(customer.id);
+      const payments = await getPaymentsByCustomerId(customer.id);
       await generateCustomerPdf(customer, usageRecords, payments);
       toast({
         title: "PDF Generated",

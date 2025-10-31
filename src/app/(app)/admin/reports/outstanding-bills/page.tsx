@@ -1,3 +1,4 @@
+
 "use client";
 
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
@@ -6,27 +7,35 @@ import { useState, useEffect, useCallback } from 'react';
 import { Droplets, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { getMockOutstandingCustomers, getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
+import { getOutstandingCustomers, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
+import { useToast } from '@/hooks/use-toast';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function OutstandingBillsPage() {
   const [outstandingCustomers, setOutstandingCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const fetchOutstandingCustomers = useCallback(() => {
+  const fetchOutstandingCustomers = useCallback(async () => {
     setIsLoading(true);
-    const customers = getMockOutstandingCustomers();
-    
-    const augmentedCustomers = customers.map(customer => {
-      const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
-      const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-      return { ...customer, totalUsageHours };
-    });
+    try {
+        const customers = await getOutstandingCustomers();
+        
+        const augmentedCustomers = await Promise.all(customers.map(async (customer) => {
+          const usageRecords = await getUsageRecordsByCustomerId(customer.id);
+          const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
+          return { ...customer, totalUsageHours };
+        }));
 
-    setOutstandingCustomers(augmentedCustomers);
-    setIsLoading(false);
-  }, []);
+        setOutstandingCustomers(augmentedCustomers);
+    } catch (error) {
+        console.error("Failed to fetch outstanding customers:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load outstanding customer data.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchOutstandingCustomers();

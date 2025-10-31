@@ -1,3 +1,4 @@
+
 "use client"; 
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,7 +12,8 @@ import { Droplets, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert } fr
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAllMockCustomers, getAllMockUsageRecords } from '@/lib/mock-data-store';
+import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
+import { useToast } from '@/hooks/use-toast';
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -72,6 +74,7 @@ const StatChangeIndicator = ({ value }: { value: number }) => {
 };
 
 export default function AdminReportsPage() {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   
@@ -107,55 +110,61 @@ export default function AdminReportsPage() {
     return options;
   }, []);
 
-  const loadReportsData = useCallback(() => {
+  const loadReportsData = useCallback(async () => {
     setIsLoading(true);
-    
-    const records = getAllMockUsageRecords();
-    const customers = getAllMockCustomers();
+    try {
+        const [records, customers] = await Promise.all([
+            getAllUsageRecords(),
+            getAllCustomers()
+        ]);
 
-    setAllUsageRecords(records);
-    
-    const selectedDate = parseISO(selectedMonth);
+        setAllUsageRecords(records);
+        
+        const selectedDate = parseISO(selectedMonth);
 
-    const firstDayOfMonth = startOfMonth(selectedDate);
-    const lastDayOfMonth = endOfMonth(selectedDate);
-    const lastMonthDate = subMonths(selectedDate, 1);
-    const firstDayOfLastMonth = startOfMonth(lastMonthDate);
-    const lastDayOfLastMonth = endOfMonth(lastMonthDate);
+        const firstDayOfMonth = startOfMonth(selectedDate);
+        const lastDayOfMonth = endOfMonth(selectedDate);
+        const lastMonthDate = subMonths(selectedDate, 1);
+        const firstDayOfLastMonth = startOfMonth(lastMonthDate);
+        const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-    const usageThisMonth = records.filter(r => new Date(r.date) >= firstDayOfMonth && new Date(r.date) <= lastDayOfMonth);
-    const usageLastMonth = records.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
-    
-    const currentMonthSupply = usageThisMonth.reduce((sum, r) => sum + r.durationHours, 0);
-    const currentMonthRevenue = usageThisMonth.reduce((sum, r) => sum + r.cost, 0);
-    const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
-    const lastMonthRevenue = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
+        const usageThisMonth = records.filter(r => new Date(r.date) >= firstDayOfMonth && new Date(r.date) <= lastDayOfMonth);
+        const usageLastMonth = records.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+        
+        const currentMonthSupply = usageThisMonth.reduce((sum, r) => sum + r.durationHours, 0);
+        const currentMonthRevenue = usageThisMonth.reduce((sum, r) => sum + r.cost, 0);
+        const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
+        const lastMonthRevenue = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
 
-    setSupplyThisMonth(currentMonthSupply);
-    setRevenueThisMonth(currentMonthRevenue);
-    setSupplyChange(lastMonthSupply > 0 ? ((currentMonthSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentMonthSupply > 0 ? 100 : 0));
-    setRevenueChange(lastMonthRevenue > 0 ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : (currentMonthRevenue > 0 ? 100 : 0));
-    
-    const customerConsumptionMap = new Map<string, { id: string, name: string, consumption: number }>();
-    usageThisMonth.forEach(record => {
-        const current = customerConsumptionMap.get(record.customerId) || { id: record.customerId, name: record.customerName, consumption: 0 };
-        current.consumption += record.durationHours;
-        customerConsumptionMap.set(record.customerId, current);
-    });
+        setSupplyThisMonth(currentMonthSupply);
+        setRevenueThisMonth(currentMonthRevenue);
+        setSupplyChange(lastMonthSupply > 0 ? ((currentMonthSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentMonthSupply > 0 ? 100 : 0));
+        setRevenueChange(lastMonthRevenue > 0 ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : (currentMonthRevenue > 0 ? 100 : 0));
+        
+        const customerConsumptionMap = new Map<string, { id: string, name: string, consumption: number }>();
+        usageThisMonth.forEach(record => {
+            const current = customerConsumptionMap.get(record.customerId) || { id: record.customerId, name: record.customerName, consumption: 0 };
+            current.consumption += record.durationHours;
+            customerConsumptionMap.set(record.customerId, current);
+        });
 
-    const processedTopCustomers = Array.from(customerConsumptionMap.values())
-        .sort((a,b) => b.consumption - a.consumption)
-        .slice(0, 5);
-    setTopCustomers(processedTopCustomers);
+        const processedTopCustomers = Array.from(customerConsumptionMap.values())
+            .sort((a,b) => b.consumption - a.consumption)
+            .slice(0, 5);
+        setTopCustomers(processedTopCustomers);
 
-    setTotalRevenue(currentMonthRevenue);
-    const totalOutstanding = customers.reduce((sum, customer) => sum + customer.balance, 0);
-    setOutstandingBalance(totalOutstanding);
-    const activeCustomersThisMonth = customerConsumptionMap.size;
-    setAverageConsumption(activeCustomersThisMonth > 0 ? currentMonthSupply / activeCustomersThisMonth : 0);
-
-    setIsLoading(false);
-  }, [selectedMonth]);
+        setTotalRevenue(currentMonthRevenue);
+        const totalOutstanding = customers.reduce((sum, customer) => sum + customer.balance, 0);
+        setOutstandingBalance(totalOutstanding);
+        const activeCustomersThisMonth = customerConsumptionMap.size;
+        setAverageConsumption(activeCustomersThisMonth > 0 ? currentMonthSupply / activeCustomersThisMonth : 0);
+    } catch (error) {
+        console.error("Failed to load reports data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load reports data.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [selectedMonth, toast]);
 
   useEffect(() => {
     loadReportsData();

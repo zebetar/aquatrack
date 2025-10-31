@@ -15,13 +15,13 @@ import { useState } from "react";
 import type { Customer } from "@/types";
 
 interface AddCustomerDialogProps {
-  onCustomerAdded: (customer: Customer) => void;
+  onCustomerAdded: (customer: Omit<Customer, 'id' | 'createdAt'>) => void;
 }
 
 export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const handleSuccess = (newCustomer: Customer) => {
+  const handleSuccess = (newCustomer: Omit<Customer, 'id' | 'createdAt'>) => {
     onCustomerAdded(newCustomer);
     setOpen(false);
   };
@@ -29,11 +29,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {/* On mobile, this becomes an icon button. On desktop, it has text. */}
-        <Button className="w-10 h-10 p-0 md:w-auto md:h-auto md:px-4 md:py-2 relative">
-          <PlusCircle className="h-4 w-4" />
-          <span className="hidden md:inline md:ml-2">Add New Customer</span>
-          <span className="sr-only">Add New Customer</span>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add New Customer
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

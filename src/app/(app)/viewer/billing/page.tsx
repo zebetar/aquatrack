@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Payment, Customer } from '@/types'; 
@@ -8,28 +9,38 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { Droplets } from 'lucide-react';
-import { getMockCustomerByEmail, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
+import { getCustomerByAuthUID, getPaymentsByCustomerId } from '@/lib/firebase-service';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ViewerBillingPage() {
   const { user, loading: authLoading } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [customerProfile, setCustomerProfile] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const loadBillingData = useCallback(() => {
-    if (!user || !user.email) {
+  const loadBillingData = useCallback(async () => {
+    if (!user) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    const customer = getMockCustomerByEmail(user.email);
-    if (customer) {
-      setCustomerProfile(customer);
-      const paymentData = getMockPaymentsByCustomerId(customer.id);
-      setPayments(paymentData);
+    try {
+        const customer = await getCustomerByAuthUID(user.id);
+        if (customer) {
+          setCustomerProfile(customer);
+          const paymentData = await getPaymentsByCustomerId(customer.id);
+          setPayments(paymentData);
+        } else {
+            toast({ variant: 'destructive', title: 'Profile not found', description: 'Could not find a customer profile linked to your account.' });
+        }
+    } catch (error) {
+        console.error("Failed to load billing data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load billing information.' });
+    } finally {
+        setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [user]);
+  }, [user, toast]);
 
   useEffect(() => {
     if (!authLoading) {

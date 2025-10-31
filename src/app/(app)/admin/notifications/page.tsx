@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
-import { getMockNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
+import { getNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/firebase-service';
 
 const NotificationIcon = ({ type }: { type: TNotification['type']}) => {
   const iconProps = { className: "h-5 w-5" };
@@ -33,29 +34,43 @@ export default function AdminNotificationsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchNotifications = useCallback(() => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
-    const fetchedNotifications = getMockNotificationsByUserId(user.id);
-    setNotifications(fetchedNotifications);
-    setIsLoading(false);
-  }, [user]);
+    try {
+        const fetchedNotifications = await getNotificationsByUserId(user.id);
+        setNotifications(fetchedNotifications);
+    } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load notifications.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  const handleMarkAsRead = (notificationId: string) => {
+  const handleMarkAsRead = async (notificationId: string) => {
     if (!user) return;
-    markNotificationAsRead(notificationId, user.id);
-    fetchNotifications(); // Re-fetch to update UI
+    try {
+        await markNotificationAsRead(notificationId);
+        await fetchNotifications(); // Re-fetch to update UI
+    } catch(error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to mark notification as read.' });
+    }
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
     if (!user) return;
-    markAllNotificationsAsRead(user.id);
-    toast({ title: "Success", description: "All notifications marked as read." });
-    fetchNotifications(); // Re-fetch to update UI
+    try {
+        await markAllNotificationsAsRead(user.id);
+        toast({ title: "Success", description: "All notifications marked as read." });
+        await fetchNotifications(); // Re-fetch to update UI
+    } catch(error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to mark all notifications as read.' });
+    }
   };
   
   if (isLoading) {

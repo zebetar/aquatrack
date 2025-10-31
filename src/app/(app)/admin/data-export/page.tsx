@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { getAllMockCustomers, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
+import { getAllCustomers, getUsageRecordsByCustomerId, getPaymentsByCustomerId } from '@/lib/firebase-service';
 
 
 export default function DataExportPage() {
@@ -39,11 +40,19 @@ export default function DataExportPage() {
   const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
-    setIsLoadingCustomers(true);
-    const allCustomers = getAllMockCustomers();
-    setCustomers(allCustomers.sort((a,b) => a.name.localeCompare(b.name)));
-    setIsLoadingCustomers(false);
-  }, []);
+    const fetchCustomers = async () => {
+        setIsLoadingCustomers(true);
+        try {
+            const allCustomers = await getAllCustomers();
+            setCustomers(allCustomers.sort((a,b) => a.name.localeCompare(b.name)));
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load customers.' });
+        } finally {
+            setIsLoadingCustomers(false);
+        }
+    };
+    fetchCustomers();
+  }, [toast]);
 
   const handleDataExport = (dataType: string, formatType: string) => {
     toast({
@@ -59,7 +68,7 @@ export default function DataExportPage() {
     });
   };
 
-  const handlePreviewFilteredData = () => {
+  const handlePreviewFilteredData = async () => {
     if (!selectedCustomerId || !startDate || !endDate) {
       toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer, start date, and end date." });
       return;
@@ -72,24 +81,28 @@ export default function DataExportPage() {
     setIsPreviewing(true);
     setShowPreview(false);
 
-    const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
-    
-    const usageData = getMockUsageRecordsByCustomerId(selectedCustomerId).filter(r => 
-      new Date(r.startTime) >= startDate && new Date(r.startTime) <= endOfDayEndDate
-    );
-    setFilteredUsage(usageData);
+    try {
+        const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+        
+        const usageData = (await getUsageRecordsByCustomerId(selectedCustomerId)).filter(r => 
+          new Date(r.startTime) >= startDate && new Date(r.startTime) <= endOfDayEndDate
+        );
+        setFilteredUsage(usageData);
 
-    const paymentData = getMockPaymentsByCustomerId(selectedCustomerId).filter(p => 
-      new Date(p.paymentDate) >= startDate && new Date(p.paymentDate) <= endOfDayEndDate
-    );
-    setFilteredPayments(paymentData);
-      
-    setShowPreview(true);
-    if (usageData.length === 0 && paymentData.length === 0) {
-        toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria and date range." });
+        const paymentData = (await getPaymentsByCustomerId(selectedCustomerId)).filter(p => 
+          new Date(p.paymentDate) >= startDate && new Date(p.paymentDate) <= endOfDayEndDate
+        );
+        setFilteredPayments(paymentData);
+          
+        setShowPreview(true);
+        if (usageData.length === 0 && paymentData.length === 0) {
+            toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria and date range." });
+        }
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Could not fetch data for preview." });
+    } finally {
+        setIsPreviewing(false);
     }
-
-    setIsPreviewing(false);
   };
 
   const handleDownloadFilteredPdf = async () => {
@@ -309,16 +322,6 @@ export default function DataExportPage() {
                   </div>
                   <Button onClick={() => handleDataExport("All Payment Histories", "CSV")} variant="outline">
                     Export as CSV
-                  </Button>
-                </div>
-
-                <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 p-4 border rounded-lg bg-card/80 hover:bg-muted/50 transition-colors">
-                  <div className="mb-2 sm:mb-0">
-                    <h3 className="font-semibold text-lg flex items-center"><FileDown className="mr-2 h-5 w-5 text-primary"/>Download Data Backup</h3>
-                    <p className="text-sm text-muted-foreground">Download all app data as a single JSON file. This is useful for backup or migration.</p>
-                  </div>
-                  <Button onClick={handleDownloadAllData} variant="outline">
-                    Download All Data (JSON)
                   </Button>
                 </div>
               </CardContent>

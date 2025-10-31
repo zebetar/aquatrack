@@ -1,3 +1,4 @@
+
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
@@ -14,19 +15,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { getAllMockUsageRecords } from '@/lib/mock-data-store';
+import { getAllUsageRecords } from '@/lib/firebase-service';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminUsagePage() {
   const [usageRecords, setUsageRecords] = useState<WaterUsageRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
-  const loadUsageData = useCallback(() => {
+  const loadUsageData = useCallback(async () => {
     setIsLoading(true);
-    const records = getAllMockUsageRecords();
-    setUsageRecords(records);
-    setIsLoading(false);
-  }, []);
+    try {
+        const records = await getAllUsageRecords();
+        setUsageRecords(records);
+    } catch (error) {
+        console.error("Failed to load usage data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load usage records.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     loadUsageData();

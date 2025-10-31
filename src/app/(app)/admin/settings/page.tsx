@@ -8,13 +8,12 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Droplets, UserCircle, BellRing, Bot, FileDown, FileUp, Palette } from 'lucide-react';
+import { Droplets, UserCircle, Bot, FileDown, FileUp, Palette } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Accordion,
   AccordionContent,
@@ -22,7 +21,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Switch } from '@/components/ui/switch';
-import { exportMockDataAsJSON, importMockDataFromJSON } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 
 const adminChangeNameSchema = z.object({
@@ -41,16 +39,14 @@ export default function AdminSettingsPage() {
   const [isSavingName, setIsSavingName] = useState(false);
   
   const [isAutomatedRemindersEnabled, setAutomatedRemindersEnabled] = useState(false);
-  
-  const [isImporting, setIsImporting] = useState(false);
-  const importFileRef = useRef<HTMLInputElement>(null);
-
 
   useEffect(() => {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
     setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
-    const savedReminderSetting = localStorage.getItem('automated_reminders_enabled') === 'true';
-    setAutomatedRemindersEnabled(savedReminderSetting);
+    if(typeof window !== 'undefined') {
+        const savedReminderSetting = localStorage.getItem('automated_reminders_enabled') === 'true';
+        setAutomatedRemindersEnabled(savedReminderSetting);
+    }
   }, []);
   
   const handleReminderToggle = (enabled: boolean) => {
@@ -98,14 +94,11 @@ export default function AdminSettingsPage() {
     setIsSavingRate(false);
   };
 
-  const handleAdminNameChange = (values: AdminChangeNameFormValues) => {
+  const handleAdminNameChange = async (values: AdminChangeNameFormValues) => {
     setIsSavingName(true);
-    updateAdminName(values.newAdminName);
+    await updateAdminName(values.newAdminName);
     setIsSavingName(false);
-    toast({
-      title: "Admin Name Updated",
-      description: `Your display name is now ${values.newAdminName}.`,
-    });
+    // Toast is handled in the context
   };
   
   const handleToggleTheme = () => {
@@ -131,75 +124,9 @@ export default function AdminSettingsPage() {
     }
   }, []);
 
-  const handleDownloadAllData = () => {
-    try {
-      const jsonData = exportMockDataAsJSON();
-      if (jsonData === "{\n  \"customers\": [],\n  \"usageRecords\": [],\n  \"payments\": [],\n  \"notifications\": []\n}") {
-         toast({
-          variant: "default",
-          title: "No Data to Export",
-          description: "The data store is currently empty.",
-        });
-        return;
-      }
-      const blob = new Blob([jsonData], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `AquaTrack_backup_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast({
-        title: "Data Backup Exported",
-        description: "All current data has been downloaded as a JSON file.",
-      });
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      toast({
-        variant: "destructive",
-        title: "Export Failed",
-        description: "Could not export the data.",
-      });
-    }
-  };
-
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      toast({ variant: "destructive", title: "No File Selected", description: "Please choose a JSON file to import." });
-      return;
-    }
-    if (file.type !== 'application/json') {
-      toast({ variant: "destructive", title: "Invalid File Type", description: "Please select a valid .json backup file." });
-      return;
-    }
-
-    setIsImporting(true);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const jsonString = e.target?.result as string;
-        const { success, message } = importMockDataFromJSON(jsonString);
-
-        if (success) {
-          toast({ title: "Import Successful", description: message });
-          setTimeout(() => window.location.reload(), 1500); 
-        } else {
-          throw new Error(message);
-        }
-      } catch (error: any) {
-        toast({ variant: "destructive", title: "Import Failed", description: error.message || "Could not process the file." });
-      } finally {
-        setIsImporting(false);
-        if (importFileRef.current) {
-          importFileRef.current.value = "";
-        }
-      }
-    };
-    reader.readAsText(file);
-  };
+  const handleBackupNotImplemented = () => {
+      toast({ title: "Coming Soon!", description: "Data backup and restore functionality is planned for a future update." });
+  }
 
   return (
     <>
@@ -336,12 +263,11 @@ export default function AdminSettingsPage() {
                    <p className="text-sm text-muted-foreground">Save or load all app data from a JSON file.</p>
                 </div>
                 <div className='flex items-center gap-2'>
-                  <Button variant="outline" onClick={handleDownloadAllData}><FileDown className="mr-2 h-4 w-4" />Backup</Button>
-                  <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={isImporting}>
-                    {isImporting ? <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" /> : <FileUp className="mr-2 h-4 w-4" />}
+                  <Button variant="outline" onClick={handleBackupNotImplemented}><FileDown className="mr-2 h-4 w-4" />Backup</Button>
+                  <Button variant="outline" onClick={handleBackupNotImplemented}>
+                    <FileUp className="mr-2 h-4 w-4" />
                     Restore
                   </Button>
-                  <Input type="file" ref={importFileRef} className="hidden" accept=".json" onChange={handleImportData} />
                 </div>
               </div>
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">

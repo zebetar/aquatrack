@@ -16,13 +16,13 @@ import { useState } from "react";
 
 interface RecordPaymentDialogProps {
   customer: Customer;
-  onPaymentRecorded?: (newPayment: Payment) => void;
+  onPaymentRecorded?: (newPayment: Omit<Payment, 'id' | 'createdAt'>) => void;
 }
 
 export function RecordPaymentDialog({ customer, onPaymentRecorded }: RecordPaymentDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const handleSuccess = (newPayment: Payment) => {
+  const handleSuccess = (newPayment: Omit<Payment, 'id' | 'createdAt'>) => {
     onPaymentRecorded?.(newPayment);
     setOpen(false);
   };

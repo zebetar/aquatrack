@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAllMockCustomers, getAllMockUsageRecords, getMockOutstandingCustomers } from '@/lib/mock-data-store';
+import { getAllCustomers, getAllUsageRecords, getOutstandingCustomers } from '@/lib/firebase-service';
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -140,6 +141,7 @@ KeyMetricCard.displayName = 'KeyMetricCard';
 
 
 export default function AdminDashboardPage() {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
 
   // Dashboard Metrics
@@ -176,49 +178,54 @@ export default function AdminDashboardPage() {
   }, [customersWithMonthlyUsageData]);
 
 
-  const loadDashboardData = useCallback(() => {
+  const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
+    try {
+        const today = new Date();
+        const firstDay = startOfMonth(today);
+        const lastDay = endOfMonth(today);
+        const lastMonthDate = subMonths(today, 1);
+        const firstDayOfLastMonth = startOfMonth(lastMonthDate);
+        const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-    const today = new Date();
-    const firstDay = startOfMonth(today);
-    const lastDay = endOfMonth(today);
-    const lastMonthDate = subMonths(today, 1);
-    const firstDayOfLastMonth = startOfMonth(lastMonthDate);
-    const lastDayOfLastMonth = endOfMonth(lastMonthDate);
+        const [allCustomers, allUsageRecordsData, outstandingCustomers] = await Promise.all([
+            getAllCustomers(),
+            getAllUsageRecords(),
+            getOutstandingCustomers()
+        ]);
+        
+        setAllUsageRecords(allUsageRecordsData);
+        
+        const usageRecordsThisMonth = allUsageRecordsData.filter(record => record.date >= firstDay && record.date <= lastDay);
+        const usageLastMonth = allUsageRecordsData.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
 
-    const allCustomers = getAllMockCustomers();
-    const allUsageRecordsData = getAllMockUsageRecords();
-    
-    setAllUsageRecords(allUsageRecordsData);
-    
-    const usageRecordsThisMonth = allUsageRecordsData.filter(record => record.date >= firstDay && record.date <= lastDay);
-    const usageLastMonth = allUsageRecordsData.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
+        setMonthlyUsageRecords(usageRecordsThisMonth);
+        setCustomersWithOutstandingBills(outstandingCustomers);
+        
+        const sortedOutstanding = [...outstandingCustomers].sort((a,b) => b.balance - a.balance);
+        setTopOutstandingCustomers(sortedOutstanding.slice(0, 5));
 
-    const outstandingCustomers = getMockOutstandingCustomers();
+        const currentSupply = usageRecordsThisMonth.reduce((sum, record) => sum + record.durationHours, 0);
+        const currentRevenue = usageRecordsThisMonth.reduce((sum, record) => sum + record.cost, 0);
+        
+        const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
+        
+        setTotalCustomers(allCustomers.length);
+        setMonthlySupply(formatDurationFromHours(currentSupply));
+        setMonthlyRevenue(currentRevenue);
+        setOutstandingBillsValue(totalDue);
 
-    setMonthlyUsageRecords(usageRecordsThisMonth);
-    setCustomersWithOutstandingBills(outstandingCustomers);
-    
-    const sortedOutstanding = [...outstandingCustomers].sort((a,b) => b.balance - a.balance);
-    setTopOutstandingCustomers(sortedOutstanding.slice(0, 5));
-
-    const currentSupply = usageRecordsThisMonth.reduce((sum, record) => sum + record.durationHours, 0);
-    const currentRevenue = usageRecordsThisMonth.reduce((sum, record) => sum + record.cost, 0);
-    
-    const totalDue = outstandingCustomers.reduce((sum, customer) => sum + customer.balance, 0);
-    
-    setTotalCustomers(allCustomers.length);
-    setMonthlySupply(formatDurationFromHours(currentSupply));
-    setMonthlyRevenue(currentRevenue);
-    setOutstandingBillsValue(totalDue);
-
-    const lastMonthRevenueCalc = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
-    const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
-    setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
-    setRevenueChange(lastMonthRevenueCalc > 0 ? ((currentRevenue - lastMonthRevenueCalc) / lastMonthRevenueCalc) * 100 : (currentRevenue > 0 ? 100 : 0));
-      
-    setIsLoading(false);
-  }, []);
+        const lastMonthRevenueCalc = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
+        const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
+        setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
+        setRevenueChange(lastMonthRevenueCalc > 0 ? ((currentRevenue - lastMonthRevenueCalc) / lastMonthRevenueCalc) * 100 : (currentRevenue > 0 ? 100 : 0));
+    } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load dashboard data.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
   
   useEffect(() => {
     loadDashboardData();
@@ -278,30 +285,35 @@ export default function AdminDashboardPage() {
   }, [allUsageRecords, supplyChartView, revenueChartView]);
 
 
-  const loadAndProcessDialogData = useCallback(() => {
+  const loadAndProcessDialogData = useCallback(async () => {
     setIsDialogDataLoading(true);
+    try {
+        const customers = await getAllCustomers();
+          
+        const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
+        customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
 
-    const customers = getAllMockCustomers();
+        monthlyUsageRecords.forEach(record => { 
+          const entry = customerUsageMap.get(record.customerId);
+          if (entry) {
+            entry.usageHours += record.durationHours;
+            entry.cost += record.cost;
+          }
+        });
       
-    const customerUsageMap = new Map<string, { name: string, usageHours: number, cost: number }>();
-    customers.forEach(c => customerUsageMap.set(c.id, { name: c.name, usageHours: 0, cost: 0 }));
-
-    monthlyUsageRecords.forEach(record => { 
-      const entry = customerUsageMap.get(record.customerId);
-      if (entry) {
-        entry.usageHours += record.durationHours;
-        entry.cost += record.cost;
-      }
-    });
-  
-    const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
-      .map(([id, data]) => ({ id, ...data }))
-      .filter(item => item.usageHours > 0 || item.cost > 0) 
-      .sort((a,b) => b.usageHours - a.usageHours);
-      
-    setCustomersWithMonthlyUsageData(processedDialogData);
-    setIsDialogDataLoading(false);
-  }, [monthlyUsageRecords]);
+        const processedDialogData: CustomerMonthlyUsage[] = Array.from(customerUsageMap.entries())
+          .map(([id, data]) => ({ id, ...data }))
+          .filter(item => item.usageHours > 0 || item.cost > 0) 
+          .sort((a,b) => b.usageHours - a.usageHours);
+          
+        setCustomersWithMonthlyUsageData(processedDialogData);
+    } catch (error) {
+        console.error("Failed to load dialog data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load customer details for the dialog.' });
+    } finally {
+        setIsDialogDataLoading(false);
+    }
+  }, [monthlyUsageRecords, toast]);
 
   const handleOpenSupplyDialog = () => {
     setIsMonthlySupplyDialogOpen(true);

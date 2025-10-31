@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,7 +27,7 @@ const addCustomerFormSchema = z.object({
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt'>) => void;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
@@ -44,18 +45,19 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     
-    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> = {
+    const newCustomer: Omit<Customer, 'id' | 'createdAt'> = {
       name: values.name,
+      balance: 0, // All new customers start with a zero balance
     };
 
     if (values.email) {
       newCustomer.email = values.email;
+      // We no longer create a mock authUID here. It will be assigned when the user is created in Firebase Auth.
     }
     if (values.contactInfo) {
       newCustomer.contactInfo = values.contactInfo;
     }
     
-    // The parent component now handles the database call
     onSuccessCallback(newCustomer); 
     
     setIsLoading(false);

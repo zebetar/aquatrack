@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +22,8 @@ import { format, differenceInMinutes, set, addDays } from "date-fns";
 import { CORE_WATER_RATE_PER_HOUR } from "@/lib/constants";
 import type { Customer, WaterUsageRecord } from "@/types";
 import { useState, useMemo } from "react";
+import { useAuth } from '@/contexts/auth-context';
+
 
 const logUsageFormSchema = z.object({
   date: z.date({ required_error: "Date is required." }),
@@ -53,10 +56,11 @@ type LogUsageFormValues = z.infer<typeof logUsageFormSchema>;
 
 interface LogUsageFormProps {
   customer: Customer;
-  onSuccess?: (newRecord: Omit<WaterUsageRecord, 'id' | 'createdAt' | 'recordedBy' | 'customerName'>) => void; 
+  onSuccess?: (newRecord: Omit<WaterUsageRecord, 'id' | 'createdAt'>) => void; 
 }
 
 export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LogUsageFormValues>({
@@ -106,6 +110,10 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
   const isFormCurrentlyValid = logUsageFormSchema.safeParse(watchedValues).success;
 
   async function onSubmit(values: LogUsageFormValues) {
+    if (!user) {
+        // Handle user not being logged in
+        return;
+    }
     setIsLoading(true);
     
     const [startH, startM] = values.startTime.split(':').map(Number);
@@ -123,11 +131,13 @@ export function LogUsageForm({ customer, onSuccess }: LogUsageFormProps) {
 
     const newUsageRecord = {
       customerId: customer.id,
+      customerName: customer.name,
       date: values.date,
       startTime: actualStartTime, 
       endTime: actualEndTime,  
       durationHours: finalDurationHours,
       cost: finalCost,
+      recordedBy: user.id
     };
     
     onSuccess?.(newUsageRecord);

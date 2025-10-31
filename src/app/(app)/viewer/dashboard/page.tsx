@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,8 @@ import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns'
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getMockCustomerByEmail, getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
+import { getCustomerByAuthUID, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
+import { useToast } from '@/hooks/use-toast';
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -106,6 +108,7 @@ interface ChartDataPoint {
 
 export default function ViewerDashboardPage() {
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [customerProfile, setCustomerProfile] = useState<Customer | null>(null);
   
   const [currentMonthUsage, setCurrentMonthUsage] = useState(0);
@@ -121,56 +124,60 @@ export default function ViewerDashboardPage() {
   const [usageChartData, setUsageChartData] = useState<ChartDataPoint[]>([]);
   const [costChartData, setCostChartData] = useState<ChartDataPoint[]>([]);
 
-  const viewerEmail = user?.email; 
-
-  const loadDashboardData = useCallback(() => {
-    if (!viewerEmail) {
+  const loadDashboardData = useCallback(async () => {
+    if (!user) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
 
-    const customer = getMockCustomerByEmail(viewerEmail);
-    if (!customer) {
-      setIsLoading(false);
-      return;
-    }
+    try {
+        const customer = await getCustomerByAuthUID(user.id);
+        if (!customer) {
+          toast({ variant: 'destructive', title: 'Profile not found', description: 'Could not find a customer profile linked to your account.' });
+          setIsLoading(false);
+          return;
+        }
 
-    setCustomerProfile(customer);
-    const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
-    setAllUsageRecords(usageRecords);
-    
-    const today = new Date();
-    const firstDay = startOfMonth(today);
-    const lastDay = endOfMonth(today);
-    const lastMonthDate = subMonths(today, 1);
-    const firstDayOfLastMonth = startOfMonth(lastMonthDate);
-    const lastDayOfLastMonth = endOfMonth(lastMonthDate);
+        setCustomerProfile(customer);
+        const usageRecords = await getUsageRecordsByCustomerId(customer.id);
+        setAllUsageRecords(usageRecords);
+        
+        const today = new Date();
+        const firstDay = startOfMonth(today);
+        const lastDay = endOfMonth(today);
+        const lastMonthDate = subMonths(today, 1);
+        const firstDayOfLastMonth = startOfMonth(lastMonthDate);
+        const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-    const usageThisMonthRecords = usageRecords.filter(record => new Date(record.date) >= firstDay && new Date(record.date) <= lastDay);
-    const usageLastMonthRecords = usageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+        const usageThisMonthRecords = usageRecords.filter(record => new Date(record.date) >= firstDay && new Date(record.date) <= lastDay);
+        const usageLastMonthRecords = usageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
 
-    const thisMonthTotalUsage = usageThisMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
-    const thisMonthTotalCost = usageThisMonthRecords.reduce((sum, record) => sum + record.cost, 0);
-    const lastMonthTotalUsage = usageLastMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
-    const lastMonthTotalCost = usageLastMonthRecords.reduce((sum, record) => sum + record.cost, 0);
-    
-    setCurrentMonthUsage(thisMonthTotalUsage);
-    setCurrentMonthCost(thisMonthTotalCost);
-    
-    setUsageChange(lastMonthTotalUsage > 0 ? ((thisMonthTotalUsage - lastMonthTotalUsage) / lastMonthTotalUsage) * 100 : (thisMonthTotalUsage > 0 ? 100 : 0));
-    setCostChange(lastMonthTotalCost > 0 ? ((thisMonthTotalCost - lastMonthTotalCost) / lastMonthTotalCost) * 100 : (thisMonthTotalCost > 0 ? 100 : 0));
-    
-    setIsLoading(false);
-  }, [viewerEmail]); 
-
-  useEffect(() => {
-    if (!authLoading && viewerEmail) {
-      loadDashboardData();
-    } else if (!authLoading && !viewerEmail) {
+        const thisMonthTotalUsage = usageThisMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
+        const thisMonthTotalCost = usageThisMonthRecords.reduce((sum, record) => sum + record.cost, 0);
+        const lastMonthTotalUsage = usageLastMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
+        const lastMonthTotalCost = usageLastMonthRecords.reduce((sum, record) => sum + record.cost, 0);
+        
+        setCurrentMonthUsage(thisMonthTotalUsage);
+        setCurrentMonthCost(thisMonthTotalCost);
+        
+        setUsageChange(lastMonthTotalUsage > 0 ? ((thisMonthTotalUsage - lastMonthTotalUsage) / lastMonthTotalUsage) * 100 : (thisMonthTotalUsage > 0 ? 100 : 0));
+        setCostChange(lastMonthTotalCost > 0 ? ((thisMonthTotalCost - lastMonthTotalCost) / lastMonthTotalCost) * 100 : (thisMonthTotalCost > 0 ? 100 : 0));
+    } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load dashboard data.' });
+    } finally {
         setIsLoading(false);
     }
-  }, [authLoading, viewerEmail, loadDashboardData]);
+  }, [user, toast]); 
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      loadDashboardData();
+    } else if (!authLoading && !user) {
+        setIsLoading(false);
+    }
+  }, [authLoading, user, loadDashboardData]);
 
   useEffect(() => {
     if (allUsageRecords.length === 0) return;
@@ -237,16 +244,13 @@ export default function ViewerDashboardPage() {
   if (!user) { 
       return <p>Not authenticated. Please log in.</p>
   }
-   if (!viewerEmail) { 
-      return <p>Could not load dashboard data: User email not found.</p>
-  }
-
+  
   const currentMonthLabel = format(new Date(), 'MMMM yyyy');
 
   return (
     <div className="mt-6 space-y-6">
       <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-        Welcome, {customerProfile?.name ?? 'Customer'}!
+        Welcome, {customerProfile?.name ?? user.name ?? 'Customer'}!
       </h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <SummaryCard 

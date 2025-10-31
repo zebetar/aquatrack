@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { WaterUsageRecord, Notification as TNotification } from '@/types';
@@ -11,7 +12,7 @@ import { Droplets, AlertTriangle } from 'lucide-react';
 import { formatDurationFromHours } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { getMockCustomerByEmail, getMockUsageRecordsByCustomerId, addMockNotification } from '@/lib/mock-data-store';
+import { getUsageRecordsByCustomerId, addNotification } from '@/lib/firebase-service';
 
 export default function ViewerUsagePage() {
   const { user, loading: authLoading } = useAuth();
@@ -19,19 +20,22 @@ export default function ViewerUsagePage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const loadUsageData = useCallback(() => {
-    if (!user || !user.email) {
+  const loadUsageData = useCallback(async () => {
+    if (!user || !user.customerId) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    const customer = getMockCustomerByEmail(user.email);
-    if (customer) {
-      const records = getMockUsageRecordsByCustomerId(customer.id);
-      setUsageRecords(records);
+    try {
+        const records = await getUsageRecordsByCustomerId(user.customerId);
+        setUsageRecords(records);
+    } catch (error) {
+        console.error("Failed to load usage data:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load usage history.' });
+    } finally {
+        setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [user]);
+  }, [user, toast]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -39,24 +43,27 @@ export default function ViewerUsagePage() {
     }
   }, [authLoading, loadUsageData]);
 
-  const handleReportIssue = (record: WaterUsageRecord) => {
+  const handleReportIssue = async (record: WaterUsageRecord) => {
     if (!user || !user.customerId) return;
     
-    const issueNotification: TNotification = {
-        id: `notif-${Date.now()}`,
-        userId: 'admin001', 
-        message: `Issue reported by ${user.name} for usage on ${format(new Date(record.date), 'PP')}.`,
-        type: 'ISSUE_REPORTED',
-        isRead: false,
-        linkTo: `/admin/customers/${user.customerId}`,
-        createdAt: new Date(),
-    };
-    addMockNotification(issueNotification);
+    try {
+        const issueNotification: Omit<TNotification, 'id' | 'createdAt'> = {
+            userId: 'admin001', // Hardcoded admin ID for now
+            message: `Issue reported by ${user.name} for usage on ${format(new Date(record.date), 'PP')}.`,
+            type: 'ISSUE_REPORTED',
+            isRead: false,
+            linkTo: `/admin/customers/${user.customerId}`,
+        };
+        await addNotification(issueNotification);
 
-    toast({
-        title: "Issue Reported",
-        description: "Your report has been sent to the admin for review.",
-    });
+        toast({
+            title: "Issue Reported",
+            description: "Your report has been sent to the admin for review.",
+        });
+    } catch (error) {
+        console.error("Failed to report issue:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not submit your report.' });
+    }
   };
 
   if (isLoading || authLoading) {

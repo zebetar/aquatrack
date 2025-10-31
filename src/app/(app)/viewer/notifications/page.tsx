@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Notification as TNotification } from '@/types';
@@ -11,7 +12,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { getMockNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
+import { getNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/firebase-service';
 
 const NotificationIcon = ({ type }: { type: TNotification['type']}) => {
   const iconProps = { className: "h-5 w-5" };
@@ -32,18 +33,24 @@ export default function ViewerNotificationsPage() {
   const [notifications, setNotifications] = useState<TNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const viewerUserId = user?.authUID || user?.id;
+  const viewerUserId = user?.id;
 
-  const loadNotifications = useCallback(() => {
+  const loadNotifications = useCallback(async () => {
     if (!viewerUserId) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    const fetchedNotifications = getMockNotificationsByUserId(viewerUserId);
-    setNotifications(fetchedNotifications);
-    setIsLoading(false);
-  }, [viewerUserId]);
+    try {
+        const fetchedNotifications = await getNotificationsByUserId(viewerUserId);
+        setNotifications(fetchedNotifications);
+    } catch (error) {
+        console.error("Failed to load notifications:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load notifications.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [viewerUserId, toast]);
 
   useEffect(() => {
     if (!authLoading && viewerUserId) {
@@ -53,20 +60,28 @@ export default function ViewerNotificationsPage() {
     }
   }, [authLoading, loadNotifications, viewerUserId]);
 
-  const handleMarkAsRead = (notificationId: string) => {
+  const handleMarkAsRead = async (notificationId: string) => {
     if (!viewerUserId) return;
-    markNotificationAsRead(notificationId, viewerUserId);
-    loadNotifications(); 
+    try {
+        await markNotificationAsRead(notificationId);
+        await loadNotifications(); 
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to mark notification as read.' });
+    }
   };
   
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
     if (!viewerUserId) return;
     const unread = notifications.filter(n => !n.isRead);
     if (unread.length === 0) return;
 
-    markAllNotificationsAsRead(viewerUserId);
-    toast({ title: "Success", description: "All notifications marked as read." });
-    loadNotifications();
+    try {
+        await markAllNotificationsAsRead(viewerUserId);
+        toast({ title: "Success", description: "All notifications marked as read." });
+        await loadNotifications();
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to mark all as read.' });
+    }
   };
 
   if (isLoading || authLoading) {

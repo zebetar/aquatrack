@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Customer, Payment } from "@/types";
 import { useState } from "react";
+import { useAuth } from '@/contexts/auth-context';
 
 const recordPaymentFormSchema = z.object({
   paymentDate: z.date({ required_error: "Payment date is required." }),
@@ -30,27 +32,34 @@ type RecordPaymentFormValues = z.infer<typeof recordPaymentFormSchema>;
 
 interface RecordPaymentFormProps {
   customer: Customer;
-  onSuccess?: (newPayment: Omit<Payment, 'id' | 'createdAt' | 'recordedBy' | 'customerName'>) => void;
+  onSuccess?: (newPayment: Omit<Payment, 'id' | 'createdAt'>) => void;
 }
 
 export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<RecordPaymentFormValues>({
     resolver: zodResolver(recordPaymentFormSchema),
     defaultValues: {
       paymentDate: new Date(),
-      amountPaid: customer.balance > 0 ? customer.balance : 0,
+      amountPaid: customer.balance > 0 ? customer.balance : undefined,
     },
   });
 
   async function onSubmit(values: RecordPaymentFormValues) {
+    if (!user) {
+        // Handle user not being logged in
+        return;
+    }
     setIsLoading(true);
     
     const newPayment = {
       customerId: customer.id,
+      customerName: customer.name,
       paymentDate: values.paymentDate,
       amountPaid: values.amountPaid,
+      recordedBy: user.id
     };
     
     onSuccess?.(newPayment);
@@ -58,7 +67,7 @@ export function RecordPaymentForm({ customer, onSuccess }: RecordPaymentFormProp
     setIsLoading(false);
     form.reset({
         paymentDate: new Date(),
-        amountPaid: 0, 
+        amountPaid: undefined, 
     });
   }
 

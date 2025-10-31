@@ -1,3 +1,4 @@
+
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
@@ -20,12 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
-import { 
-  addMockCustomer, 
-  getAllMockCustomers, 
-  addMockNotification,
-  getMockUsageRecordsByCustomerId
-} from '@/lib/mock-data-store';
+import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -36,61 +32,58 @@ export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { user } = useAuth();
   
-  const fetchCustomers = useCallback(() => {
+  const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
-    const storedCustomers = getAllMockCustomers();
-    
-    const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
-      const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
-      const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
-      return { ...customer, totalUsageHours };
-    });
+    try {
+      const storedCustomers = await getAllCustomers();
+      
+      const customersWithUsage: CustomerWithUsage[] = await Promise.all(storedCustomers.map(async (customer) => {
+        const usageRecords = await getUsageRecordsByCustomerId(customer.id);
+        const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
+        return { ...customer, totalUsageHours };
+      }));
 
-    setCustomers(customersWithUsage);
-    setIsLoading(false);
-  }, []);
+      setCustomers(customersWithUsage);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not load customer data.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => {
+  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt'>) => {
     if (!user) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a customer." });
         return;
     }
     
-    const customerId = `cust-${Date.now()}`;
-    const customerWithMetadata: Customer = {
-      ...newCustomerData,
-      id: customerId,
-      balance: 0,
-      createdAt: new Date(),
-    };
-    
-    if (customerWithMetadata.email && !customerWithMetadata.authUID) {
-      customerWithMetadata.authUID = `authuid-${Math.random().toString(36).substring(2, 9)}`;
+    try {
+      const newCustomer = await addCustomer(newCustomerData);
+
+      const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
+        userId: user.id, 
+        message: `New customer added: ${newCustomerData.name}.`,
+        type: 'CUSTOMER_ADDED',
+        isRead: false,
+        linkTo: `/admin/customers/${newCustomer.id}`,
+      };
+      await addNotification(adminNotification);
+
+      toast({
+        title: "Customer Added",
+        description: `${newCustomerData.name} has been added successfully.`,
+      });
+      
+      await fetchCustomers();
+    } catch (error) {
+      console.error("Failed to add customer:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to add the new customer.' });
     }
-
-    addMockCustomer(customerWithMetadata);
-
-    const adminNotification: TNotification = {
-      id: `notif-${Date.now()}`,
-      userId: user.id, 
-      message: `New customer added: ${newCustomerData.name}.`,
-      type: 'CUSTOMER_ADDED',
-      isRead: false,
-      linkTo: `/admin/customers/${customerId}`,
-      createdAt: new Date(),
-    };
-    addMockNotification(adminNotification);
-
-    toast({
-      title: "Customer Added",
-      description: `${newCustomerData.name} has been added successfully.`,
-    });
-    
-    fetchCustomers();
   };
 
   const filteredCustomers = useMemo(() => {
