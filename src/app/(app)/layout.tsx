@@ -6,13 +6,14 @@ import { AppShell } from '@/components/layout/app-shell';
 import { CommandPalette } from '@/components/shared/command-palette';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Droplets } from 'lucide-react';
 
 export default function ApplicationLayout({ children }: { children: ReactNode }) {
   const [isCommandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -32,15 +33,23 @@ export default function ApplicationLayout({ children }: { children: ReactNode })
   }, []);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && pathname !== '/login') {
       router.replace('/login');
     }
-  }, [loading, user, router]);
+  }, [loading, user, router, pathname]);
 
-
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
+        <Droplets className="h-12 w-12 animate-pulse-subtle text-primary" />
+      </div>
+    );
+  }
+
+  // To prevent flash of content before redirect
+  if (!user) {
+    return (
+       <div className="flex h-screen items-center justify-center">
         <Droplets className="h-12 w-12 animate-pulse-subtle text-primary" />
       </div>
     );

@@ -11,22 +11,12 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Give a moment for auth state to be confirmed
     if (!loading) {
-      const timer = setTimeout(() => {
         if (user) {
-          if (user.role === 'admin') {
-            router.replace('/admin/dashboard');
-          } else {
-            router.replace('/viewer/dashboard');
-          }
+          router.replace(user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard');
         } else {
-          // If no user after loading, go to login
           router.replace('/login');
         }
-      }, 500); // A shorter delay is fine now
-
-      return () => clearTimeout(timer);
     }
   }, [user, loading, router]);
 
