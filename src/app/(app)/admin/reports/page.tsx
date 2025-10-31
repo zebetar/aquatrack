@@ -195,7 +195,7 @@ export default function AdminReportsPage() {
               historicalMap.set(monthKey, { supply: 0, revenue: 0 });
           }
           allUsageRecords.forEach(record => {
-              const recordDate = new Date(record.date);
+              const recordDate = record.date; // No new Date()
               const monthKey = format(recordDate, 'yyyy-MM');
               if (historicalMap.has(monthKey)) {
                   const current = historicalMap.get(monthKey)!;
@@ -219,12 +219,12 @@ export default function AdminReportsPage() {
           }
 
           const usageInMonth = allUsageRecords.filter(r => {
-            const rDate = new Date(r.date);
+            const rDate = r.date; // No new Date()
             return rDate >= firstDay && rDate <= lastDay;
           });
 
           usageInMonth.forEach(record => {
-              const dayKey = format(new Date(record.date), 'yyyy-MM-dd');
+              const dayKey = format(record.date, 'yyyy-MM-dd'); // No new Date()
               if (dailyMap.has(dayKey)) {
                   const current = dailyMap.get(dayKey)!;
                   current.supply += record.durationHours;
@@ -418,3 +418,5 @@ export default function AdminReportsPage() {
     </div>
   );
 }
+
+    
