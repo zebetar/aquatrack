@@ -20,14 +20,14 @@ import type { Customer } from "@/types";
 
 const addCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
-  email: z.string().email({ message: "Please enter a valid email." }).trim().toLowerCase().optional().or(z.literal('')),
+  email: z.string().email({ message: "A valid email is required for login." }).trim().toLowerCase(),
   contactInfo: z.string().trim().optional(),
 });
 
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'> & { email: string }) => void;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
@@ -45,21 +45,18 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     
-    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> = {
+    // The email is now required by the schema, so we can assert it.
+    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> & { email: string } = {
       name: values.name,
+      email: values.email!,
+      contactInfo: values.contactInfo || undefined,
     };
-
-    if (values.email) {
-      newCustomer.email = values.email;
-    }
-    if (values.contactInfo) {
-      newCustomer.contactInfo = values.contactInfo;
-    }
     
     onSuccessCallback(newCustomer); 
     
-    setIsLoading(false);
-    form.reset();
+    // The parent dialog will handle loading state and closing.
+    // We can keep the form in a loading state until the process is complete.
+    // If you want the form to reset, the parent must handle it.
   }
 
   return (
@@ -85,7 +82,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
             <FormItem>
               <FormLabel>Email (for Viewer Account Login)</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="viewer@example.com (optional)" {...field} />
+                <Input type="email" placeholder="viewer@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -98,7 +95,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
             <FormItem>
               <FormLabel>Contact Info (Phone/Address)</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., 9876543210" {...field} />
+                <Input placeholder="e.g., 9876543210 (optional)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -106,7 +103,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
-          Add Customer
+          Add Customer & Send Invite
         </Button>
       </form>
     </Form>

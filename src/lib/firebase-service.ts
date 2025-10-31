@@ -281,3 +281,24 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
     });
     await batch.commit();
 }
+
+// --- Admin Actions (Server-side) ---
+// These functions are placeholders for where you'd call a serverless function.
+// For now, they'll call a Next.js Server Action.
+export async function createAuthUserAndSendInvite(email: string, name: string): Promise<{success: boolean, uid?: string, error?: string}> {
+    const response = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+    });
+    return response.json();
+}
+
+export async function resendPasswordReset(email: string): Promise<{success: boolean, error?: string}> {
+    const response = await fetch('/api/resend-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+    });
+    return response.json();
+}
