@@ -18,7 +18,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
-import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, type User as FirebaseUser } from 'firebase/auth';
+import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth';
 
 // Helper to convert Firestore Timestamps
 const fromFirestore = <T extends { createdAt?: any; date?: any; startTime?: any; endTime?: any; paymentDate?: any; }>(docData: T): Omit<T, 'createdAt' | 'date' | 'startTime' | 'endTime' | 'paymentDate'> & { createdAt?: Date; date?: Date; startTime?: Date; endTime?: Date; paymentDate?: Date; } => {
@@ -71,12 +71,22 @@ export async function isAdminUser(userId: string): Promise<boolean> {
     return adminDocSnap.exists();
 }
 
+export async function checkEmailExists(auth: Auth, email: string): Promise<boolean> {
+    try {
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        return methods.length > 0;
+    } catch (error) {
+        console.error("Error checking email existence:", error);
+        return false; // Fail safe
+    }
+}
+
 
 // --- Customer Functions ---
-export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt'>, auth: Auth, password?: string): Promise<Customer> {
+export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, auth: Auth, password: string): Promise<Customer> {
     
-    if (!customerData.email || !password) {
-        throw new Error("Email and password are required to create a new customer account.");
+    if (!customerData.email) {
+        throw new Error("Email is required to create a new customer account.");
     }
     
     // Step 1: Create the user in Firebase Authentication
@@ -87,7 +97,6 @@ export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt
     const docData = {
         name: customerData.name,
         email: customerData.email,
-        contactInfo: customerData.contactInfo || '',
         balance: 0,
         authUID: authUID, // Link to the auth user
         createdAt: serverTimestamp(),

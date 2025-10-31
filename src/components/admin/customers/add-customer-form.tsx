@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Droplets, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import type { Customer } from "@/types";
+import { checkEmailExists } from "@/lib/firebase-service";
+import { useFirebase } from "@/contexts/firebase-context";
+
 
 const addCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
@@ -39,15 +42,36 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { auth } = useFirebase();
 
   const form = useForm<AddCustomerFormValues>({
-    resolver: zodResolver(addCustomerFormSchema),
+    resolver: async (data, context, options) => {
+        const schemaResult = await zodResolver(addCustomerFormSchema)(data, context, options);
+        if (!auth || !data.email || !schemaResult.errors.email) {
+            return schemaResult;
+        }
+
+        const emailExists = await checkEmailExists(auth, data.email);
+        if (emailExists) {
+            const fieldErrors = schemaResult.errors;
+            if (!fieldErrors.email) {
+                fieldErrors.email = { type: 'manual', message: '' };
+            }
+            fieldErrors.email.message = 'This email is already in use. Please use a different email.';
+             return {
+                values: data,
+                errors: fieldErrors,
+            };
+        }
+        return schemaResult;
+    },
     defaultValues: {
       name: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
+    mode: 'onBlur', // Validate on blur to check email
   });
 
   async function onSubmit(values: AddCustomerFormValues) {
