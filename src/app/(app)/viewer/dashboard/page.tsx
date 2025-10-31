@@ -6,13 +6,12 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, memo } from 'react'; 
 import { useAuth } from '@/contexts/auth-context';
-import { db } from '@/lib/firebase-config';
-import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
 import type { Customer, WaterUsageRecord } from '@/types';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getMockCustomerByEmail, getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -122,63 +121,56 @@ export default function ViewerDashboardPage() {
   const [usageChartData, setUsageChartData] = useState<ChartDataPoint[]>([]);
   const [costChartData, setCostChartData] = useState<ChartDataPoint[]>([]);
 
-  const viewerUserId = user?.id; 
+  const viewerEmail = user?.email; 
 
-  const loadDashboardData = useCallback(async () => {
-    if (!viewerUserId || !user?.customerId) { 
+  const loadDashboardData = useCallback(() => {
+    if (!viewerEmail) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    try {
-        const profileRef = doc(db, 'customers', user.customerId);
-        const profileSnap = await getDoc(profileRef);
-        if(profileSnap.exists()) {
-            setCustomerProfile({ id: profileSnap.id, ...profileSnap.data() } as Customer);
-        }
 
-        const usageQuery = query(collection(db, `customers/${user.customerId}/usageRecords`));
-        const usageSnap = await getDocs(usageQuery);
-        const usageRecords = usageSnap.docs.map(d => {
-            const data = d.data();
-            return { ...data, date: (data.date as Timestamp).toDate() } as WaterUsageRecord;
-        });
-        setAllUsageRecords(usageRecords);
-        
-        const today = new Date();
-        const firstDay = startOfMonth(today);
-        const lastDay = endOfMonth(today);
-        const lastMonthDate = subMonths(today, 1);
-        const firstDayOfLastMonth = startOfMonth(lastMonthDate);
-        const lastDayOfLastMonth = endOfMonth(lastMonthDate);
-
-        const usageThisMonthRecords = usageRecords.filter(record => record.date >= firstDay && record.date <= lastDay);
-        const usageLastMonthRecords = usageRecords.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
-
-        const thisMonthTotalUsage = usageThisMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
-        const thisMonthTotalCost = usageThisMonthRecords.reduce((sum, record) => sum + record.cost, 0);
-        const lastMonthTotalUsage = usageLastMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
-        const lastMonthTotalCost = usageLastMonthRecords.reduce((sum, record) => sum + record.cost, 0);
-        
-        setCurrentMonthUsage(thisMonthTotalUsage);
-        setCurrentMonthCost(thisMonthTotalCost);
-        
-        setUsageChange(lastMonthTotalUsage > 0 ? ((thisMonthTotalUsage - lastMonthTotalUsage) / lastMonthTotalUsage) * 100 : (thisMonthTotalUsage > 0 ? 100 : 0));
-        setCostChange(lastMonthTotalCost > 0 ? ((thisMonthTotalCost - lastMonthTotalCost) / lastMonthTotalCost) * 100 : (thisMonthTotalCost > 0 ? 100 : 0));
-    } catch (error) {
-        console.error("Failed to load viewer dashboard data", error);
-    } finally {
-        setIsLoading(false);
+    const customer = getMockCustomerByEmail(viewerEmail);
+    if (!customer) {
+      setIsLoading(false);
+      return;
     }
-  }, [viewerUserId, user?.customerId]); 
+
+    setCustomerProfile(customer);
+    const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
+    setAllUsageRecords(usageRecords);
+    
+    const today = new Date();
+    const firstDay = startOfMonth(today);
+    const lastDay = endOfMonth(today);
+    const lastMonthDate = subMonths(today, 1);
+    const firstDayOfLastMonth = startOfMonth(lastMonthDate);
+    const lastDayOfLastMonth = endOfMonth(lastMonthDate);
+
+    const usageThisMonthRecords = usageRecords.filter(record => new Date(record.date) >= firstDay && new Date(record.date) <= lastDay);
+    const usageLastMonthRecords = usageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
+
+    const thisMonthTotalUsage = usageThisMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
+    const thisMonthTotalCost = usageThisMonthRecords.reduce((sum, record) => sum + record.cost, 0);
+    const lastMonthTotalUsage = usageLastMonthRecords.reduce((sum, record) => sum + record.durationHours, 0);
+    const lastMonthTotalCost = usageLastMonthRecords.reduce((sum, record) => sum + record.cost, 0);
+    
+    setCurrentMonthUsage(thisMonthTotalUsage);
+    setCurrentMonthCost(thisMonthTotalCost);
+    
+    setUsageChange(lastMonthTotalUsage > 0 ? ((thisMonthTotalUsage - lastMonthTotalUsage) / lastMonthTotalUsage) * 100 : (thisMonthTotalUsage > 0 ? 100 : 0));
+    setCostChange(lastMonthTotalCost > 0 ? ((thisMonthTotalCost - lastMonthTotalCost) / lastMonthTotalCost) * 100 : (thisMonthTotalCost > 0 ? 100 : 0));
+    
+    setIsLoading(false);
+  }, [viewerEmail]); 
 
   useEffect(() => {
-    if (!authLoading && viewerUserId) {
+    if (!authLoading && viewerEmail) {
       loadDashboardData();
-    } else if (!authLoading && !viewerUserId) {
+    } else if (!authLoading && !viewerEmail) {
         setIsLoading(false);
     }
-  }, [authLoading, viewerUserId, loadDashboardData]);
+  }, [authLoading, viewerEmail, loadDashboardData]);
 
   useEffect(() => {
     if (allUsageRecords.length === 0) return;
@@ -245,8 +237,8 @@ export default function ViewerDashboardPage() {
   if (!user) { 
       return <p>Not authenticated. Please log in.</p>
   }
-   if (!viewerUserId) { 
-      return <p>Could not load dashboard data: User ID not found.</p>
+   if (!viewerEmail) { 
+      return <p>Could not load dashboard data: User email not found.</p>
   }
 
   const currentMonthLabel = format(new Date(), 'MMMM yyyy');

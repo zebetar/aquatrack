@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { FileDown, CalendarIcon, Search, Download, Droplets } from 'lucide-react';
-import { db } from '@/lib/firebase-config';
-import { collection, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
@@ -23,6 +21,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { getAllMockCustomers, getMockUsageRecordsByCustomerId, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 
 
 export default function DataExportPage() {
@@ -40,22 +39,11 @@ export default function DataExportPage() {
   const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      setIsLoadingCustomers(true);
-      try {
-        const customersQuery = query(collection(db, 'customers'), orderBy('name', 'asc'));
-        const querySnapshot = await getDocs(customersQuery);
-        const allCustomers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
-        setCustomers(allCustomers);
-      } catch (error) {
-        console.error("Error fetching customers:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch customers.' });
-      } finally {
-        setIsLoadingCustomers(false);
-      }
-    };
-    fetchCustomers();
-  }, [toast]);
+    setIsLoadingCustomers(true);
+    const allCustomers = getAllMockCustomers();
+    setCustomers(allCustomers.sort((a,b) => a.name.localeCompare(b.name)));
+    setIsLoadingCustomers(false);
+  }, []);
 
   const handleDataExport = (dataType: string, formatType: string) => {
     toast({
@@ -71,7 +59,7 @@ export default function DataExportPage() {
     });
   };
 
-  const handlePreviewFilteredData = async () => {
+  const handlePreviewFilteredData = () => {
     if (!selectedCustomerId || !startDate || !endDate) {
       toast({ variant: "destructive", title: "Selection Required", description: "Please select a customer, start date, and end date." });
       return;
@@ -84,50 +72,24 @@ export default function DataExportPage() {
     setIsPreviewing(true);
     setShowPreview(false);
 
-    try {
-      const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
-      
-      const usageQuery = query(
-        collection(db, `customers/${selectedCustomerId}/usageRecords`),
-        where('startTime', '>=', startDate),
-        where('startTime', '<=', endOfDayEndDate),
-        orderBy('startTime', 'desc')
-      );
-      const usageSnap = await getDocs(usageQuery);
-      const usageData = usageSnap.docs.map(d => ({ 
-        id: d.id, 
-        ...d.data(), 
-        date: (d.data().date as Timestamp).toDate(),
-        startTime: (d.data().startTime as Timestamp).toDate(),
-        endTime: (d.data().endTime as Timestamp).toDate(),
-      } as WaterUsageRecord));
-      setFilteredUsage(usageData);
+    const endOfDayEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+    
+    const usageData = getMockUsageRecordsByCustomerId(selectedCustomerId).filter(r => 
+      new Date(r.startTime) >= startDate && new Date(r.startTime) <= endOfDayEndDate
+    );
+    setFilteredUsage(usageData);
 
-      const paymentsQuery = query(
-        collection(db, `customers/${selectedCustomerId}/payments`),
-        where('paymentDate', '>=', startDate),
-        where('paymentDate', '<=', endOfDayEndDate),
-        orderBy('paymentDate', 'desc')
-      );
-      const paymentSnap = await getDocs(paymentsQuery);
-      const paymentData = paymentSnap.docs.map(d => ({ 
-        id: d.id, 
-        ...d.data(),
-        paymentDate: (d.data().paymentDate as Timestamp).toDate(),
-      } as Payment));
-      setFilteredPayments(paymentData);
+    const paymentData = getMockPaymentsByCustomerId(selectedCustomerId).filter(p => 
+      new Date(p.paymentDate) >= startDate && new Date(p.paymentDate) <= endOfDayEndDate
+    );
+    setFilteredPayments(paymentData);
       
-      setShowPreview(true);
-      if (usageData.length === 0 && paymentData.length === 0) {
-          toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria and date range." });
-      }
-
-    } catch (error) {
-      console.error("Error fetching filtered data: ", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch data for preview.' });
-    } finally {
-      setIsPreviewing(false);
+    setShowPreview(true);
+    if (usageData.length === 0 && paymentData.length === 0) {
+        toast({ title: "No Data Found", description: "No usage or payment records found for the selected criteria and date range." });
     }
+
+    setIsPreviewing(false);
   };
 
   const handleDownloadFilteredPdf = async () => {

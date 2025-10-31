@@ -3,50 +3,30 @@
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer } from '@/types'; 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, getDocs, collectionGroup } from 'firebase/firestore';
-import { db } from '@/lib/firebase-config';
 import { Droplets, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { getMockOutstandingCustomers, getMockUsageRecordsByCustomerId } from '@/lib/mock-data-store';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function OutstandingBillsPage() {
   const [outstandingCustomers, setOutstandingCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
-  const fetchOutstandingCustomers = useCallback(async () => {
+  const fetchOutstandingCustomers = useCallback(() => {
     setIsLoading(true);
-    try {
-        const customersQuery = query(collection(db, 'customers'), where('balance', '>', 0));
-        const customersSnap = await getDocs(customersQuery);
-        const customers = customersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+    const customers = getMockOutstandingCustomers();
+    
+    const augmentedCustomers = customers.map(customer => {
+      const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
+      const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
+      return { ...customer, totalUsageHours };
+    });
 
-        const usageRecordsQuery = query(collectionGroup(db, 'usageRecords'));
-        const usageRecordsSnap = await getDocs(usageRecordsQuery);
-        const usageRecords = usageRecordsSnap.docs.map(d => d.data());
-        
-        const augmentedCustomers = customers.map(customer => {
-            const customerUsage = usageRecords
-                .filter(record => record.customerId === customer.id)
-                .reduce((sum, record) => sum + record.durationHours, 0);
-            return { ...customer, totalUsageHours: customerUsage };
-        });
-
-        setOutstandingCustomers(augmentedCustomers.sort((a, b) => b.balance - a.balance));
-    } catch (error) {
-        console.error("Failed to fetch outstanding customers from Firestore:", error);
-        toast({
-          variant: "destructive",
-          title: "Failed to load report",
-          description: "Could not retrieve outstanding bills report. Check console for details.",
-        });
-    } finally {
-        setIsLoading(false);
-    }
-  }, [toast]);
+    setOutstandingCustomers(augmentedCustomers);
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     fetchOutstandingCustomers();

@@ -3,10 +3,7 @@
 import { PageHeader } from '@/components/shared/page-header';
 import type { Payment } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collectionGroup, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase-config';
 import { Droplets, Search } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { PaymentList } from '@/components/admin/payments/payment-list';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,38 +14,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
+import { getAllMockPayments } from '@/lib/mock-data-store';
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const loadPaymentData = useCallback(async () => {
+  const loadPaymentData = useCallback(() => {
     setIsLoading(true);
-    try {
-      const paymentsQuery = query(collectionGroup(db, 'payments'), orderBy('paymentDate', 'desc'));
-      const querySnapshot = await getDocs(paymentsQuery);
-      const records = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          paymentDate: (data.paymentDate as Timestamp).toDate(),
-        } as Payment;
-      });
-      setPayments(records);
-    } catch (error) {
-      console.error("Failed to fetch payments from Firestore:", error);
-      toast({
-        variant: "destructive",
-        title: "Failed to load payments",
-        description: "Could not retrieve payment data. Check console for details.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+    const records = getAllMockPayments();
+    setPayments(records);
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     loadPaymentData();

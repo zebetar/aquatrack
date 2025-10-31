@@ -7,12 +7,11 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { db } from '@/lib/firebase-config';
-import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { Droplets, AlertTriangle } from 'lucide-react';
 import { formatDurationFromHours } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { getMockCustomerByEmail, getMockUsageRecordsByCustomerId, addMockNotification } from '@/lib/mock-data-store';
 
 export default function ViewerUsagePage() {
   const { user, loading: authLoading } = useAuth();
@@ -20,36 +19,19 @@ export default function ViewerUsagePage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const loadUsageData = useCallback(async () => {
-    if (!user || !user.customerId) {
+  const loadUsageData = useCallback(() => {
+    if (!user || !user.email) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    try {
-      const q = query(
-        collection(db, `customers/${user.customerId}/usageRecords`),
-        orderBy('startTime', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-      const records = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-              id: doc.id,
-              ...data,
-              date: (data.date as Timestamp).toDate(),
-              startTime: (data.startTime as Timestamp).toDate(),
-              endTime: (data.endTime as Timestamp).toDate(),
-          } as WaterUsageRecord
-      });
+    const customer = getMockCustomerByEmail(user.email);
+    if (customer) {
+      const records = getMockUsageRecordsByCustomerId(customer.id);
       setUsageRecords(records);
-    } catch (error) {
-      console.error("Error fetching usage records:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch usage history.' });
-    } finally {
-      setIsLoading(false);
     }
-  }, [user, toast]);
+    setIsLoading(false);
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -57,30 +39,24 @@ export default function ViewerUsagePage() {
     }
   }, [authLoading, loadUsageData]);
 
-  const handleReportIssue = async (record: WaterUsageRecord) => {
+  const handleReportIssue = (record: WaterUsageRecord) => {
     if (!user || !user.customerId) return;
     
-    try {
-      const issueNotification: Omit<TNotification, 'id' | 'createdAt'> = {
-          userId: 'admin-user-id', // In a real app, this would be a specific admin's ID
-          message: `Issue reported by ${user.name} for usage on ${format(new Date(record.date), 'PP')}.`,
-          type: 'ISSUE_REPORTED',
-          isRead: false,
-          linkTo: `/admin/customers/${user.customerId}`,
-      };
-      await addDoc(collection(db, 'notifications'), {
-        ...issueNotification,
-        createdAt: serverTimestamp()
-      });
+    const issueNotification: TNotification = {
+        id: `notif-${Date.now()}`,
+        userId: 'admin001', 
+        message: `Issue reported by ${user.name} for usage on ${format(new Date(record.date), 'PP')}.`,
+        type: 'ISSUE_REPORTED',
+        isRead: false,
+        linkTo: `/admin/customers/${user.customerId}`,
+        createdAt: new Date(),
+    };
+    addMockNotification(issueNotification);
 
-      toast({
-          title: "Issue Reported",
-          description: "Your report has been sent to the admin for review.",
-      });
-    } catch (error) {
-      console.error("Error reporting issue:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not report issue.' });
-    }
+    toast({
+        title: "Issue Reported",
+        description: "Your report has been sent to the admin for review.",
+    });
   };
 
   if (isLoading || authLoading) {

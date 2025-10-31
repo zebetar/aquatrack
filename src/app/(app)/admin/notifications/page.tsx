@@ -6,13 +6,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import type { Notification as TNotification } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, orderBy, getDocs, doc, writeBatch } from 'firebase/firestore';
-import { db } from '@/lib/firebase-config';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
+import { getMockNotificationsByUserId, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/mock-data-store';
 
 const NotificationIcon = ({ type }: { type: TNotification['type']}) => {
   const iconProps = { className: "h-5 w-5" };
@@ -34,55 +33,29 @@ export default function AdminNotificationsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(() => {
     if (!user) return;
     setIsLoading(true);
-    try {
-      const q = query(collection(db, "notifications"), where("userId", "==", user.id), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      const fetchedNotifications = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TNotification));
-      setNotifications(fetchedNotifications);
-    } catch(error) {
-      console.error("Failed to load notifications from Firestore", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not load notifications. Check console for details." });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast, user]);
+    const fetchedNotifications = getMockNotificationsByUserId(user.id);
+    setNotifications(fetchedNotifications);
+    setIsLoading(false);
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      const notificationRef = doc(db, "notifications", notificationId);
-      await writeBatch(db).update(notificationRef, { isRead: true }).commit();
-      fetchNotifications();
-    } catch(error) {
-      console.error("Failed to mark notification as read:", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not mark notification as read." });
-    }
+  const handleMarkAsRead = (notificationId: string) => {
+    if (!user) return;
+    markNotificationAsRead(notificationId, user.id);
+    fetchNotifications(); // Re-fetch to update UI
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      const unreadNotifications = notifications.filter(n => !n.isRead);
-      if(unreadNotifications.length === 0) return;
-
-      const batch = writeBatch(db);
-      unreadNotifications.forEach(notification => {
-        const notificationRef = doc(db, "notifications", notification.id);
-        batch.update(notificationRef, { isRead: true });
-      });
-      await batch.commit();
-
-      fetchNotifications();
-      toast({ title: "Success", description: "All notifications marked as read." });
-    } catch(error) {
-      console.error("Failed to mark all notifications as read:", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not mark all notifications as read." });
-    }
+  const handleMarkAllAsRead = () => {
+    if (!user) return;
+    markAllNotificationsAsRead(user.id);
+    toast({ title: "Success", description: "All notifications marked as read." });
+    fetchNotifications(); // Re-fetch to update UI
   };
   
   if (isLoading) {
@@ -145,7 +118,7 @@ export default function AdminNotificationsPage() {
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground/80 mt-1">
-                        {format(new Date(notification.createdAt.seconds * 1000), 'PP p')}
+                        {format(new Date(notification.createdAt), 'PP p')}
                       </p>
                       {notification.linkTo && (
                          <Button variant="link" size="sm" asChild className="px-0 h-auto mt-1 text-primary">

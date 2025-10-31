@@ -7,49 +7,29 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { db } from '@/lib/firebase-config';
-import { collection, doc, getDoc, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { Droplets } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { getMockCustomerByEmail, getMockPaymentsByCustomerId } from '@/lib/mock-data-store';
 
 export default function ViewerBillingPage() {
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [customerProfile, setCustomerProfile] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadBillingData = useCallback(async () => {
-    if (!user || !user.customerId) {
+  const loadBillingData = useCallback(() => {
+    if (!user || !user.email) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
-    try {
-      // Fetch customer profile
-      const customerRef = doc(db, 'customers', user.customerId);
-      const customerSnap = await getDoc(customerRef);
-      if (customerSnap.exists()) {
-        setCustomerProfile({ id: customerSnap.id, ...customerSnap.data() } as Customer);
-      }
-
-      // Fetch payments
-      const paymentsQuery = query(collection(db, `customers/${user.customerId}/payments`), orderBy('paymentDate', 'desc'));
-      const paymentsSnap = await getDocs(paymentsQuery);
-      const paymentData = paymentsSnap.docs.map(d => ({ 
-        id: d.id, 
-        ...d.data(), 
-        paymentDate: (d.data().paymentDate as Timestamp).toDate()
-      } as Payment));
+    const customer = getMockCustomerByEmail(user.email);
+    if (customer) {
+      setCustomerProfile(customer);
+      const paymentData = getMockPaymentsByCustomerId(customer.id);
       setPayments(paymentData);
-
-    } catch (error) {
-      console.error("Error fetching billing data:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch your billing information.' });
-    } finally {
-      setIsLoading(false);
     }
-  }, [user, toast]);
+    setIsLoading(false);
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading) {

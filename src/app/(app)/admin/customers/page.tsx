@@ -5,8 +5,6 @@ import { AddCustomerDialog } from '@/components/admin/customers/add-customer-dia
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
 import type { Customer, Notification as TNotification } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, getDoc, doc, collectionGroup } from 'firebase/firestore';
-import { db } from '@/lib/firebase-config';
 import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -22,6 +20,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
+import { 
+  addMockCustomer, 
+  getAllMockCustomers, 
+  addMockNotification,
+  getMockUsageRecordsByCustomerId
+} from '@/lib/mock-data-store';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
@@ -32,72 +36,61 @@ export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { user } = useAuth();
   
-  const fetchCustomers = useCallback(async () => {
+  const fetchCustomers = useCallback(() => {
     setIsLoading(true);
-    try {
-      const customersQuery = query(collection(db, 'customers'), orderBy('createdAt', 'desc'));
-      const customersSnapshot = await getDocs(customersQuery);
-      const storedCustomers = customersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+    const storedCustomers = getAllMockCustomers();
+    
+    const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
+      const usageRecords = getMockUsageRecordsByCustomerId(customer.id);
+      const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
+      return { ...customer, totalUsageHours };
+    });
 
-      const usageRecordsQuery = query(collectionGroup(db, 'usageRecords'));
-      const usageRecordsSnapshot = await getDocs(usageRecordsQuery);
-      const usageRecords = usageRecordsSnapshot.docs.map(d => d.data());
-
-      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => {
-        const customerUsage = usageRecords
-          .filter(record => record.customerId === customer.id)
-          .reduce((sum, record) => sum + record.durationHours, 0);
-        return { ...customer, totalUsageHours: customerUsage };
-      });
-      setCustomers(customersWithUsage);
-    } catch (error) {
-        console.error("Failed to fetch customers from Firestore:", error);
-        toast({
-          variant: "destructive",
-          title: "Failed to load customers",
-          description: "Could not retrieve customer data. Check console for details.",
-        });
-    } finally {
-        setIsLoading(false);
-    }
-  }, [toast]);
+    setCustomers(customersWithUsage);
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => {
+  const handleAddCustomer = (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => {
     if (!user) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a customer." });
         return;
     }
-    try {
-      const customerWithMetadata = {
-        ...newCustomerData,
-        balance: 0,
-        createdAt: serverTimestamp(),
-      };
-      
-      const docRef = await addDoc(collection(db, "customers"), customerWithMetadata);
-      
-      const adminNotification: Omit<TNotification, 'id'|'createdAt'> = {
-          userId: user.id, 
-          message: `New customer added: ${newCustomerData.name}.`,
-          type: 'CUSTOMER_ADDED',
-          isRead: false,
-          linkTo: `/admin/customers/${docRef.id}`,
-      };
-      await addDoc(collection(db, "notifications"), { ...adminNotification, createdAt: serverTimestamp() });
-
-      fetchCustomers();
-    } catch (error) {
-        console.error("Failed to add customer to Firestore:", error);
-        toast({
-          variant: "destructive",
-          title: "Failed to add customer",
-          description: "Could not save new customer. Please try again.",
-        });
+    
+    const customerId = `cust-${Date.now()}`;
+    const customerWithMetadata: Customer = {
+      ...newCustomerData,
+      id: customerId,
+      balance: 0,
+      createdAt: new Date(),
+    };
+    
+    if (customerWithMetadata.email && !customerWithMetadata.authUID) {
+      customerWithMetadata.authUID = `authuid-${Math.random().toString(36).substring(2, 9)}`;
     }
+
+    addMockCustomer(customerWithMetadata);
+
+    const adminNotification: TNotification = {
+      id: `notif-${Date.now()}`,
+      userId: user.id, 
+      message: `New customer added: ${newCustomerData.name}.`,
+      type: 'CUSTOMER_ADDED',
+      isRead: false,
+      linkTo: `/admin/customers/${customerId}`,
+      createdAt: new Date(),
+    };
+    addMockNotification(adminNotification);
+
+    toast({
+      title: "Customer Added",
+      description: `${newCustomerData.name} has been added successfully.`,
+    });
+    
+    fetchCustomers();
   };
 
   const filteredCustomers = useMemo(() => {
