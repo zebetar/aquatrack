@@ -16,7 +16,7 @@ import {
   type User as FirebaseUser
 } from 'firebase/auth';
 import { firebaseAuth } from '@/lib/firebase-config';
-import { getUserProfile, getCustomerByAuthUID, updateCustomerInDb } from '@/lib/firebase-service';
+import { getUserProfile, getCustomerByAuthUID, updateCustomerInDb, addUserProfile } from '@/lib/firebase-service';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -42,33 +42,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         // User is signed in, get our custom user profile
-        const profile = await getUserProfile(firebaseUser.uid);
-        if (profile) {
-            let finalUser: AppUser = {
-                ...profile,
+        let profile = await getUserProfile(firebaseUser.uid);
+        
+        if (!profile) {
+            // Profile doesn't exist, create it with a default role
+            console.log(`No profile found for UID ${firebaseUser.uid}. Creating one.`);
+            const newUser: AppUser = {
                 id: firebaseUser.uid,
-                email: firebaseUser.email || profile.email || '',
-                name: firebaseUser.displayName || profile.name,
+                email: firebaseUser.email || 'no-email@example.com',
+                role: 'viewer', // Default to 'viewer'
+                name: firebaseUser.displayName || 'New User',
             };
+            await addUserProfile(newUser);
+            profile = newUser;
+        }
 
-             if (finalUser.role === 'viewer') {
-                const customerProfile = await getCustomerByAuthUID(finalUser.id);
-                if (customerProfile) {
-                    finalUser.customerId = customerProfile.id;
-                    // Sync display name from customer record if not on firebase user
-                    if (!firebaseUser.displayName) {
-                        finalUser.name = customerProfile.name;
-                    }
+        let finalUser: AppUser = {
+            ...profile,
+            id: firebaseUser.uid,
+            email: firebaseUser.email || profile.email || '',
+            name: firebaseUser.displayName || profile.name,
+        };
+
+         if (finalUser.role === 'viewer') {
+            const customerProfile = await getCustomerByAuthUID(finalUser.id);
+            if (customerProfile) {
+                finalUser.customerId = customerProfile.id;
+                // Sync display name from customer record if not on firebase user
+                if (!firebaseUser.displayName) {
+                    finalUser.name = customerProfile.name;
                 }
             }
-
-            setUser(finalUser);
-        } else {
-            // This case might happen if a user is created in Auth but not in Firestore
-            console.error("No user profile found in Firestore for UID:", firebaseUser.uid);
-            setUser(null);
-            await signOut(firebaseAuth);
         }
+
+        setUser(finalUser);
       } else {
         // User is signed out
         setUser(null);

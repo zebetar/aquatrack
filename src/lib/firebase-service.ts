@@ -13,7 +13,8 @@ import {
     orderBy,
     writeBatch,
     serverTimestamp,
-    Timestamp
+    Timestamp,
+    setDoc
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
 
@@ -47,6 +48,15 @@ export async function getUserProfile(userId: string): Promise<User | null> {
         return fromFirestore(userDocSnap.data() as User);
     }
     return null;
+}
+
+export async function addUserProfile(userData: User): Promise<void> {
+    const userDocRef = doc(db, 'users', userData.id);
+    await setDoc(userDocRef, {
+        email: userData.email,
+        role: userData.role,
+        name: userData.name,
+    });
 }
 
 
