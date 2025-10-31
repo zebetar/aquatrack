@@ -11,19 +11,25 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-        if (user) {
-          router.replace(user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard');
-        } else {
-          router.replace('/login');
+    // A small delay to allow the animation to be visible
+    const redirectTimer = setTimeout(() => {
+        if (!loading) {
+            if (user) {
+                router.replace(user.role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard');
+            } else {
+                router.replace('/login');
+            }
         }
-    }
+    }, 1500); // 1.5 second delay
+
+    // Cleanup the timer if the component unmounts
+    return () => clearTimeout(redirectTimer);
   }, [user, loading, router]);
 
   // Show a loading splash screen while auth state is being determined.
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 animated-login-bg">
-        <Droplets className="h-24 w-24 text-sky-500 animate-pulse-subtle" />
+        <Droplets className="h-24 w-24 text-sky-500 animate-icon-pop" />
     </div>
   );
 }
