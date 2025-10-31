@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
-import { useFirebase } from "@/contexts/firebase-context"; // Import the new hook
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Droplets, Eye, EyeOff, Mail } from "lucide-react";
@@ -30,7 +29,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { sendPasswordReset } from "@/lib/firebase-service";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -48,7 +46,6 @@ type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
-  const { auth } = useFirebase(); // Get the auth instance
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -78,27 +75,39 @@ export function LoginForm() {
   }
 
   async function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
-      if (!auth) {
-          toast({ variant: "destructive", title: "Error", description: "Firebase is not initialized. Please refresh the page." });
-          return;
-      }
       setIsSendingReset(true);
-      const { success, error } = await sendPasswordReset(auth, values.email);
-      if (success) {
+      try {
+        const response = await fetch('/api/generate-password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: values.email }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
           toast({
-            title: "Password Reset Email Sent",
-            description: `If an account exists for ${values.email}, a password reset link has been sent to it.`,
+            title: "Link Generated in Console",
+            description: "A password reset link has been generated in the server console for you to share.",
           });
           setForgotPasswordOpen(false);
           forgotPasswordForm.reset();
-      } else {
+        } else {
           toast({
             variant: "destructive",
-            title: "Error Sending Request",
-            description: error || "An unexpected error occurred.",
+            title: "Error Generating Link",
+            description: result.message || "An unexpected error occurred.",
           });
+        }
+      } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Request Failed",
+            description: "Could not connect to the server. Please try again.",
+          });
+      } finally {
+        setIsSendingReset(false);
       }
-      setIsSendingReset(false);
   }
 
   const isLoading = authLoading || isSubmitting;
@@ -181,9 +190,9 @@ export function LoginForm() {
     <Dialog open={isForgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Reset Your Password</DialogTitle>
+                <DialogTitle>Generate Password Reset Link</DialogTitle>
                 <DialogDescription>
-                    Enter your email address. If an account exists, we will send a link to reset your password.
+                    Enter an email address. A password reset link will be generated in the server console for you to copy and share.
                 </DialogDescription>
             </DialogHeader>
             <Form {...forgotPasswordForm}>
@@ -210,7 +219,7 @@ export function LoginForm() {
                         </DialogClose>
                         <Button type="submit" disabled={isSendingReset}>
                             {isSendingReset && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle"/>}
-                            Send Reset Link
+                            Generate Link
                         </Button>
                     </DialogFooter>
                 </form>

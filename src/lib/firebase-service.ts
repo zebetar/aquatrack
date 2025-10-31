@@ -81,11 +81,21 @@ export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt
     };
 
     const docRef = await addDoc(collection(db, 'customers'), docData);
-
+    
+    // The link is now generated via API route and logged to the console.
+    // The client will call this API.
     if (customerData.email) {
-        // We pass the auth instance here to ensure it's correctly initialized
-        await sendPasswordReset(firebaseAuth, customerData.email);
+      try {
+        await fetch('/api/generate-password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: customerData.email }),
+        });
+      } catch (e) {
+        console.error("Failed to trigger password reset link generation:", e);
+      }
     }
+
 
     return {
         id: docRef.id,
@@ -293,31 +303,4 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
         batch.update(doc.ref, { isRead: true });
     });
     await batch.commit();
-}
-
-// --- Auth Actions ---
-export async function sendPasswordReset(auth: Auth, email: string): Promise<{success: boolean, error?: string}> {
-    try {
-        await sendPasswordResetEmail(auth, email);
-        return { success: true };
-    } catch(error: any) {
-        console.error("Password reset email failed:", error.code, error.message);
-        
-        let errorMessage = "An unknown error occurred. Please try again.";
-        switch (error.code) {
-            case 'auth/invalid-email':
-                errorMessage = "The email address is not valid.";
-                break;
-            case 'auth/user-not-found':
-                errorMessage = "No account found with this email address.";
-                break;
-            case 'auth/missing-continue-uri':
-                 errorMessage = "A continue URL must be provided in the request.";
-                 break;
-            default:
-                errorMessage = error.message;
-                break;
-        }
-        return { success: false, error: errorMessage };
-    }
 }
