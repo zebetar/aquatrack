@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
+import { useFirebase } from "@/contexts/firebase-context"; // Import the new hook
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Droplets, Eye, EyeOff, Mail } from "lucide-react";
@@ -47,6 +48,7 @@ type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
+  const { auth } = useFirebase(); // Get the auth instance
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -76,14 +78,19 @@ export function LoginForm() {
   }
 
   async function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
+      if (!auth) {
+          toast({ variant: "destructive", title: "Error", description: "Firebase is not initialized. Please refresh the page." });
+          return;
+      }
       setIsSendingReset(true);
-      const { success, error } = await sendPasswordReset(values.email);
+      const { success, error } = await sendPasswordReset(auth, values.email);
       if (success) {
           toast({
             title: "Password Reset Email Sent",
             description: `If an account exists for ${values.email}, a password reset link has been sent to it.`,
           });
           setForgotPasswordOpen(false);
+          forgotPasswordForm.reset();
       } else {
           toast({
             variant: "destructive",

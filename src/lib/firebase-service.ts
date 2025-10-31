@@ -18,7 +18,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
-import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 // Helper to convert Firestore Timestamps
 const fromFirestore = <T extends { createdAt?: any; date?: any; startTime?: any; endTime?: any; paymentDate?: any; }>(docData: T): Omit<T, 'createdAt' | 'date' | 'startTime' | 'endTime' | 'paymentDate'> & { createdAt?: Date; date?: Date; startTime?: Date; endTime?: Date; paymentDate?: Date; } => {
@@ -74,33 +74,24 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 
 // --- Customer Functions ---
 export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>): Promise<Customer> {
-    // Note: User creation in Firebase Auth for the customer is handled separately.
-    // This function now only handles creating the Firestore document.
-    // A temporary password or an invite link mechanism should be used.
-    
     const docData = {
         ...customerData,
         balance: 0,
         createdAt: serverTimestamp(),
-        // authUID will be set later, perhaps after the user first logs in
-        // or is explicitly linked by an admin.
     };
 
     const docRef = await addDoc(collection(db, 'customers'), docData);
 
-    // Send a password reset email to allow the user to set their password.
-    // This requires the user to exist in Firebase Auth first. For this app,
-    // we assume an admin might create a user in the Firebase Console,
-    // or we could build a more complex user creation flow.
     if (customerData.email) {
-        await sendPasswordReset(customerData.email);
+        // We pass the auth instance here to ensure it's correctly initialized
+        await sendPasswordReset(firebaseAuth, customerData.email);
     }
 
     return {
         id: docRef.id,
         ...customerData,
         balance: 0,
-        createdAt: new Date(), // Approximate, actual value is on server
+        createdAt: new Date(), 
     };
 }
 
@@ -135,8 +126,6 @@ export async function updateCustomerInDb(customerId: string, customerUpdate: Par
 }
 
 export async function deleteCustomer(customerId: string): Promise<void> {
-    // This is a simplified deletion. For a production app, use a Cloud Function
-    // to recursively delete subcollections (usageRecords, payments).
     const docRef = doc(db, 'customers', customerId);
     await deleteDoc(docRef);
 }
@@ -307,25 +296,27 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
 }
 
 // --- Auth Actions ---
-export async function sendPasswordReset(email: string): Promise<{success: boolean, error?: string}> {
+export async function sendPasswordReset(auth: Auth, email: string): Promise<{success: boolean, error?: string}> {
     try {
-        await sendPasswordResetEmail(firebaseAuth, email);
+        await sendPasswordResetEmail(auth, email);
         return { success: true };
     } catch(error: any) {
-        console.error("Password reset email failed:", error);
+        console.error("Password reset email failed:", error.code, error.message);
         
         let errorMessage = "An unknown error occurred. Please try again.";
-        if (error.code === 'auth/invalid-email') {
-            errorMessage = "The email address is not valid.";
-        } else if (error.code === 'auth/user-not-found') {
-            // This is expected for new customers, so we don't treat it as a critical error.
-            // A better flow would be to create the user first, then send the reset link.
-            // For now, we'll let it pass silently on the UI but log it.
-            console.warn(`Attempted to send password reset to non-existent user: ${email}. This is expected if the customer is new.`);
-            // To avoid showing an error to the admin, we can return success.
-            // The admin's goal is to trigger the email, which happens if the user exists.
-            // If they don't, the admin needs to create them in Firebase Auth console.
-            return { success: true, error: "User does not exist in Firebase Authentication. Create them in the console first." };
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage = "The email address is not valid.";
+                break;
+            case 'auth/user-not-found':
+                errorMessage = "No account found with this email address.";
+                break;
+            case 'auth/missing-continue-uri':
+                 errorMessage = "A continue URL must be provided in the request.";
+                 break;
+            default:
+                errorMessage = error.message;
+                break;
         }
         return { success: false, error: errorMessage };
     }

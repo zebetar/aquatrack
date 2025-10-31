@@ -4,6 +4,7 @@ import { Poppins } from 'next/font/google'; // Changed from Roboto to Poppins
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseProvider } from '@/contexts/firebase-context'; // Import the new provider
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -65,11 +66,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={`${poppins.variable} font-sans antialiased`}> {/* Use Poppins variable */}
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+      <body className={`${poppins.variable} font-sans antialiased`}>
+        <FirebaseProvider>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </FirebaseProvider>
       </body>
     </html>
   );

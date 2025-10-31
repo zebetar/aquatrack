@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
+import { useFirebase } from '@/contexts/firebase-context';
 
 interface CustomerWithUsage extends Customer {
   totalUsageHours?: number;
@@ -50,6 +51,7 @@ export function CustomerListTable({
 }: CustomerListTableProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const { auth } = useFirebase();
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
   const [sendingInviteId, setSendingInviteId] = useState<string | null>(null);
 
@@ -58,13 +60,13 @@ export function CustomerListTable({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!customer.email) {
-      toast({ variant: 'destructive', title: 'Error', description: 'This customer does not have an email address.' });
+    if (!customer.email || !auth) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Customer email is missing or Firebase is not initialized.' });
       return;
     }
 
     setSendingInviteId(customer.id);
-    const { success, error } = await sendPasswordReset(customer.email);
+    const { success, error } = await sendPasswordReset(auth, customer.email);
     if (success) {
         toast({
             title: 'Password Reset Email Sent',

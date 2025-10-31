@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { User as AppUser } from '@/types';
 import { 
@@ -15,7 +15,7 @@ import {
   EmailAuthProvider,
   type User as FirebaseUser
 } from 'firebase/auth';
-import { firebaseAuth } from '@/lib/firebase-config';
+import { useFirebase } from './firebase-context'; // Import the new hook
 import { getUserProfile, getCustomerByAuthUID, updateCustomerInDb, addUserProfile, isAdminUser } from '@/lib/firebase-service';
 
 interface AuthContextType {
@@ -32,17 +32,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { auth: firebaseAuth } = useFirebase(); // Get auth from the new context
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!firebaseAuth) {
+        setLoading(false);
+        return;
+    };
+
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        
-        // This is the new role-detection logic.
         const userIsAdmin = await isAdminUser(firebaseUser.uid);
         const intendedRole = userIsAdmin ? 'admin' : 'viewer';
         
@@ -59,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await addUserProfile(newUserProfile);
             profile = newUserProfile;
         } else if (profile.role !== intendedRole) {
-            // If the user's role in the DB doesn't match their admin status, update it.
             console.log(`Role mismatch for UID ${firebaseUser.uid}. Updating role to ${intendedRole}.`);
             await addUserProfile({ ...profile, role: intendedRole });
             profile.role = intendedRole;
@@ -77,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const customerProfile = await getCustomerByAuthUID(finalUser.id);
             if (customerProfile) {
                 finalUser.customerId = customerProfile.id;
-                // Sync name from customer profile if auth profile name is generic
                 if (!firebaseUser.displayName) {
                     finalUser.name = customerProfile.name;
                 }
@@ -92,14 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [firebaseAuth]);
 
 
   const login = async (email: string, password: string): Promise<void> => {
+    if (!firebaseAuth) return;
     setLoading(true);
     try {
       await signInWithEmailAndPassword(firebaseAuth, email, password);
-      // onAuthStateChanged will handle setting user state and routing
       toast({ title: "Login Successful" });
     } catch (error: any) {
       console.error("Firebase Auth Error:", error.code, error.message);
@@ -116,12 +117,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    if (!firebaseAuth) return;
     await signOut(firebaseAuth);
     toast({ title: "Logged Out" });
     router.push('/login');
   };
   
   const updateUserEmail = async (newEmail: string, currentPassword?: string): Promise<{ success: boolean; error?: string }> => {
+    if (!firebaseAuth) return { success: false, error: 'Firebase not initialized.'};
     const firebaseUser = firebaseAuth.currentUser;
     if (!firebaseUser || !currentPassword || !firebaseUser.email) return { success: false, error: 'Not logged in or missing credentials.' };
 
@@ -132,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if(user?.role === 'viewer' && user.customerId) {
             await updateCustomerInDb(user.customerId, { email: newEmail });
-        } else if (user) { // This handles admin or any other user profile
+        } else if (user) { 
             await addUserProfile({ ...user, email: newEmail });
         }
 
@@ -147,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+     if (!firebaseAuth) return { success: false, error: 'Firebase not initialized.'};
      const firebaseUser = firebaseAuth.currentUser;
      if (!firebaseUser || !firebaseUser.email) return { success: false, error: 'Not logged in.' };
 
