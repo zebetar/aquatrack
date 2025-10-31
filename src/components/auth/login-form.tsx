@@ -16,21 +16,10 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Droplets, Eye, EyeOff, Mail } from "lucide-react";
+import { Droplets, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useFirebase } from "@/contexts/firebase-context";
-import { sendPasswordReset } from "@/lib/firebase-service";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -40,11 +29,6 @@ const loginFormSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-const forgotPasswordSchema = z.object({
-    email: z.string().email({ message: "Please enter a valid email address." }),
-});
-type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
-
 
 export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
@@ -52,8 +36,6 @@ export function LoginForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isForgotPasswordOpen, setForgotPasswordOpen] = useState(false);
-  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -64,50 +46,16 @@ export function LoginForm() {
     },
   });
 
-  const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
-      resolver: zodResolver(forgotPasswordSchema),
-      defaultValues: {
-          email: ""
-      }
-  });
-
   async function onLoginSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
     await login(values.email, values.password);
     setIsSubmitting(false);
   }
 
-  async function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
-      setIsSendingReset(true);
-      if (!auth) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Firebase is not initialized.' });
-          setIsSendingReset(false);
-          return;
-      }
-      const result = await sendPasswordReset(auth, values.email);
-
-      if (result.success) {
-        toast({
-            title: "Password Reset Email Sent",
-            description: "If an account exists for this email, a reset link has been sent.",
-        });
-        setForgotPasswordOpen(false);
-        forgotPasswordForm.reset();
-      } else {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: result.error || "Failed to send password reset email.",
-        });
-      }
-      setIsSendingReset(false);
-  }
-
   const isLoading = authLoading || isSubmitting;
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return (
-    <>
     <Form {...loginForm}>
       <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
         <FormField
@@ -116,7 +64,10 @@ export function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Enter your email" {...field} />
+                <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="Enter your email" {...field} className="pl-10" />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -128,12 +79,13 @@ export function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <FormControl>
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     {...field}
-                    className="pr-10 hover:border-primary/80 focus:border-primary"
+                    className="pl-10 pr-10 hover:border-primary/80 focus:border-primary"
                   />
                 </FormControl>
                 <Button
@@ -152,8 +104,7 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <div className="flex items-center justify-between">
-            <FormField
+        <FormField
             control={loginForm.control}
             name="rememberMe"
             render={({ field }) => (
@@ -166,12 +117,7 @@ export function LoginForm() {
                 </Label>
                 </FormItem>
             )}
-            />
-            <Button type="button" variant="link" className="p-0 h-auto text-sm" onClick={() => setForgotPasswordOpen(true)}>
-                Forgot Password?
-            </Button>
-        </div>
-
+        />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
@@ -179,47 +125,5 @@ export function LoginForm() {
         </Button>
       </form>
     </Form>
-
-    <Dialog open={isForgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Reset Your Password</DialogTitle>
-                <DialogDescription>
-                  Enter your email address to receive a password reset link.
-                  If you are a customer and don't receive an email, please contact the administrator.
-                </DialogDescription>
-            </DialogHeader>
-            <Form {...forgotPasswordForm}>
-                <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-4">
-                    <FormField
-                        control={forgotPasswordForm.control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
-                                <Label htmlFor="forgot-email" className="sr-only">Email</Label>
-                                <FormControl>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input id="forgot-email" type="email" placeholder="your.email@example.com" {...field} className="pl-10"/>
-                                    </div>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                     <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="button" variant="ghost" disabled={isSendingReset}>Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit" disabled={isSendingReset}>
-                            {isSendingReset && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle"/>}
-                            Send Reset Link
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </Form>
-        </DialogContent>
-    </Dialog>
-    </>
   );
 }
