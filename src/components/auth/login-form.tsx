@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Droplets, Eye, EyeOff, Database } from "lucide-react";
 import { useState } from "react";
-import { seedDatabase } from "@/lib/seed-database";
+import { seedDatabaseAction } from "@/app/(auth)/login/actions";
 import { useToast } from "@/hooks/use-toast";
 
 const loginFormSchema = z.object({
@@ -47,7 +47,7 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
-    await login(values.email, values.password, values.email === 'admin@example.com' ? 'admin' : 'viewer');
+    await login(values.email, values.password, 'admin');
     setIsSubmitting(false);
   }
 
@@ -55,7 +55,7 @@ export function LoginForm() {
     setIsSeeding(true);
     toast({ title: "Seeding Database...", description: "This may take a moment. Please wait." });
     try {
-        await seedDatabase();
+        await seedDatabaseAction();
         toast({ title: "Database Seeded!", description: "Sample data and admin user created. You can now log in." });
     } catch(error) {
         console.error("Database seeding failed:", error);
