@@ -10,6 +10,7 @@ import {
   Settings,
   FileText,
   FileDown,
+  UserCog,
 } from 'lucide-react';
 
 export const adminNavItems: NavItem[] = [
@@ -23,6 +24,12 @@ export const adminNavItems: NavItem[] = [
     title: 'Customers',
     href: '/admin/customers',
     icon: Users,
+    role: 'admin',
+  },
+  {
+    title: 'User Management',
+    href: '/admin/user-management',
+    icon: UserCog,
     role: 'admin',
   },
   {

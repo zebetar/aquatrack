@@ -2,11 +2,10 @@
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
-import { AddCustomerDialog } from '@/components/admin/customers/add-customer-dialog';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, Notification as TNotification } from '@/types';
+import type { Customer } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Droplets, Search } from 'lucide-react';
+import { Droplets, Search, UserCog } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,34 +16,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
+import { getAllCustomers, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
-import { useAuth } from '@/contexts/auth-context';
-import { addCustomer, getAllCustomers, addNotification, getUsageRecordsByCustomerId } from '@/lib/firebase-service';
-import { useFirebase } from '@/contexts/firebase-context';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
-export default function AdminCustomersPage() {
+export default function AdminUserManagementPage() {
   const [customers, setCustomers] = useState<CustomerWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const { user } = useAuth();
-  const { auth } = useFirebase();
-  
+
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
       const storedCustomers = await getAllCustomers();
-      
       const customersWithUsage: CustomerWithUsage[] = await Promise.all(storedCustomers.map(async (customer) => {
         const usageRecords = await getUsageRecordsByCustomerId(customer.id);
         const totalUsageHours = usageRecords.reduce((sum, record) => sum + record.durationHours, 0);
         return { ...customer, totalUsageHours };
       }));
-
       setCustomers(customersWithUsage);
     } catch (error) {
       console.error("Failed to fetch customers:", error);
@@ -58,37 +52,14 @@ export default function AdminCustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => {
-    if (!user || !auth) {
-        toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a customer." });
-        return;
-    }
-    
-    try {
-        const newCustomer = await addCustomer(newCustomerData, auth, password);
-        
-        toast({
-            title: "Customer & Account Created",
-            description: `${newCustomerData.name} has been added and their viewer account is ready.`,
-        });
-
-        const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
-            userId: user.id, 
-            message: `New customer ${newCustomerData.name} was added.`,
-            type: 'CUSTOMER_ADDED',
-            isRead: false,
-            linkTo: `/admin/customers/${newCustomer.id}`,
-        };
-        await addNotification(adminNotification);
-        
-        await fetchCustomers(); // Refresh the list
-    } catch (error: any) {
-        console.error("Failed to add customer:", error);
-        toast({ variant: 'destructive', title: 'Error Creating Customer', description: error.message || 'An unexpected error occurred.' });
-        // Re-throw the error to prevent the dialog from closing on failure
-        throw error;
-    }
+  const handleCustomerDeleted = (customerId: string) => {
+    setCustomers(prev => prev.filter(c => c.id !== customerId));
+    setDeletingCustomerId(null);
   };
+  
+  const handleCustomerUpdated = () => {
+    fetchCustomers(); // Refetch all customers to get the updated data
+  }
 
   const filteredCustomers = useMemo(() => {
     if (!searchTerm) return customers;
@@ -97,14 +68,14 @@ export default function AdminCustomersPage() {
       (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [customers, searchTerm]);
-
+  
   if (isLoading && customers.length === 0) { 
     return (
       <div className="mt-6">
         <PageHeader 
-            title="Customer Profiles"
-            description="View customer details and their usage history."
-            actions={<div className="flex items-center gap-2"><Skeleton className="h-10 w-10" /><Skeleton className="h-10 w-44" /></div>}
+            title="User Management"
+            description="Edit and delete customer accounts." 
+            actions={<div className="flex items-center gap-2"><Skeleton className="h-10 w-10" /></div>}
         />
         {/* Skeleton for mobile card view */}
         <div className="space-y-4 md:hidden">
@@ -138,6 +109,7 @@ export default function AdminCustomersPage() {
                         <TableHead className="text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableHead>
                         <TableHead className="text-center"><Skeleton className="h-5 w-16 mx-auto" /></TableHead>
                         <TableHead className="text-center"><Skeleton className="h-5 w-12 mx-auto" /></TableHead>
+                         <TableHead className="text-center"><Skeleton className="h-5 w-24 mx-auto" /></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -148,6 +120,7 @@ export default function AdminCustomersPage() {
                             <TableCell className="text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableCell>
                             <TableCell className="text-center"><Skeleton className="h-6 w-20 mx-auto rounded-full" /></TableCell>
                             <TableCell className="text-center"><Skeleton className="h-8 w-8 rounded-full mx-auto" /></TableCell>
+                            <TableCell className="text-center"><Skeleton className="h-8 w-24 rounded-md mx-auto" /></TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -185,15 +158,14 @@ export default function AdminCustomersPage() {
           {searchInput}
         </DialogContent>
       </Dialog>
-      <AddCustomerDialog onCustomerAdded={handleAddCustomer} />
     </div>
   );
 
   return (
     <div className="mt-6">
       <PageHeader 
-        title="Customer Profiles"
-        description="View customer details and their usage history."
+        title="User Management"
+        description="Edit and delete customer accounts."
         actions={pageActions}
       />
       
@@ -203,11 +175,13 @@ export default function AdminCustomersPage() {
           <span>Refreshing customer list...</span>
         </div>
       )}
+
       <CustomerListTable 
         customers={filteredCustomers} 
-        onCustomerDeleted={() => {}}
-        deletingCustomerId={null} 
-        enableActions={false}
+        onCustomerDeleted={handleCustomerDeleted}
+        onCustomerUpdated={handleCustomerUpdated}
+        deletingCustomerId={deletingCustomerId} 
+        enableActions={true}
       />
     </div>
   );
