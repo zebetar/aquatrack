@@ -10,10 +10,11 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle } from "lucide-react";
+import { Plus, PlusCircle } from "lucide-react";
 import { AddCustomerForm } from "./add-customer-form";
 import { useState } from "react";
 import type { Customer } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AddCustomerDialogProps {
   onCustomerAdded: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => Promise<void>;
@@ -21,6 +22,7 @@ interface AddCustomerDialogProps {
 
 export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleSuccess = async (newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => {
     await onCustomerAdded(newCustomer, password);
@@ -31,10 +33,17 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New Customer
-        </Button>
+        {isMobile ? (
+          <Button variant="default" size="icon">
+            <Plus className="h-5 w-5" />
+            <span className="sr-only">Add New Customer</span>
+          </Button>
+        ) : (
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New Customer
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
