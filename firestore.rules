@@ -9,84 +9,69 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/admins/$(userId));
     }
 
-    // Admins collection: Only other admins can read/write admin documents (for simplicity).
+    // Admins collection: Only other admins can read/write admin documents.
+    // This prevents a non-admin from making themselves an admin.
     // In a real app, you might restrict this further or manage admins differently.
     match /admins/{adminId} {
-      allow read, write: if isAdmin(request.auth.uid);
+      allow read, write: if request.auth != null && isAdmin(request.auth.uid);
+    }
+    
+    // Users collection: Contains public profile info.
+    match /users/{userId} {
+        // Any authenticated user can read any profile (for display names, etc.)
+        allow get: if request.auth != null;
+        // A user can only create or update their own profile document.
+        allow write: if request.auth != null && request.auth.uid == userId;
     }
 
     // Customers collection
-    // Rules for collection-level operations (like list/query)
-    match /customers/{docIdWildcard} {
-      // Allows an authenticated user to perform queries on the 'customers' collection.
-      // THIS IS CRUCIAL for the viewer login query: query(collection(db, "customers"), where("authUID", "==", firebaseUser.uid))
-      // Firestore security rules will then apply document-level 'get' rules to the results of this query.
-      // If this query requires an index (e.g., on 'authUID'), that index MUST exist in Firestore.
-      // Check browser dev console for a Firebase error with a link to create the index if it's missing.
-      allow list: if request.auth != null;
-
-      // Only admins can perform a general read (like get all documents) on the collection path directly.
-      // Note: 'read' at this level implies 'get' and 'list'.
-      // We provide a more permissive 'list' above for queries, then secure individual 'get' below.
-      allow read: if isAdmin(request.auth.uid);
-    }
-
-    // Rules for individual customer documents
     match /customers/{customerId} {
+      // Allow full access to any document if the user is an admin.
+      allow read, write, create, delete: if request.auth != null && isAdmin(request.auth.uid);
+
       // Viewer access for their OWN document
       // Authenticated, their UID matches authUID in the doc, and they are NOT an admin.
-      allow get: if request.auth != null && request.auth.uid == resource.data.authUID && !isAdmin(request.auth.uid);
-
-      // Admin access for any customer document
-      allow read, write, create, delete: if isAdmin(request.auth.uid);
+      allow get: if request.auth != null && request.auth.uid == resource.data.authUID;
+    }
+    
+    // Rules for collection-level operations on 'customers'
+    match /customers/{docIdWildcard} {
+        // Admins can perform list/query operations.
+        allow list: if request.auth != null && isAdmin(request.auth.uid);
+        
+        // A specific rule to allow a logged-in viewer to query for their OWN customer document.
+        // This is crucial for the login flow to find which customer record belongs to the Auth user.
+        // Firestore security rules will then apply document-level 'get' rules to the results.
+        allow list: if request.auth != null && request.query.limit == 1 && request.query.where[0][0] == 'authUID' && request.query.where[0][2] == request.auth.uid;
     }
 
-    // UsageRecords collection group (accessible for any customer)
-    // This allows querying across all 'usageRecords' subcollections.
+    // UsageRecords collection group
     match /{path=**}/usageRecords/{usageRecordId} {
       // Admins can read/write/create/delete any usage record.
-      allow read, write, create, delete: if isAdmin(request.auth.uid);
+      allow read, write, create, delete: if request.auth != null && isAdmin(request.auth.uid);
 
-      // Viewers can read their own usage records.
-      // Assumes 'usageRecords' are subcollections of 'customers/{customerId}'.
-      // The 'path' variable would capture 'customers/{customerId}'.
-      // We check if the customerId in the path corresponds to a customer document
-      // whose authUID matches the requesting user's UID.
-      allow get: if request.auth != null &&
-                    get(/databases/$(database)/documents/customers/$(path[1])).data.authUID == request.auth.uid &&
-                    !isAdmin(request.auth.uid);
-      allow list: if request.auth != null &&
-                     request.resource.data.customerId == path[1] && // Ensure query is scoped by customerId from the path
-                     get(/databases/$(database)/documents/customers/$(path[1])).data.authUID == request.auth.uid &&
-                     !isAdmin(request.auth.uid);
-
-      // For ADMIN collection group queries (e.g., get all usage records ordered by time)
-      // This allows admins to query across all usage records.
-      // An index on 'startTime' (desc) for the 'usageRecords' collection group will be needed.
-      allow list: if isAdmin(request.auth.uid);
+      // Viewers can read their own usage records (get and list).
+      // We verify ownership by checking the authUID on the parent customer document.
+      allow get, list: if request.auth != null &&
+                    get(/databases/$(database)/documents/customers/$(path[1])).data.authUID == request.auth.uid;
     }
-
 
     // Payments collection group
     match /{path=**}/payments/{paymentId} {
-      allow read, write, create, delete: if isAdmin(request.auth.uid);
-      allow get: if request.auth != null &&
-                    get(/databases/$(database)/documents/customers/$(path[1])).data.authUID == request.auth.uid &&
-                    !isAdmin(request.auth.uid);
-      allow list: if request.auth != null &&
-                     request.resource.data.customerId == path[1] &&
-                     get(/databases/$(database)/documents/customers/$(path[1])).data.authUID == request.auth.uid &&
-                     !isAdmin(request.auth.uid);
-      allow list: if isAdmin(request.auth.uid); // Admin collection group query
+      // Admins have full control.
+      allow read, write, create, delete: if request.auth != null && isAdmin(request.auth.uid);
+      
+      // Viewers can read their own payments.
+      allow get, list: if request.auth != null &&
+                    get(/databases/$(database)/documents/customers/$(path[1])).data.authUID == request.auth.uid;
     }
 
     // Notifications collection
     match /notifications/{notificationId} {
       // Admins can manage all notifications
-      allow read, write, create, delete: if isAdmin(request.auth.uid);
+      allow read, write, create, delete: if request.auth != null && isAdmin(request.auth.uid);
 
       // Users can read notifications where their userId matches the notification's userId.
-      // userId could be an admin's UID or a viewer's authUID.
       allow get, list: if request.auth != null && request.auth.uid == resource.data.userId;
 
       // Allow users to update their own notifications (e.g., mark as read)
@@ -95,5 +80,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

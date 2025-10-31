@@ -16,7 +16,7 @@ import {
   type User as FirebaseUser
 } from 'firebase/auth';
 import { firebaseAuth } from '@/lib/firebase-config';
-import { getUserProfile, getCustomerByAuthUID, updateCustomerInDb, addUserProfile } from '@/lib/firebase-service';
+import { getUserProfile, getCustomerByAuthUID, updateCustomerInDb, addUserProfile, isAdminUser } from '@/lib/firebase-service';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -41,23 +41,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        let profile = await getUserProfile(firebaseUser.uid);
         
-        // This is the role-detection logic.
-        const intendedRole = firebaseUser.email === 'admin@example.com' ? 'admin' : 'viewer';
+        // This is the new role-detection logic.
+        const userIsAdmin = await isAdminUser(firebaseUser.uid);
+        const intendedRole = userIsAdmin ? 'admin' : 'viewer';
+        
+        let profile = await getUserProfile(firebaseUser.uid);
 
-        if (!profile || profile.role !== intendedRole) {
-            console.log(`No profile found or role mismatch for UID ${firebaseUser.uid}. Creating/updating profile.`);
-            
-            const newUser: AppUser = {
+        if (!profile) {
+            console.log(`No profile found for UID ${firebaseUser.uid}. Creating new profile.`);
+            const newUserProfile: AppUser = {
                 id: firebaseUser.uid,
                 email: firebaseUser.email || 'no-email@example.com',
                 role: intendedRole,
-                name: firebaseUser.displayName || (profile?.name || (intendedRole === 'admin' ? 'Admin User' : 'New Viewer')),
-                avatarUrl: profile?.avatarUrl
+                name: firebaseUser.displayName || (intendedRole === 'admin' ? 'Admin User' : 'New Viewer'),
             };
-            await addUserProfile(newUser);
-            profile = newUser;
+            await addUserProfile(newUserProfile);
+            profile = newUserProfile;
+        } else if (profile.role !== intendedRole) {
+            // If the user's role in the DB doesn't match their admin status, update it.
+            console.log(`Role mismatch for UID ${firebaseUser.uid}. Updating role to ${intendedRole}.`);
+            await addUserProfile({ ...profile, role: intendedRole });
+            profile.role = intendedRole;
         }
 
         let finalUser: AppUser = {
@@ -65,15 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: firebaseUser.uid,
             email: firebaseUser.email || profile.email || '',
             name: firebaseUser.displayName || profile.name,
-            role: intendedRole, // Explicitly set the role here to ensure it's correct
+            role: intendedRole,
         };
 
          if (finalUser.role === 'viewer') {
             const customerProfile = await getCustomerByAuthUID(finalUser.id);
             if (customerProfile) {
                 finalUser.customerId = customerProfile.id;
-                // Only override name if it hasn't been set on the auth user profile yet
-                if (!firebaseUser.displayName && !profile.name) {
+                // Sync name from customer profile if auth profile name is generic
+                if (!firebaseUser.displayName) {
                     finalUser.name = customerProfile.name;
                 }
             }

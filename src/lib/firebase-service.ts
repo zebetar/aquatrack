@@ -46,7 +46,6 @@ export async function getUserProfile(userId: string): Promise<User | null> {
     const userDocSnap = await getDoc(userDocRef);
     if (userDocSnap.exists()) {
         const data = userDocSnap.data();
-        // Ensure role is correctly typed
         const role = data.role === 'admin' ? 'admin' : 'viewer';
         return fromFirestore({ id: userDocSnap.id, ...data, role } as User);
     }
@@ -55,13 +54,19 @@ export async function getUserProfile(userId: string): Promise<User | null> {
 
 export async function addUserProfile(userData: User): Promise<void> {
     const userDocRef = doc(db, 'users', userData.id);
-    // Use setDoc with merge: true to create or update the profile
     await setDoc(userDocRef, {
         email: userData.email,
         role: userData.role,
         name: userData.name,
         avatarUrl: userData.avatarUrl || null,
     }, { merge: true });
+}
+
+export async function isAdminUser(userId: string): Promise<boolean> {
+    if (!userId) return false;
+    const adminDocRef = doc(db, 'admins', userId);
+    const adminDocSnap = await getDoc(adminDocRef);
+    return adminDocSnap.exists();
 }
 
 
@@ -283,8 +288,7 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
 }
 
 // --- Admin Actions (Server-side) ---
-// These functions are placeholders for where you'd call a serverless function.
-// For now, they'll call a Next.js Server Action.
+// These functions call a Next.js API route that uses the Firebase Admin SDK.
 export async function createAuthUserAndSendInvite(email: string, name: string): Promise<{success: boolean, uid?: string, error?: string}> {
     const response = await fetch('/api/create-user', {
         method: 'POST',
