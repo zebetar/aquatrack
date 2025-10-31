@@ -16,8 +16,20 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Droplets, Eye, EyeOff } from "lucide-react";
+import { Droplets, Eye, EyeOff, Mail } from "lucide-react";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { resendPasswordReset } from "@/lib/firebase-service";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -27,12 +39,21 @@ const loginFormSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
+const forgotPasswordSchema = z.object({
+    email: z.string().email({ message: "Please enter a valid email address." }),
+});
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+
+
 export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
-  const form = useForm<LoginFormValues>({
+  const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "admin@example.com",
@@ -41,21 +62,49 @@ export function LoginForm() {
     },
   });
 
-  async function onSubmit(values: LoginFormValues) {
+  const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
+      resolver: zodResolver(forgotPasswordSchema),
+  });
+
+  async function onLoginSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
     await login(values.email, values.password);
     setIsSubmitting(false);
   }
 
-  const isLoading = authLoading || isSubmitting;
+  async function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
+      setIsSendingReset(true);
+      try {
+          const result = await resendPasswordReset(values.email);
+          if (result.success) {
+              toast({
+                  title: "Password Reset Email Sent",
+                  description: `If an account exists for ${values.email}, a password reset link has been sent.`,
+              });
+              setForgotPasswordOpen(false);
+          } else {
+              throw new Error(result.error || "An unknown error occurred.");
+          }
+      } catch (error: any) {
+          toast({
+              variant: "destructive",
+              title: "Error Sending Email",
+              description: error.message,
+          });
+      } finally {
+          setIsSendingReset(false);
+      }
+  }
 
+  const isLoading = authLoading || isSubmitting;
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <>
+    <Form {...loginForm}>
+      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
         <FormField
-          control={form.control}
+          control={loginForm.control}
           name="email"
           render={({ field }) => (
             <FormItem>
@@ -67,7 +116,7 @@ export function LoginForm() {
           )}
         />
         <FormField
-          control={form.control}
+          control={loginForm.control}
           name="password"
           render={({ field }) => (
             <FormItem>
@@ -96,20 +145,26 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="rememberMe"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} id="rememberMe" />
-              </FormControl>
-              <Label htmlFor="rememberMe" className="font-normal text-sm text-muted-foreground cursor-pointer">
-                Remember Me
-              </Label>
-            </FormItem>
-          )}
-        />
+        <div className="flex items-center justify-between">
+            <FormField
+            control={loginForm.control}
+            name="rememberMe"
+            render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} id="rememberMe" />
+                </FormControl>
+                <Label htmlFor="rememberMe" className="font-normal text-sm text-muted-foreground cursor-pointer">
+                    Remember Me
+                </Label>
+                </FormItem>
+            )}
+            />
+            <Button type="button" variant="link" className="p-0 h-auto text-sm" onClick={() => setForgotPasswordOpen(true)}>
+                Forgot Password?
+            </Button>
+        </div>
+
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
@@ -117,5 +172,46 @@ export function LoginForm() {
         </Button>
       </form>
     </Form>
+
+    <Dialog open={isForgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Reset Your Password</DialogTitle>
+                <DialogDescription>
+                    Enter your email address below. If an account is associated with it, we will send you a link to reset your password.
+                </DialogDescription>
+            </DialogHeader>
+            <Form {...forgotPasswordForm}>
+                <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-4">
+                    <FormField
+                        control={forgotPasswordForm.control}
+                        name="email"
+                        render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="forgot-email" className="sr-only">Email</Label>
+                                <FormControl>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input id="forgot-email" type="email" placeholder="your.email@example.com" {...field} className="pl-10"/>
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                     <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="ghost" disabled={isSendingReset}>Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isSendingReset}>
+                            {isSendingReset && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle"/>}
+                            Send Reset Link
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </Form>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
