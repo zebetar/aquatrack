@@ -41,20 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // User is signed in, get our custom user profile
         let profile = await getUserProfile(firebaseUser.uid);
         
-        if (!profile) {
-            console.log(`No profile found for UID ${firebaseUser.uid}. Creating one.`);
-            
-            // Determine role based on email - crucial for admin login
-            const role = firebaseUser.email === 'admin@example.com' ? 'admin' : 'viewer';
+        // This is the role-detection logic.
+        const intendedRole = firebaseUser.email === 'admin@example.com' ? 'admin' : 'viewer';
 
+        if (!profile || profile.role !== intendedRole) {
+            console.log(`No profile found or role mismatch for UID ${firebaseUser.uid}. Creating/updating profile.`);
+            
             const newUser: AppUser = {
                 id: firebaseUser.uid,
                 email: firebaseUser.email || 'no-email@example.com',
-                role: role,
-                name: firebaseUser.displayName || (role === 'admin' ? 'Admin User' : 'New Viewer'),
+                role: intendedRole,
+                name: firebaseUser.displayName || (profile?.name || (intendedRole === 'admin' ? 'Admin User' : 'New Viewer')),
+                avatarUrl: profile?.avatarUrl
             };
             await addUserProfile(newUser);
             profile = newUser;
@@ -65,13 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: firebaseUser.uid,
             email: firebaseUser.email || profile.email || '',
             name: firebaseUser.displayName || profile.name,
+            role: intendedRole, // Explicitly set the role here to ensure it's correct
         };
 
          if (finalUser.role === 'viewer') {
             const customerProfile = await getCustomerByAuthUID(finalUser.id);
             if (customerProfile) {
                 finalUser.customerId = customerProfile.id;
-                if (!firebaseUser.displayName) {
+                // Only override name if it hasn't been set on the auth user profile yet
+                if (!firebaseUser.displayName && !profile.name) {
                     finalUser.name = customerProfile.name;
                 }
             }
@@ -79,13 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(finalUser);
       } else {
-        // User is signed out
         setUser(null);
       }
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
