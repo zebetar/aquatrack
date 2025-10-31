@@ -39,21 +39,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
-        let appUser: User | null = null;
+        let appUser: User;
+
         if (userDocSnap.exists()) {
+            // User document exists, use it as the source of truth
             const userData = userDocSnap.data();
             appUser = {
                 id: firebaseUser.uid,
                 email: firebaseUser.email!,
-                name: userData.name,
+                name: userData.name || firebaseUser.displayName || 'User',
                 role: role,
                 avatarUrl: userData.avatarUrl || undefined,
                 customerId: userData.customerId || undefined,
+            };
+        } else {
+            // User is authenticated but has no Firestore document.
+            // Create a temporary user object to allow the app to function.
+            // This is crucial for users created manually in the Firebase Auth console.
+            console.warn(`User document not found for UID ${firebaseUser.uid}. Creating a temporary profile.`);
+            appUser = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email!,
+                name: firebaseUser.displayName || 'New User',
+                role: role,
             };
         }
         
         setUser(appUser);
         localStorage.setItem('authUser', JSON.stringify(appUser));
+
+        // Redirect after setting user
+        const targetPath = role === 'admin' ? '/admin/dashboard' : '/viewer/dashboard';
+        if (pathname !== targetPath) {
+          router.replace(targetPath);
+        }
+
     } else {
         setUser(null);
         localStorage.removeItem('authUser');
