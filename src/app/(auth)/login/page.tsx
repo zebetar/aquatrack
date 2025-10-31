@@ -12,7 +12,7 @@ export default function LoginPage() {
         </div>
         <CardTitle className="text-4xl font-bold lowercase tracking-tighter text-sky-500 animate-shimmer">aquatrack</CardTitle>
       </CardHeader>
-      <CardContent className="py-8"> {/* Increased vertical padding */}
+      <CardContent className="py-8">
         <LoginForm />
       </CardContent>
     </Card>

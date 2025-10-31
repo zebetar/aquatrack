@@ -8,7 +8,7 @@ import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { Droplets, Users, FileDown, Palette, UploadCloud, UserCircle, BellRing, Bot, FileUp, DatabaseZap } from 'lucide-react';
+import { Droplets, UserCircle, BellRing, Bot, FileDown, FileUp, Palette } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -33,15 +33,12 @@ type AdminChangeNameFormValues = z.infer<typeof adminChangeNameSchema>;
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
-  const { user, updateAdminName, updateUserAvatarUrl } = useAuth();
+  const { user, updateAdminName } = useAuth();
   const [currentRate, setCurrentRate] = useState(CORE_WATER_RATE_PER_HOUR);
   const [newRateInput, setNewRateInput] = useState(String(CORE_WATER_RATE_PER_HOUR));
   const [isSavingRate, setIsSavingRate] = useState(false);
 
   const [isSavingName, setIsSavingName] = useState(false);
-  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isAutomatedRemindersEnabled, setAutomatedRemindersEnabled] = useState(false);
   
@@ -64,10 +61,6 @@ export default function AdminSettingsPage() {
         description: `Automated bill reminders are now ${enabled ? 'ON' : 'OFF'}.`
     });
   };
-
-  useEffect(() => {
-    setAvatarPreview(user?.avatarUrl || null);
-  }, [user?.avatarUrl]);
 
   const adminNameForm = useForm<AdminChangeNameFormValues>({
     resolver: zodResolver(adminChangeNameSchema),
@@ -114,49 +107,7 @@ export default function AdminSettingsPage() {
       description: `Your display name is now ${values.newAdminName}.`,
     });
   };
-
-  const handleAvatarFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit for mock
-        toast({
-          variant: "destructive",
-          title: "File Too Large",
-          description: "Please select an image smaller than 2MB.",
-        });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAdminAvatarChange = () => {
-    if (!avatarPreview && !user?.avatarUrl) { 
-        toast({ title: "No Image", description: "Please select an image to update your avatar." });
-        return;
-    }
-    if (avatarPreview === user?.avatarUrl) { 
-        toast({ title: "No Change", description: "The selected image is the same as your current avatar." });
-        return;
-    }
-
-    setIsSavingAvatar(true);
-    updateUserAvatarUrl(avatarPreview); 
-    setIsSavingAvatar(false);
-  };
   
-  const handleClearAvatar = () => {
-    setAvatarPreview(null);
-    if (fileInputRef.current) {
-        fileInputRef.current.value = ""; 
-    }
-  };
-
-
   const handleToggleTheme = () => {
     const htmlElement = document.documentElement;
     if (htmlElement.classList.contains('dark')) {
@@ -252,7 +203,7 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <Accordion type="multiple" defaultValue={['admin-account', 'system-ops']} className="w-full space-y-4 mt-6">
+      <Accordion type="multiple" defaultValue={['admin-account', 'system-ops', 'water-rate']} className="w-full space-y-4 mt-6">
         
         {/* Water Rate Section */}
         <AccordionItem value="water-rate" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
@@ -345,52 +296,17 @@ export default function AdminSettingsPage() {
                   </div>
               </div>
 
-              {/* Change Avatar Section */}
-              <div className="flex flex-col gap-4 rounded-lg border bg-card/50 p-4 sm:flex-row sm:items-start">
-                  <div className="flex-1 space-y-1">
-                      <h4 className="font-semibold">Change Admin Avatar</h4>
-                      <p className="text-sm text-muted-foreground">Upload a new profile picture.</p>
-                  </div>
-                  <div className="sm:w-2/3 space-y-4">
-                      {avatarPreview && (
-                          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
-                          <Image src={avatarPreview} alt="Avatar Preview" layout="fill" objectFit="cover" />
-                          </div>
-                      )}
-                      <Input
-                          id="avatarFile"
-                          type="file"
-                          accept="image/png, image/jpeg, image/gif"
-                          onChange={handleAvatarFileChange}
-                          ref={fileInputRef}
-                          className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                      />
-                      <div className="flex flex-wrap gap-2">
-                          <Button onClick={handleAdminAvatarChange} disabled={isSavingAvatar}>
-                              {isSavingAvatar && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
-                              <UploadCloud className="mr-2 h-4 w-4" />
-                              Save Avatar
-                          </Button>
-                          {avatarPreview && (
-                              <Button variant="outline" onClick={handleClearAvatar} disabled={isSavingAvatar}>
-                                  Clear Preview
-                              </Button>
-                          )}
-                      </div>
-                  </div>
-              </div>
-              
               {/* Credentials Section */}
               <div className="flex flex-col gap-4 rounded-lg border bg-card/50 p-4 sm:flex-row sm:items-center">
                   <div className="flex-1 space-y-1">
                       <h4 className="font-semibold">Login Credentials</h4>
                       <p className="text-sm text-muted-foreground">
-                          Email and password are fixed for this app.
+                          Email and password can be updated in your Firebase project.
                       </p>
                   </div>
                   <div>
                        <p className="text-sm font-medium">
-                          <code className="bg-muted px-2 py-1 rounded-md">{user?.email || 'admin@aquatrack.com'}</code>
+                          <code className="bg-muted px-2 py-1 rounded-md">{user?.email || 'admin@example.com'}</code>
                        </p>
                   </div>
               </div>

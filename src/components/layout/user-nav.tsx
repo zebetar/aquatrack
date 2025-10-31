@@ -47,9 +47,8 @@ export function UserNav() {
             {avatarSrc ? (
               <AvatarImage src={avatarSrc} alt={user.name || "User"} data-ai-hint={aiHint} />
             ) : (
-              <AvatarImage src={`https://placehold.co/100x100.png`} alt={user.name || "User"} data-ai-hint="avatar person" />
+               <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
             )}
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

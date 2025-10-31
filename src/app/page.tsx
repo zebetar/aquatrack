@@ -11,8 +11,8 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Give a moment for auth state to be confirmed
     if (!loading) {
-      // This delay allows the animation to be visible before navigating.
       const timer = setTimeout(() => {
         if (user) {
           if (user.role === 'admin') {
@@ -21,20 +21,19 @@ export default function HomePage() {
             router.replace('/viewer/dashboard');
           }
         } else {
+          // If no user after loading, go to login
           router.replace('/login');
         }
-      }, 1500); // This duration should match the animation duration in globals.css
+      }, 500); // A shorter delay is fine now
 
       return () => clearTimeout(timer);
     }
   }, [user, loading, router]);
 
-  // This splash screen shows only the icon animating.
+  // Show a loading splash screen while auth state is being determined.
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 animated-login-bg">
-      <div className="animate-icon-pop">
-        <Droplets className="h-24 w-24 text-sky-500" />
-      </div>
+        <Droplets className="h-24 w-24 text-sky-500 animate-pulse-subtle" />
     </div>
   );
 }
