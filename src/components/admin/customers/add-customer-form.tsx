@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Droplets } from "lucide-react";
+import { Droplets, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import type { Customer } from "@/types";
 
@@ -22,16 +22,24 @@ const addCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
   email: z.string().email({ message: "A valid email is required for login." }).trim().toLowerCase(),
   contactInfo: z.string().trim().optional(),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match.",
+  path: ["confirmPassword"],
 });
+
 
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => void;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<AddCustomerFormValues>({
     resolver: zodResolver(addCustomerFormSchema),
@@ -39,6 +47,8 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
       name: "",
       email: "",
       contactInfo: "",
+      password: "",
+      confirmPassword: "",
     },
   });
 
@@ -48,17 +58,29 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
     const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'> = {
       name: values.name,
       email: values.email,
-      // This is the fix: only include contactInfo if it has a value.
       ...(values.contactInfo && { contactInfo: values.contactInfo }),
     };
     
-    onSuccessCallback(newCustomer); 
-    setIsLoading(false);
+    onSuccessCallback(newCustomer, values.password); 
+    // We don't set isLoading to false here, as the parent dialog will close on success.
   }
+  
+  const PasswordVisibilityToggle = ({ isVisible, toggle }: { isVisible: boolean, toggle: () => void }) => (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      onClick={toggle}
+      tabIndex={-1}
+    >
+      {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    </Button>
+  );
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -87,6 +109,38 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
         />
         <FormField
           control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Set Initial Password</FormLabel>
+              <div className="relative">
+                <FormControl>
+                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                </FormControl>
+                <PasswordVisibilityToggle isVisible={showPassword} toggle={() => setShowPassword(!showPassword)} />
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
+              <div className="relative">
+                <FormControl>
+                  <Input type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                </FormControl>
+                 <PasswordVisibilityToggle isVisible={showConfirmPassword} toggle={() => setShowConfirmPassword(!showConfirmPassword)} />
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="contactInfo"
           render={({ field }) => (
             <FormItem>
@@ -100,7 +154,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />}
-          Add Customer
+          Add Customer & Create Account
         </Button>
       </form>
     </Form>

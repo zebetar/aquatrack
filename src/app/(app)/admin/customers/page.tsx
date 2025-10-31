@@ -58,20 +58,19 @@ export default function AdminCustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => {
-    if (!user) {
+  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => {
+    if (!user || !auth) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a customer." });
         return;
     }
     
     try {
-        const newCustomer = await addCustomer(newCustomerData);
+        const newCustomer = await addCustomer(newCustomerData, auth, password);
         
         toast({
-            title: "Customer Added & Invite Sent",
-            description: `${newCustomerData.name} has been added. If they have an account, a password setup email has been sent.`,
+            title: "Customer & Account Created",
+            description: `${newCustomerData.name} has been added and their viewer account is ready.`,
         });
-
 
         const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
             userId: user.id, 
@@ -85,7 +84,9 @@ export default function AdminCustomersPage() {
         await fetchCustomers(); // Refresh the list
     } catch (error: any) {
         console.error("Failed to add customer:", error);
-        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to create customer profile.' });
+        toast({ variant: 'destructive', title: 'Error Creating Customer', description: error.message || 'An unexpected error occurred.' });
+        // Re-throw the error to prevent the dialog from closing on failure
+        throw error;
     }
   };
 

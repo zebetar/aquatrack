@@ -29,6 +29,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useFirebase } from "@/contexts/firebase-context";
+import { sendPasswordReset } from "@/lib/firebase-service";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }).trim().toLowerCase(),
@@ -46,6 +48,7 @@ type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export function LoginForm() {
   const { login, loading: authLoading } = useAuth();
+  const { auth } = useFirebase();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -76,38 +79,28 @@ export function LoginForm() {
 
   async function onForgotPasswordSubmit(values: ForgotPasswordFormValues) {
       setIsSendingReset(true);
-      try {
-        const response = await fetch('/api/generate-password-reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: values.email }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          toast({
-            title: "Link Generated in Console",
-            description: "A password reset link has been generated in the server console for you to share.",
-          });
-          setForgotPasswordOpen(false);
-          forgotPasswordForm.reset();
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error Generating Link",
-            description: result.message || "An unexpected error occurred.",
-          });
-        }
-      } catch (error) {
-         toast({
-            variant: "destructive",
-            title: "Request Failed",
-            description: "Could not connect to the server. Please try again.",
-          });
-      } finally {
-        setIsSendingReset(false);
+      if (!auth) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Firebase is not initialized.' });
+          setIsSendingReset(false);
+          return;
       }
+      const result = await sendPasswordReset(auth, values.email);
+
+      if (result.success) {
+        toast({
+            title: "Password Reset Email Sent",
+            description: "If an account exists for this email, a reset link has been sent.",
+        });
+        setForgotPasswordOpen(false);
+        forgotPasswordForm.reset();
+      } else {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: result.error || "Failed to send password reset email.",
+        });
+      }
+      setIsSendingReset(false);
   }
 
   const isLoading = authLoading || isSubmitting;
@@ -190,9 +183,10 @@ export function LoginForm() {
     <Dialog open={isForgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Generate Password Reset Link</DialogTitle>
+                <DialogTitle>Reset Your Password</DialogTitle>
                 <DialogDescription>
-                    Enter an email address. A password reset link will be generated in the server console for you to copy and share.
+                  Enter your email address to receive a password reset link.
+                  If you are a customer and don't receive an email, please contact the administrator.
                 </DialogDescription>
             </DialogHeader>
             <Form {...forgotPasswordForm}>
@@ -219,7 +213,7 @@ export function LoginForm() {
                         </DialogClose>
                         <Button type="submit" disabled={isSendingReset}>
                             {isSendingReset && <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle"/>}
-                            Generate Link
+                            Send Reset Link
                         </Button>
                     </DialogFooter>
                 </form>

@@ -18,7 +18,7 @@ import {
     setDoc
 } from 'firebase/firestore';
 import type { User, Customer, WaterUsageRecord, Payment, Notification } from '@/types';
-import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, type User as FirebaseUser } from 'firebase/auth';
 
 // Helper to convert Firestore Timestamps
 const fromFirestore = <T extends { createdAt?: any; date?: any; startTime?: any; endTime?: any; paymentDate?: any; }>(docData: T): Omit<T, 'createdAt' | 'date' | 'startTime' | 'endTime' | 'paymentDate'> & { createdAt?: Date; date?: Date; startTime?: Date; endTime?: Date; paymentDate?: Date; } => {
@@ -73,33 +73,42 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 
 
 // --- Customer Functions ---
-export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>): Promise<Customer> {
+export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt'>, auth: Auth, password?: string): Promise<Customer> {
+    
+    if (!customerData.email || !password) {
+        throw new Error("Email and password are required to create a new customer account.");
+    }
+    
+    // Step 1: Create the user in Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(auth, customerData.email, password);
+    const authUID = userCredential.user.uid;
+
+    // Step 2: Create the customer document in Firestore
     const docData = {
-        ...customerData,
+        name: customerData.name,
+        email: customerData.email,
+        contactInfo: customerData.contactInfo || '',
         balance: 0,
+        authUID: authUID, // Link to the auth user
         createdAt: serverTimestamp(),
     };
 
     const docRef = await addDoc(collection(db, 'customers'), docData);
     
-    // The link is now generated via API route and logged to the console.
-    // The client will call this API.
-    if (customerData.email) {
-      try {
-        await fetch('/api/generate-password-reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: customerData.email }),
-        });
-      } catch (e) {
-        console.error("Failed to trigger password reset link generation:", e);
-      }
-    }
-
+    // Step 3: Create the user profile document for the viewer
+    const newUserProfile: User = {
+        id: authUID,
+        email: customerData.email,
+        role: 'viewer',
+        name: customerData.name,
+        customerId: docRef.id
+    };
+    await addUserProfile(newUserProfile);
 
     return {
         id: docRef.id,
         ...customerData,
+        authUID: authUID,
         balance: 0,
         createdAt: new Date(), 
     };
@@ -145,7 +154,6 @@ export async function getOutstandingCustomers(): Promise<Customer[]> {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Customer));
 }
-
 
 // --- Usage Record Functions ---
 export async function addUsageRecord(recordData: Omit<WaterUsageRecord, 'id' | 'createdAt'>): Promise<WaterUsageRecord> {
@@ -303,4 +311,14 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
         batch.update(doc.ref, { isRead: true });
     });
     await batch.commit();
+}
+
+export async function sendPasswordReset(auth: Auth, email: string): Promise<{success: boolean, error?: string}> {
+    try {
+        await sendPasswordResetEmail(auth, email);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Password reset email failed:", error);
+        return { success: false, error: error.message };
+    }
 }

@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { Download, Droplets, Pencil, Trash2, Mail } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { getUsageRecordsByCustomerId, getPaymentsByCustomerId } from '@/lib/firebase-service';
+import { getUsageRecordsByCustomerId, getPaymentsByCustomerId, sendPasswordReset } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
@@ -51,6 +51,7 @@ export function CustomerListTable({
 }: CustomerListTableProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const { auth } = useFirebase();
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
   const [sendingInviteId, setSendingInviteId] = useState<string | null>(null);
 
@@ -63,38 +64,26 @@ export function CustomerListTable({
       toast({ variant: 'destructive', title: 'Error', description: 'Customer email is missing.' });
       return;
     }
+    if (!auth) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Firebase Auth is not available.' });
+      return;
+    }
 
     setSendingInviteId(customer.id);
-    try {
-        const response = await fetch('/api/generate-password-reset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: customer.email }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          toast({
-            title: "Link Generated in Console",
-            description: `Password reset link for ${customer.email} generated in server console.`,
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error Generating Link",
-            description: result.message || "An unexpected error occurred.",
-          });
-        }
-    } catch (error) {
-        toast({
-            variant: "destructive",
-            title: "Request Failed",
-            description: "Could not connect to the server. Please try again.",
-        });
-    } finally {
-      setSendingInviteId(null);
+    const result = await sendPasswordReset(auth, customer.email);
+    if (result.success) {
+      toast({
+        title: "Password Reset Sent",
+        description: `An email has been sent to ${customer.email} with password reset instructions.`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Failed to Send Email",
+        description: result.error || "An unexpected error occurred.",
+      });
     }
+    setSendingInviteId(null);
   };
 
 

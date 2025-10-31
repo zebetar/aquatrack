@@ -16,14 +16,15 @@ import { useState } from "react";
 import type { Customer } from "@/types";
 
 interface AddCustomerDialogProps {
-  onCustomerAdded: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => void;
+  onCustomerAdded: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => Promise<void>;
 }
 
 export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const handleSuccess = (newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => {
-    onCustomerAdded(newCustomer);
+  const handleSuccess = async (newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>, password: string) => {
+    await onCustomerAdded(newCustomer, password);
+    // Only close the dialog if the parent onCustomerAdded function resolves successfully
     setOpen(false);
   };
 
@@ -39,7 +40,7 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
           <DialogDescription>
-            This creates a customer profile and generates a password reset link in the server console for you to share.
+            This creates a customer profile and a viewer account with the password you set.
           </DialogDescription>
         </DialogHeader>
         <AddCustomerForm onSuccessCallback={handleSuccess} />
