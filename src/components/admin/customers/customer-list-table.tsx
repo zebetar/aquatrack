@@ -13,9 +13,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { Download, Droplets, Pencil, Trash2, Mail } from 'lucide-react';
+import { Download, Droplets, Pencil, Trash2 } from 'lucide-react';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
-import { getUsageRecordsByCustomerId, getPaymentsByCustomerId, sendPasswordReset } from '@/lib/firebase-service';
+import { getUsageRecordsByCustomerId, getPaymentsByCustomerId } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
@@ -51,41 +51,7 @@ export function CustomerListTable({
 }: CustomerListTableProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const { auth } = useFirebase();
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
-  const [sendingInviteId, setSendingInviteId] = useState<string | null>(null);
-
-
-  const handleResendInvite = async (e: React.MouseEvent, customer: Customer) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!customer.email) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Customer email is missing.' });
-      return;
-    }
-    if (!auth) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Firebase Auth is not available.' });
-      return;
-    }
-
-    setSendingInviteId(customer.id);
-    const result = await sendPasswordReset(auth, customer.email);
-    if (result.success) {
-      toast({
-        title: "Password Reset Sent",
-        description: `An email has been sent to ${customer.email} with password reset instructions.`,
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Failed to Send Email",
-        description: result.error || "An unexpected error occurred.",
-      });
-    }
-    setSendingInviteId(null);
-  };
-
 
   const handleDownloadPdf = async (e: React.MouseEvent, customer: Customer) => {
     e.preventDefault();
@@ -159,21 +125,6 @@ export function CustomerListTable({
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2 pt-2" onClick={handleActionClick}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full"
-                        title="Resend Invite Email"
-                        onClick={(e) => handleResendInvite(e, customer)}
-                        disabled={sendingInviteId === customer.id}
-                      >
-                         {sendingInviteId === customer.id ? (
-                           <Droplets className="h-4 w-4 animate-pulse-subtle" />
-                         ) : (
-                           <Mail className="h-4 w-4 text-primary" />
-                         )}
-                         <span className="sr-only">Resend Invite</span>
-                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -264,19 +215,6 @@ export function CustomerListTable({
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1" onClick={handleActionClick}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Resend Invite Email"
-                        onClick={(e) => handleResendInvite(e, customer)}
-                        disabled={sendingInviteId === customer.id}
-                      >
-                         {sendingInviteId === customer.id ? (
-                           <Droplets className="h-4 w-4 animate-pulse-subtle" />
-                         ) : (
-                           <Mail className="h-4 w-4 text-primary" />
-                         )}
-                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
