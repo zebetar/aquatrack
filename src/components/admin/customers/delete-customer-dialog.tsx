@@ -15,30 +15,43 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2, Droplets } from "lucide-react";
 import type { Customer } from "@/types";
+import { deleteCustomer } from "@/lib/firebase-service";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface DeleteCustomerDialogProps {
   customer: Customer;
   onDeleteConfirm: (customerId: string) => void;
   isDeleting: boolean;
-  triggerButton?: React.ReactNode; // Optional custom trigger
+  triggerButton?: React.ReactNode;
 }
 
 export function DeleteCustomerDialog({ 
   customer, 
   onDeleteConfirm,
-  isDeleting,
   triggerButton 
 }: DeleteCustomerDialogProps) {
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  const handleDelete = () => {
-    onDeleteConfirm(customer.id);
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+        await deleteCustomer(customer.id);
+        toast({ title: "Customer Deleted", description: `${customer.name} and all their data have been removed.` });
+        onDeleteConfirm(customer.id);
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to delete customer." });
+    } finally {
+        setIsDeleting(false);
+    }
   };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         {triggerButton ? triggerButton : (
-          <Button variant="ghost" size="icon" title="Delete Customer" disabled={isDeleting} onClick={(e) => e.stopPropagation()}>
+          <Button variant="ghost" size="icon" title="Delete Customer" disabled={isDeleting} onClick={(e) => { e.stopPropagation(); }}>
             {isDeleting ? <Droplets className="h-4 w-4 animate-pulse-subtle" /> : <Trash2 className="h-4 w-4 text-destructive" />}
           </Button>
         )}

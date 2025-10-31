@@ -16,13 +16,13 @@ import { useState } from "react";
 
 interface LogUsageDialogProps {
   customer: Customer;
-  onUsageLogged?: (newRecord: WaterUsageRecord) => void;
+  onUsageLogged?: (newRecord: Omit<WaterUsageRecord, 'id' | 'createdAt'>) => void;
 }
 
 export function LogUsageDialog({ customer, onUsageLogged }: LogUsageDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const handleSuccess = (newRecord: WaterUsageRecord) => {
+  const handleSuccess = (newRecord: Omit<WaterUsageRecord, 'id' | 'createdAt'>) => {
     onUsageLogged?.(newRecord);
     setOpen(false);
   };

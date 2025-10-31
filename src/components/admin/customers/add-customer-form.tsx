@@ -27,7 +27,7 @@ const addCustomerFormSchema = z.object({
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt'>) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => void;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
@@ -45,14 +45,12 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     
-    const newCustomer: Omit<Customer, 'id' | 'createdAt'> = {
+    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> = {
       name: values.name,
-      balance: 0, // All new customers start with a zero balance
     };
 
     if (values.email) {
       newCustomer.email = values.email;
-      // We no longer create a mock authUID here. It will be assigned when the user is created in Firebase Auth.
     }
     if (values.contactInfo) {
       newCustomer.contactInfo = values.contactInfo;

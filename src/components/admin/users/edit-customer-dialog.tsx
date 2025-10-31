@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { updateCustomer } from "@/lib/firebase-service";
+
 
 const editCustomerFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
@@ -36,7 +38,7 @@ type EditCustomerFormValues = z.infer<typeof editCustomerFormSchema>;
 
 interface EditCustomerDialogProps {
   customer: Customer;
-  onCustomerUpdated: (customer: Customer) => void;
+  onCustomerUpdated: () => void;
   triggerButton?: React.ReactNode;
 }
 
@@ -68,29 +70,29 @@ export function EditCustomerDialog({ customer, onCustomerUpdated, triggerButton 
   async function onSubmit(values: EditCustomerFormValues) {
     setIsLoading(true);
 
-    const updatedCustomer: Customer = {
-      ...customer,
+    const updatedCustomerData: Partial<Customer> = {
       name: values.name,
       contactInfo: values.contactInfo || undefined,
       email: values.email || undefined,
     };
-    
-    // If email is provided, ensure authUID exists. If not, create one.
-    if (updatedCustomer.email && !updatedCustomer.authUID) {
-      updatedCustomer.authUID = `authuid-${Math.random().toString(36).substring(2, 9)}`;
-    }
-    // If email is removed, remove authUID as well.
-    if (!updatedCustomer.email) {
-      updatedCustomer.authUID = undefined;
-    }
 
-    onCustomerUpdated(updatedCustomer);
-    toast({
-      title: "Customer Updated",
-      description: `${values.name}'s details have been updated.`,
-    });
-    setIsLoading(false);
-    setOpen(false);
+    try {
+        await updateCustomer(customer.id, updatedCustomerData);
+        toast({
+            title: "Customer Updated",
+            description: `${values.name}'s details have been updated.`,
+        });
+        onCustomerUpdated();
+        setOpen(false);
+    } catch(error) {
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update customer details.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -99,7 +101,7 @@ export function EditCustomerDialog({ customer, onCustomerUpdated, triggerButton 
         {triggerButton ? (
           triggerButton
         ) : (
-          <Button variant="ghost" size="icon" title="Edit Customer" onClick={(e) => e.stopPropagation()}>
+          <Button variant="ghost" size="icon" title="Edit Customer" onClick={(e) => {e.stopPropagation(); setOpen(true)}}>
             <Pencil className="h-4 w-4 text-primary" />
           </Button>
         )}

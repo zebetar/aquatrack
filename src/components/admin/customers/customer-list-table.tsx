@@ -34,7 +34,7 @@ interface CustomerWithUsage extends Customer {
 interface CustomerListTableProps {
   customers: CustomerWithUsage[];
   onCustomerDeleted: (customerId: string) => void;
-  onCustomerUpdated?: (customer: Customer) => void;
+  onCustomerUpdated?: () => void;
   deletingCustomerId: string | null;
   enableActions?: boolean;
   className?: string;
@@ -141,12 +141,12 @@ export function CustomerListTable({
                     </div>
                   </div>
                   {enableActions && onCustomerUpdated && (
-                    <div className="flex items-center justify-end gap-2 pt-2">
+                    <div className="flex items-center justify-end gap-2 pt-2" onClick={handleActionClick}>
                        <EditCustomerDialog
                           customer={customer}
                           onCustomerUpdated={onCustomerUpdated}
                           triggerButton={
-                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleActionClick}>
+                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                                 <Pencil className="h-4 w-4 text-primary" />
                                 <span className="sr-only">Edit</span>
                               </Button>
@@ -157,7 +157,7 @@ export function CustomerListTable({
                           onDeleteConfirm={() => onCustomerDeleted(customer.id)}
                           isDeleting={deletingCustomerId === customer.id}
                            triggerButton={
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleActionClick}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                               {deletingCustomerId === customer.id ? <Droplets className="h-4 h-4 animate-pulse-subtle" /> : <Trash2 className="h-4 h-4 text-destructive" />}
                               <span className="sr-only">Delete</span>
                             </Button>
@@ -229,7 +229,7 @@ export function CustomerListTable({
                     </Button>
                   </TableCell>
                   {enableActions && onCustomerUpdated && (
-                    <TableCell className="text-center">
+                    <TableCell className="text-center" onClick={handleActionClick}>
                       <div className="flex items-center justify-center gap-1">
                         <EditCustomerDialog 
                           customer={customer}

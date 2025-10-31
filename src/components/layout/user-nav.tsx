@@ -72,7 +72,7 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href={user.role === 'admin' ? "/admin/settings" : "/viewer/profile"}>
               <UserIcon className="mr-2 h-4 w-4" />
-              <span>Profile</span>
+              <span>{user.role === 'admin' ? 'Account' : 'Profile'}</span>
             </Link>
           </DropdownMenuItem>
           {user.role === 'admin' && (
