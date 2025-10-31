@@ -5,33 +5,28 @@ import { getFirestore, Timestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig: FirebaseOptions = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "your-api-key",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "your-auth-domain",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "your-project-id",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "your-storage-bucket",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "your-messaging-sender-id",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "your-app-id"
 };
 
 // Validate that the required environment variables are set.
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error(
+if (firebaseConfig.apiKey === "your-api-key" || firebaseConfig.projectId === "your-project-id") {
+  console.warn(
 `
 ********************************************************************************
 *                                                                              *
-*                      FIREBASE CONFIGURATION ERROR                            *
+*                      FIREBASE CONFIGURATION WARNING                          *
 *                                                                              *
-*      Firebase environment variables are not set.                             *
-*      Please create a '.env.local' file in the root of your project and       *
-*      add your Firebase project credentials from your Firebase Console.       *
+*      Firebase environment variables are not set or are using placeholders.   *
+*      Please create or check your '.env.local' file in the root of your       *
+*      project and add your Firebase project credentials.                      *
 *                                                                              *
-*      Example .env.local:                                                     *
-*      NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...                                  *
-*      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com           *
-*      NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id                         *
-*      ...                                                                     *
-*                                                                              *
-*      The application will not function correctly until these are provided.   *
+*      The application will run in a mock mode, but will not connect to        *
+*      a live Firebase backend until these are provided.                       *
 *                                                                              *
 ********************************************************************************
 `

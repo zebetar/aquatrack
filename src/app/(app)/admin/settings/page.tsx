@@ -22,7 +22,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Switch } from '@/components/ui/switch';
-import { exportMockDataAsJSON, importMockDataFromJSON, seedAndOverwriteMockData } from '@/lib/mock-data-store';
+import { exportMockDataAsJSON, importMockDataFromJSON } from '@/lib/mock-data-store';
 import { format } from 'date-fns';
 
 const adminChangeNameSchema = z.object({
@@ -81,7 +81,7 @@ export default function AdminSettingsPage() {
   }, [user?.name, adminNameForm]);
 
 
-  const handleSaveWaterRate = async () => {
+  const handleSaveWaterRate = () => {
     setIsSavingRate(true);
     const rateValue = parseFloat(newRateInput);
 
@@ -105,7 +105,7 @@ export default function AdminSettingsPage() {
     setIsSavingRate(false);
   };
 
-  const handleAdminNameChange = async (values: AdminChangeNameFormValues) => {
+  const handleAdminNameChange = (values: AdminChangeNameFormValues) => {
     setIsSavingName(true);
     updateAdminName(values.newAdminName);
     setIsSavingName(false);
@@ -134,7 +134,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleAdminAvatarChange = async () => {
+  const handleAdminAvatarChange = () => {
     if (!avatarPreview && !user?.avatarUrl) { 
         toast({ title: "No Image", description: "Please select an image to update your avatar." });
         return;
@@ -249,24 +249,6 @@ export default function AdminSettingsPage() {
     };
     reader.readAsText(file);
   };
-
-  const handleSeedData = () => {
-    try {
-      seedAndOverwriteMockData();
-      toast({
-        title: "Database Seeded",
-        description: "Rich mock data has been generated. Please reload the page to see the changes.",
-      });
-    } catch (error) {
-      console.error("Error seeding mock data:", error);
-      toast({
-        variant: "destructive",
-        title: "Seeding Failed",
-        description: "Could not generate mock data.",
-      });
-    }
-  };
-
 
   return (
     <>
@@ -423,22 +405,6 @@ export default function AdminSettingsPage() {
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <div className="space-y-4">
-               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                <div>
-                  <h3 className="font-medium flex items-center gap-2"><DatabaseZap className="text-destructive"/>Seed Mock Database</h3>
-                  <p className="text-sm text-muted-foreground">Overwrite all current data with a new, rich set of mock data. <span className="font-semibold">This cannot be undone.</span></p>
-                </div>
-                <Button variant="destructive" onClick={handleSeedData}>Seed Data</Button>
-              </div>
-              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
-                <div>
-                  <h3 className="font-medium">User Management</h3>
-                  <p className="text-sm text-muted-foreground">Edit or remove customer accounts.</p>
-                </div>
-                <Button variant="outline" asChild>
-                  <Link href="/admin/users"><Users className="mr-2 h-4 w-4" />Manage Users</Link>
-                </Button>
-              </div>
               <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 rounded-lg border border-border/50 p-4 bg-card/80">
                 <div>
                   <h3 className="font-medium">PDF Data Export</h3>

@@ -2,17 +2,16 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Droplets, CreditCard, BarChart3, ChevronRight, ArrowUp, ArrowDown, Sparkles, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import { Users, Droplets, CreditCard, BarChart3, ChevronRight, ArrowUp, ArrowDown, Info } from 'lucide-react';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'; 
 import Link from 'next/link';
 import { 
   getAllMockCustomers,
   getAllMockUsageRecords,
-  getMockOutstandingCustomers,
-  addMockNotification
+  getMockOutstandingCustomers
 } from '@/lib/mock-data-store';
-import type { Customer, WaterUsageRecord, CustomerMonthlyUsage, Notification, ProjectedRevenueOutput } from '@/types';
-import { format, startOfMonth, endOfMonth, subMonths, parseISO, isAfter, subHours } from 'date-fns';
+import type { Customer, WaterUsageRecord, CustomerMonthlyUsage } from '@/types';
+import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { cn, formatDurationFromHours } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MonthlySupplyDetailsDialog } from '@/components/admin/dashboard/monthly-supply-details-dialog';
@@ -22,19 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { summarizeDashboardMetrics, type DashboardMetricsSummary } from '@/ai/flows/summarize-dashboard-flow';
-import { projectRevenue } from '@/ai/flows/project-revenue-flow';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const FuturisticTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -165,10 +152,7 @@ export default function AdminDashboardPage() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [monthlySupply, setMonthlySupply] = useState("0 min");
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
-  const [lastMonthRevenue, setLastMonthRevenue] = useState(0);
   const [outstandingBillsValue, setOutstandingBillsValue] = useState(0);
-  const [projection, setProjection] = useState<ProjectedRevenueOutput | null>(null);
-  const [isProjectionLoading, setIsProjectionLoading] = useState(true);
   
   // Data for dialogs
   const [isDialogDataLoading, setIsDialogDataLoading] = useState(false);
@@ -181,7 +165,6 @@ export default function AdminDashboardPage() {
   const [isMonthlySupplyDialogOpen, setIsMonthlySupplyDialogOpen] = useState(false);
   const [isOutstandingBillsDialogOpen, setIsOutstandingBillsDialogOpen] = useState(false);
   const [isMonthlyRevenueDialogOpen, setIsMonthlyRevenueDialogOpen] = useState(false);
-  const [isProjectionInfoOpen, setIsProjectionInfoOpen] = useState(false);
 
   // Chart state
   const [allUsageRecords, setAllUsageRecords] = useState<WaterUsageRecord[]>([]);
@@ -192,84 +175,14 @@ export default function AdminDashboardPage() {
   const [supplyChange, setSupplyChange] = useState(0);
   const [revenueChange, setRevenueChange] = useState(0);
 
-  // AI Summary state
-  const [summary, setSummary] = useState<DashboardMetricsSummary | null>(null);
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-
   const customersWithMonthlyRevenueData = useMemo(() => {
     return customersWithMonthlyUsageData
       .filter(c => c.cost > 0)
       .sort((a, b) => b.cost - a.cost);
   }, [customersWithMonthlyUsageData]);
 
-  const handleGenerateSummary = useCallback(async () => {
-    setIsSummaryLoading(true);
-    setSummaryError(null);
-    setSummary(null);
 
-    const metricsPayload = {
-      totalCustomers,
-      monthlySupply,
-      monthlyRevenue,
-      outstandingBillsValue,
-      topOutstandingCustomers,
-    };
-
-    try {
-      const result = await summarizeDashboardMetrics(metricsPayload);
-      setSummary(result);
-    } catch (e: any) {
-      const errorMessage = e.message || "An unknown error occurred while generating the summary.";
-      console.error("AI Summary Error:", errorMessage);
-      setSummaryError(errorMessage);
-      toast({
-        variant: "destructive",
-        title: "AI Summary Failed",
-        description: errorMessage,
-      });
-    } finally {
-      setIsSummaryLoading(false);
-    }
-  }, [
-    toast,
-    totalCustomers,
-    monthlySupply,
-    monthlyRevenue,
-    outstandingBillsValue,
-    topOutstandingCustomers,
-  ]);
-
-  const handleGenerateProjection = useCallback(async () => {
-    if (!lastMonthRevenue && !monthlyRevenue) return;
-
-    setIsProjectionLoading(true);
-    setProjection(null);
-
-    try {
-      const result = await projectRevenue({
-        lastMonthRevenue: lastMonthRevenue,
-        currentMonthRevenue: monthlyRevenue,
-        currentDate: new Date().toISOString(),
-      });
-      setProjection(result);
-    } catch (e) {
-      console.error("AI Projection Error:", e);
-      setProjection({
-          projectedAmount: lastMonthRevenue > 0 ? lastMonthRevenue * 1.05 : monthlyRevenue > 0 ? monthlyRevenue * 1.1 : 5000,
-          reasoning: "AI projection failed. Showing a basic forecast."
-      });
-      toast({
-        variant: "destructive",
-        title: "AI Projection Failed",
-        description: "Could not generate AI-powered revenue projection.",
-      });
-    } finally {
-      setIsProjectionLoading(false);
-    }
-  }, [lastMonthRevenue, monthlyRevenue, toast]);
-
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(() => {
     setIsLoading(true);
     try {
       const today = new Date();
@@ -310,7 +223,6 @@ export default function AdminDashboardPage() {
 
       // Calculate changes for cards
       const lastMonthRevenueCalc = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
-      setLastMonthRevenue(lastMonthRevenueCalc);
       const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
       setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
       setRevenueChange(lastMonthRevenueCalc > 0 ? ((currentRevenue - lastMonthRevenueCalc) / lastMonthRevenueCalc) * 100 : (currentRevenue > 0 ? 100 : 0));
@@ -327,42 +239,6 @@ export default function AdminDashboardPage() {
     }
   }, [toast]);
   
-  useEffect(() => {
-    if (!isLoading) {
-        handleGenerateProjection();
-    }
-  }, [isLoading, handleGenerateProjection]);
-  
-  // Effect for automated reminders
-  useEffect(() => {
-    try {
-      const isRemindersEnabled = localStorage.getItem('automated_reminders_enabled') === 'true';
-      if (isRemindersEnabled) {
-        const outstanding = getMockOutstandingCustomers();
-        const now = new Date();
-        outstanding.forEach(customer => {
-          const lastReminderStr = localStorage.getItem(`reminder_last_sent_${customer.id}`);
-          const twentyFourHoursAgo = subHours(now, 24);
-          if (!lastReminderStr || isAfter(twentyFourHoursAgo, new Date(lastReminderStr))) {
-            const reminderNotification: Notification = {
-              id: `noti-${Date.now()}-reminder-${customer.id}`,
-              userId: customer.authUID || customer.id,
-              message: `Reminder: Your bill of PKR ${customer.balance.toLocaleString()} is outstanding.`,
-              type: 'BILL_REMINDER',
-              isRead: false,
-              linkTo: '/viewer/billing',
-              createdAt: new Date(),
-            };
-            addMockNotification(reminderNotification);
-            localStorage.setItem(`reminder_last_sent_${customer.id}`, now.toISOString());
-          }
-        });
-      }
-    } catch (e) {
-      console.error("Error processing automated reminders:", e);
-    }
-  }, []);
-
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
@@ -421,12 +297,8 @@ export default function AdminDashboardPage() {
   }, [allUsageRecords, supplyChartView, revenueChartView]);
 
 
-  const loadAndProcessDialogData = useCallback(async () => {
-    if (isDialogDataLoading) return;
+  const loadAndProcessDialogData = useCallback(() => {
     setIsDialogDataLoading(true);
-
-    // Yield to the event loop to allow the UI to update with the loading state first.
-    await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
       const customers = getAllMockCustomers();
@@ -458,17 +330,17 @@ export default function AdminDashboardPage() {
     } finally {
       setIsDialogDataLoading(false);
     }
-  }, [isDialogDataLoading, monthlyUsageRecords, toast]);
+  }, [monthlyUsageRecords, toast]);
 
-  const handleOpenSupplyDialog = async () => {
+  const handleOpenSupplyDialog = () => {
     setIsMonthlySupplyDialogOpen(true);
-    await loadAndProcessDialogData();
+    loadAndProcessDialogData();
   };
 
-  const handleOpenRevenueDialog = async () => {
+  const handleOpenRevenueDialog = () => {
     setIsMonthlyRevenueDialogOpen(true);
     if (customersWithMonthlyUsageData.length === 0) {
-      await loadAndProcessDialogData();
+      loadAndProcessDialogData();
     }
   };
 
@@ -488,19 +360,9 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
           ))}
-          <Card className="glassmorphism-card">
-             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-5 w-2/4" />
-                <Skeleton className="h-8 w-8 rounded-full" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-7 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardContent>
-          </Card>
         </div>
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {Array.from({ length: 4 }).map((_, index) => (
+          {Array.from({ length: 2 }).map((_, index) => (
             <Card key={index} className="glassmorphism-card h-full">
               <CardHeader>
                 <Skeleton className="h-6 w-1/3" />
@@ -563,31 +425,6 @@ export default function AdminDashboardPage() {
             onClick={metric.onClick}
           />
         ))}
-        {isProjectionLoading ? (
-          <Card className="glassmorphism-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-5 w-[150px]" />
-              <Skeleton className="h-8 w-8 rounded-full" />
-              </CardHeader>
-              <CardContent>
-              <Skeleton className="h-7 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-              </CardContent>
-          </Card>
-        ) : (
-          <KeyMetricCard 
-            title='Projected Revenue'
-            value={`PKR ${projection?.projectedAmount.toLocaleString('en-US', {maximumFractionDigits: 0}) ?? '0'}`}
-            icon={TrendingUp}
-            onClick={() => setIsProjectionInfoOpen(true)}
-            description={
-              <span className="flex items-center gap-1">
-                View forecast details
-                <Info className="h-3 w-3 text-muted-foreground" />
-              </span>
-            }
-          />
-        )}
       </div>
       
       {/* Main Analysis Section in a 2x2 Grid */}
@@ -666,71 +503,6 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        <div className="animate-fade-in" style={{animationDelay: '0.3s'}}>
-          <Card className="ai-summary-card h-full">
-            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    AI-Powered Summary
-                </CardTitle>
-                <Button onClick={handleGenerateSummary} disabled={isSummaryLoading} size="sm">
-                    {isSummaryLoading ? (
-                        <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />
-                    ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Generate
-                </Button>
-            </CardHeader>
-            {(isSummaryLoading || summaryError || summary) && (
-                <CardContent>
-                    {isSummaryLoading && (
-                        <div className="space-y-4 pt-4 animate-pulse">
-                            <p className="text-sm text-muted-foreground">Generating summary...</p>
-                            <div className="h-4 bg-muted rounded w-3/4"></div>
-                            <div className="h-4 bg-muted rounded w-1/2" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="h-4 bg-muted rounded w-5/6" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                    )}
-                    {summaryError && (
-                        <div className="border-l-4 border-destructive bg-destructive/10 p-4 rounded-r-md">
-                            <h4 className="font-bold text-destructive flex items-center gap-2"><AlertTriangle className="h-5 w-5"/>Error</h4>
-                            <p className="mt-2 text-sm text-destructive-foreground">{summaryError}</p>
-                        </div>
-                    )}
-                    {summary && !isSummaryLoading && !summaryError && (
-                        <div className="border-t pt-4 mt-4">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="font-semibold text-lg">Analysis Complete</h3>
-                                <Badge variant={summary.overallStatus === 'positive' ? 'default' : summary.overallStatus === 'negative' ? 'destructive' : 'secondary'} className="capitalize">
-                                    {summary.overallStatus}
-                                </Badge>
-                            </div>
-                            <div className="grid grid-cols-1 gap-6">
-                                <div>
-                                    <h4 className="font-semibold mb-2 text-foreground">Key Takeaways</h4>
-                                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                        {summary.keyTakeaways.map((item, index) => (
-                                        <li key={`takeaway-${index}`}>{item}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold mb-2 text-foreground">Improvement Suggestions</h4>
-                                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                        {summary.improvementSuggestions.map((item, index) => (
-                                        <li key={`suggestion-${index}`}>{item}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </CardContent>
-            )}
-          </Card>
-        </div>
         
         <div className="animate-fade-in" style={{animationDelay: '0.4s'}}>
             <Card className="glassmorphism-card h-full">
@@ -786,21 +558,6 @@ export default function AdminDashboardPage() {
         onClose={() => setIsOutstandingBillsDialogOpen(false)}
         data={customersWithOutstandingBills}
       />
-      <AlertDialog open={isProjectionInfoOpen} onOpenChange={setIsProjectionInfoOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Revenue Projection Analysis</AlertDialogTitle>
-                <AlertDialogDescription className="pt-2 whitespace-pre-line">
-                    {projection?.reasoning || "No reasoning available for this projection."}
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogAction onClick={() => setIsProjectionInfoOpen(false)}>
-                    Close
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

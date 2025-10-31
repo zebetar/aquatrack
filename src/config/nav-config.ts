@@ -9,7 +9,6 @@ import {
   Bell,
   Settings,
   FileText,
-  UserCog,
   FileDown,
 } from 'lucide-react';
 
@@ -48,12 +47,6 @@ export const adminNavItems: NavItem[] = [
     title: 'Notifications',
     href: '/admin/notifications',
     icon: Bell,
-    role: 'admin',
-  },
-  {
-    title: 'User Management', 
-    href: '/admin/users',
-    icon: UserCog,
     role: 'admin',
   },
   {
