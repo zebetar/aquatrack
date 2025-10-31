@@ -228,7 +228,7 @@ export default function AdminSettingsPage() {
 
   return (
     <>
-      <Accordion type="multiple" defaultValue={['admin-account', 'system-ops', 'water-rate']} className="w-full space-y-4 mt-6">
+      <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4 mt-6">
         
         {/* User Management Section */}
         <AccordionItem value="user-management" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
