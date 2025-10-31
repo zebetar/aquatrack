@@ -27,6 +27,9 @@ const fromFirestore = <T extends { [key: string]: any }>(docData: T): T => {
     for (const key in data) {
         if (data[key] instanceof Timestamp) {
             data[key] = data[key].toDate();
+        } else if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key] && 'nanoseconds' in data[key]) {
+            // Handle plain JS objects that look like Timestamps
+            data[key] = new Timestamp(data[key].seconds, data[key].nanoseconds).toDate();
         }
     }
     return data;
@@ -203,7 +206,7 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
     const usageRecordsGroup = collectionGroup(db, 'usageRecords');
-    const q = query(usageRecordsGroup, orderBy('createdAt', 'desc'));
+    const q = query(usageRecordsGroup, orderBy('startTime', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
 }
@@ -266,7 +269,7 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 export async function getAllPayments(): Promise<Payment[]> {
     const paymentsGroup = collectionGroup(db, 'payments');
-    const q = query(paymentsGroup, orderBy('createdAt', 'desc'));
+    const q = query(paymentsGroup, orderBy('paymentDate', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
 }
