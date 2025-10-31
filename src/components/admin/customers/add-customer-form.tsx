@@ -27,7 +27,7 @@ const addCustomerFormSchema = z.object({
 type AddCustomerFormValues = z.infer<typeof addCustomerFormSchema>;
 
 interface AddCustomerFormProps {
-  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => void;
+  onSuccessCallback: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => void;
 }
 
 export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
@@ -45,7 +45,7 @@ export function AddCustomerForm({ onSuccessCallback }: AddCustomerFormProps) {
   async function onSubmit(values: AddCustomerFormValues) {
     setIsLoading(true);
     
-    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'> = {
+    const newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'> = {
       name: values.name,
       email: values.email,
       // This is the fix: only include contactInfo if it has a value.

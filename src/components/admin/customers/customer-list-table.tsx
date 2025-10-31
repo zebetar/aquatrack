@@ -88,7 +88,7 @@ export function CustomerListTable({
     try {
         const result = await resendPasswordReset(customer.email);
         if (result.success) {
-            toast({ title: 'Invite Resent', description: `A new password setup email has been sent to ${customer.email}.` });
+            toast({ title: 'Invite Sent', description: `A password setup link for ${customer.email} has been generated. Check server console.` });
         } else {
             throw new Error(result.error || 'Failed to resend invite.');
         }

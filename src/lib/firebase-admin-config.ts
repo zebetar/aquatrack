@@ -1,19 +1,17 @@
-
 import admin from 'firebase-admin';
 
-// This function is intended to be used in a secure server environment (e.g., Next.js Server Actions)
+// This function is intended to be used in a secure server environment (e.g., Next.js API Routes)
 export function initializeAdminApp() {
     if (admin.apps.length > 0) {
         return admin.app();
     }
     
-    // Check if the environment variable is set
     const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (!serviceAccountKey) {
-        // In a development environment, you might want to fall back to a local file
-        // For this project, we'll require the environment variable.
+        // In a real production app, you'd want to handle this more gracefully.
+        // For this project, we'll log an error and throw to stop execution.
         console.error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.');
-        throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. This is required for admin operations.');
+        throw new Error('Firebase Admin SDK credentials are not set. This is required for server-side operations.');
     }
 
     try {

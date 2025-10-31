@@ -16,13 +16,13 @@ import { useState } from "react";
 import type { Customer } from "@/types";
 
 interface AddCustomerDialogProps {
-  onCustomerAdded: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => void;
+  onCustomerAdded: (customer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => void;
 }
 
 export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const handleSuccess = (newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => {
+  const handleSuccess = (newCustomer: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => {
     onCustomerAdded(newCustomer);
     setOpen(false);
   };
@@ -39,7 +39,7 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
           <DialogDescription>
-            This will create a customer profile. The customer can then use the 'Forgot Password' link on the login page to create their account.
+            This creates a customer profile and generates a password reset link in the server console for you to share.
           </DialogDescription>
         </DialogHeader>
         <AddCustomerForm onSuccessCallback={handleSuccess} />

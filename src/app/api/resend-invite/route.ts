@@ -1,8 +1,8 @@
 
 // src/app/api/resend-invite/route.ts
 import { NextResponse } from 'next/server';
-import { firebaseAuth } from '@/lib/firebase-config';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { initializeAdminApp } from '@/lib/firebase-admin-config';
+import { getAuth } from 'firebase-admin/auth';
 
 export async function POST(request: Request) {
   try {
@@ -11,21 +11,40 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json({ success: false, error: 'Email is required.' }, { status: 400 });
     }
-    
-    // We use the client-side SDK for this action as it's the simplest way
-    // to trigger the pre-configured email template in Firebase.
-    // This API route acts as a secure proxy to do so.
-    await sendPasswordResetEmail(firebaseAuth, email);
 
-    return NextResponse.json({ success: true });
+    // Initialize the Admin SDK
+    initializeAdminApp();
+    const adminAuth = getAuth();
+    
+    // Get the user by email to ensure they exist
+    const user = await adminAuth.getUserByEmail(email);
+
+    // Generate the password reset link using the Admin SDK
+    const link = await adminAuth.generatePasswordResetLink(email);
+
+    // In a real application, you would use an email service (e.g., SendGrid, Nodemailer)
+    // to send this link to the user. For this project, we will log it to the console
+    // to confirm that the entire flow is working correctly.
+    console.log("------------------------------------------------------");
+    console.log(`Password reset link for ${email}:`);
+    console.log(link);
+    console.log("------------------------------------------------------");
+    console.log("In a real app, this link would be sent in an email.");
+
+
+    return NextResponse.json({ success: true, message: "Password reset link generated and logged to the server console." });
 
   } catch (error: any) {
-    console.error('Error resending password reset:', error);
+    console.error('Error in /api/resend-invite:', error);
     let errorMessage = 'An unexpected error occurred.';
-    // Firebase JS SDK throws errors with a 'code' property
+    
     if (error.code === 'auth/user-not-found') {
-        errorMessage = 'No user found with this email address.';
+      errorMessage = 'No user found with this email address.';
+    } else if (error.code === 'messaging/registration-token-not-registered') {
+      // This is a common error when the service account key is not set up correctly
+      errorMessage = "The server is not configured correctly to send this request. Please check the service account key."
     }
+
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }

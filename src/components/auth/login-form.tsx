@@ -78,8 +78,8 @@ export function LoginForm() {
           const result = await resendPasswordReset(values.email);
           if (result.success) {
               toast({
-                  title: "Password Reset Email Sent",
-                  description: `If an account exists for ${values.email}, a password reset link has been sent.`,
+                  title: "Password Reset Triggered",
+                  description: `If an account exists for ${values.email}, a reset link has been logged in the server console.`,
               });
               setForgotPasswordOpen(false);
           } else {
@@ -88,7 +88,7 @@ export function LoginForm() {
       } catch (error: any) {
           toast({
               variant: "destructive",
-              title: "Error Sending Email",
+              title: "Error Sending Request",
               description: error.message,
           });
       } finally {
@@ -178,7 +178,7 @@ export function LoginForm() {
             <DialogHeader>
                 <DialogTitle>Reset Your Password</DialogTitle>
                 <DialogDescription>
-                    Enter your email address below. If an account is associated with it, we will send you a link to reset your password.
+                    Enter your email. This will generate a password reset link in the server console for you to share.
                 </DialogDescription>
             </DialogHeader>
             <Form {...forgotPasswordForm}>

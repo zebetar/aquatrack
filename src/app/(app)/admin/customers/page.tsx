@@ -56,7 +56,7 @@ export default function AdminCustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>) => {
+  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>) => {
     if (!user) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a customer." });
         return;
@@ -71,7 +71,7 @@ export default function AdminCustomersPage() {
             if (inviteResult.success) {
                  toast({
                     title: "Customer Added & Invite Sent",
-                    description: `${newCustomerData.name} has been added. A password setup email has been sent to them.`,
+                    description: `${newCustomerData.name} has been added. Check server logs for the invite link.`,
                 });
             } else {
                 throw new Error(inviteResult.error || 'Failed to send invite email.');

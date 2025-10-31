@@ -71,7 +71,7 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 
 
 // --- Customer Functions ---
-export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>): Promise<Customer> {
+export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>): Promise<Customer> {
     const docRef = await addDoc(collection(db, 'customers'), {
         ...customerData,
         balance: 0,
@@ -289,7 +289,7 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
 
 
 // --- Admin Actions (via API route) ---
-export async function resendPasswordReset(email: string): Promise<{success: boolean, error?: string}> {
+export async function resendPasswordReset(email: string): Promise<{success: boolean, error?: string, message?: string}> {
     const response = await fetch('/api/resend-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
