@@ -45,13 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let profile = await getUserProfile(firebaseUser.uid);
         
         if (!profile) {
-            // Profile doesn't exist, create it with a default role
             console.log(`No profile found for UID ${firebaseUser.uid}. Creating one.`);
+            
+            // Determine role based on email - crucial for admin login
+            const role = firebaseUser.email === 'admin@example.com' ? 'admin' : 'viewer';
+
             const newUser: AppUser = {
                 id: firebaseUser.uid,
                 email: firebaseUser.email || 'no-email@example.com',
-                role: 'viewer', // Default to 'viewer'
-                name: firebaseUser.displayName || 'New User',
+                role: role,
+                name: firebaseUser.displayName || (role === 'admin' ? 'Admin User' : 'New Viewer'),
             };
             await addUserProfile(newUser);
             profile = newUser;
@@ -68,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const customerProfile = await getCustomerByAuthUID(finalUser.id);
             if (customerProfile) {
                 finalUser.customerId = customerProfile.id;
-                // Sync display name from customer record if not on firebase user
                 if (!firebaseUser.displayName) {
                     finalUser.name = customerProfile.name;
                 }
@@ -123,15 +125,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await reauthenticateWithCredential(firebaseUser, credential);
         await updateEmail(firebaseUser, newEmail);
         
-        // Update email in our Firestore customer record if viewer
         if(user?.role === 'viewer' && user.customerId) {
             await updateCustomerInDb(user.customerId, { email: newEmail });
-        } else if (user?.role === 'admin') {
-            await updateCustomerInDb(user.id, { email: newEmail });
+        } else if (user) { // This handles admin or any other user profile
+            await addUserProfile({ ...user, email: newEmail });
         }
 
         toast({ title: 'Email Updated', description: 'Your email has been successfully updated.' });
-        // Refresh user state
         setUser(prevUser => prevUser ? {...prevUser, email: newEmail} : null);
         return { success: true };
     } catch (error: any) {
@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateAdminName = async (newName: string) => {
     if(user && user.role === 'admin') {
       const trimmedName = newName.trim();
-      await updateCustomerInDb(user.id, { name: trimmedName }); // Update name in 'users' collection
+      await addUserProfile({ ...user, name: trimmedName });
       setUser(prev => prev ? {...prev, name: trimmedName } : null);
       toast({ title: "Admin Name Updated", description: `Your display name is now ${trimmedName}.` });
     }
@@ -169,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const updateUserAvatarUrl = async (newUrl: string | null) => {
      if(user) {
-      await updateCustomerInDb(user.id, { avatarUrl: newUrl || undefined });
+      await addUserProfile({ ...user, avatarUrl: newUrl || undefined });
       setUser(prev => prev ? {...prev, avatarUrl: newUrl || undefined} : null);
       toast({ title: "Avatar Updated", description: "Your profile picture has been updated." });
     }

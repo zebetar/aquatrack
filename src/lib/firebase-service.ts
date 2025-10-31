@@ -45,18 +45,23 @@ export async function getUserProfile(userId: string): Promise<User | null> {
     const userDocRef = doc(db, 'users', userId);
     const userDocSnap = await getDoc(userDocRef);
     if (userDocSnap.exists()) {
-        return fromFirestore(userDocSnap.data() as User);
+        const data = userDocSnap.data();
+        // Ensure role is correctly typed
+        const role = data.role === 'admin' ? 'admin' : 'viewer';
+        return fromFirestore({ id: userDocSnap.id, ...data, role } as User);
     }
     return null;
 }
 
 export async function addUserProfile(userData: User): Promise<void> {
     const userDocRef = doc(db, 'users', userData.id);
+    // Use setDoc with merge: true to create or update the profile
     await setDoc(userDocRef, {
         email: userData.email,
         role: userData.role,
         name: userData.name,
-    });
+        avatarUrl: userData.avatarUrl || null,
+    }, { merge: true });
 }
 
 
@@ -106,8 +111,8 @@ export async function updateCustomerInDb(customerId: string, customerUpdate: Par
 }
 
 export async function deleteCustomer(customerId: string): Promise<void> {
-    // In a real app, you'd want a transaction or a Cloud Function to delete subcollections.
-    // For this project, we'll just delete the customer doc.
+    // This is a simplified deletion. For a production app, use a Cloud Function
+    // to recursively delete subcollections (usageRecords, payments).
     const docRef = doc(db, 'customers', customerId);
     await deleteDoc(docRef);
 }
@@ -166,13 +171,10 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 }
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
-    const customers = await getAllCustomers();
-    const allRecords: WaterUsageRecord[] = [];
-    for (const customer of customers) {
-        const records = await getUsageRecordsByCustomerId(customer.id);
-        allRecords.push(...records);
-    }
-    return allRecords.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const usageRecordsGroup = collection(db, 'usageRecords');
+    const q = query(usageRecordsGroup, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
 }
 
 export async function getUsageRecordsByCustomerId(customerId: string): Promise<WaterUsageRecord[]> {
@@ -231,13 +233,10 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 
 export async function getAllPayments(): Promise<Payment[]> {
-    const customers = await getAllCustomers();
-    const allPayments: Payment[] = [];
-    for (const customer of customers) {
-        const payments = await getPaymentsByCustomerId(customer.id);
-        allPayments.push(...payments);
-    }
-    return allPayments.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const paymentsGroup = collection(db, 'payments');
+    const q = query(paymentsGroup, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
 }
 
 export async function getPaymentsByCustomerId(customerId: string): Promise<Payment[]> {
