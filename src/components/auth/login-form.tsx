@@ -58,8 +58,8 @@ export function LoginForm() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: "admin@example.com",
-      password: "password",
+      email: "",
+      password: "",
       rememberMe: false,
     },
   });
@@ -116,7 +116,7 @@ export function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Email" {...field} />
+                <Input placeholder="Enter your email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
