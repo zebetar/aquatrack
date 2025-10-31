@@ -72,12 +72,28 @@ export async function isAdminUser(userId: string): Promise<boolean> {
 
 
 // --- Customer Functions ---
-export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance'>): Promise<Customer> {
+export async function addCustomer(customerData: Omit<Customer, 'id' | 'createdAt' | 'balance' | 'authUID'>): Promise<Customer> {
+    
+    // Call the server-side API to create the user and send a password reset email
+    const response = await fetch('/api/resend-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: customerData.email }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.error || 'Failed to create authentication user.');
+    }
+
     const docRef = await addDoc(collection(db, 'customers'), {
         ...customerData,
         balance: 0,
         createdAt: serverTimestamp(),
+        // authUID will be populated when user signs in, if needed, or linked via email
     });
+
     return {
         id: docRef.id,
         ...customerData,

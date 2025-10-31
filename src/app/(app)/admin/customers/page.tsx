@@ -66,8 +66,8 @@ export default function AdminCustomersPage() {
         const newCustomer = await addCustomer(newCustomerData);
 
         toast({
-            title: "Customer Added",
-            description: `${newCustomerData.name} has been added. They can now use the 'Forgot Password' link to set up their account.`,
+            title: "Customer Added & Invite Sent",
+            description: `${newCustomerData.name} has been added. A password setup link has been generated in the server console.`,
         });
 
         const adminNotification: Omit<TNotification, 'id' | 'createdAt'> = {
