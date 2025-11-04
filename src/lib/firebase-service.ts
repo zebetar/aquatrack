@@ -25,8 +25,9 @@ import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, fetchSign
 const fromFirestore = <T extends { [key: string]: any }>(docData: T): T => {
     const data = { ...docData };
     for (const key in data) {
-        if (data[key] instanceof Timestamp) {
-            data[key] = data[key].toDate() as any;
+        // Use property checking instead of instanceof for better type safety with generics
+        if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key] && 'nanoseconds' in data[key] && typeof data[key].toDate === 'function') {
+            (data as any)[key] = (data[key] as Timestamp).toDate();
         }
     }
     return data;
@@ -206,7 +207,7 @@ async function getAllUsageRecordsFallback(): Promise<WaterUsageRecord[]> {
     const allRecordsPromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
     const allRecordsArrays = await Promise.all(allRecordsPromises);
     const allRecords = allRecordsArrays.flat();
-    return allRecords.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    return allRecords.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
 }
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
@@ -287,7 +288,7 @@ async function getAllPaymentsFallback(): Promise<Payment[]> {
     const allPaymentsPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
     const allPaymentsArrays = await Promise.all(allPaymentsPromises);
     const allPayments = allPaymentsArrays.flat();
-    return allPayments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+    return allPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
 }
 
 export async function getAllPayments(): Promise<Payment[]> {
