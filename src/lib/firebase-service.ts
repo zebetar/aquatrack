@@ -25,10 +25,8 @@ import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, fetchSign
 const fromFirestore = <T extends { [key: string]: any }>(docData: T): T => {
     const data = { ...docData };
     for (const key in data) {
-        if (data[key] instanceof Timestamp) {
-            data[key] = data[key].toDate();
-        } else if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key] && 'nanoseconds' in data[key]) {
-            // Handle plain JS objects that look like Timestamps
+        if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key] && 'nanoseconds' in data[key]) {
+            // Handle plain JS objects that look like Timestamps and actual Timestamps
             data[key] = new Timestamp(data[key].seconds, data[key].nanoseconds).toDate();
         }
     }
@@ -205,9 +203,11 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 }
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
-    const usageQuery = query(collectionGroup(db, 'usageRecords'), orderBy('startTime', 'desc'));
-    const querySnapshot = await getDocs(usageQuery);
-    return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
+    const customers = await getAllCustomers();
+    const allRecordsPromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
+    const allRecordsArrays = await Promise.all(allRecordsPromises);
+    const allRecords = allRecordsArrays.flat();
+    return allRecords.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
 }
 
 
@@ -267,9 +267,11 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 
 export async function getAllPayments(): Promise<Payment[]> {
-    const paymentsQuery = query(collectionGroup(db, 'payments'), orderBy('paymentDate', 'desc'));
-    const querySnapshot = await getDocs(paymentsQuery);
-    return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
+    const customers = await getAllCustomers();
+    const allPaymentsPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
+    const allPaymentsArrays = await Promise.all(allPaymentsPromises);
+    const allPayments = allPaymentsArrays.flat();
+    return allPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
 }
 
 
