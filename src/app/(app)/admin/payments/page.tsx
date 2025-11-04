@@ -30,9 +30,14 @@ export default function AdminPaymentsPage() {
     try {
         const records = await getAllPayments();
         setPayments(records);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to load payment data:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not load payment records.' });
+        toast({ 
+            variant: 'destructive', 
+            title: 'Error Loading Data', 
+            description: error.message || 'Could not load payment records. An index may be required.',
+            duration: 10000 
+        });
     } finally {
         setIsLoading(false);
     }

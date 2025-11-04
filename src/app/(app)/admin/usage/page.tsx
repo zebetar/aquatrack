@@ -29,9 +29,14 @@ export default function AdminUsagePage() {
     try {
         const records = await getAllUsageRecords();
         setUsageRecords(records);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to load usage data:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not load usage records.' });
+        toast({ 
+            variant: 'destructive', 
+            title: 'Error Loading Data', 
+            description: error.message || 'Could not load usage records. An index may be required.',
+            duration: 10000
+        });
     } finally {
         setIsLoading(false);
     }

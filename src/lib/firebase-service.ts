@@ -202,11 +202,18 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 }
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
-    const customers = await getAllCustomers();
-    const usagePromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
-    const allUsageArrays = await Promise.all(usagePromises);
-    const combinedUsage = allUsageArrays.flat();
-    return combinedUsage.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+    try {
+        const q = query(collectionGroup(db, 'usageRecords'), orderBy('startTime', 'desc'));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
+    } catch (error: any) {
+        if (error.code === 'failed-precondition') {
+            console.error("Firestore Index Error for 'getAllUsageRecords': ", error.message);
+            throw new Error("A Firestore index is required for this query. Please check the browser console for the link to create it in your Firebase project.");
+        }
+        console.error("Error fetching all usage records: ", error);
+        throw error;
+    }
 }
 
 
@@ -266,11 +273,18 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 
 export async function getAllPayments(): Promise<Payment[]> {
-    const customers = await getAllCustomers();
-    const paymentPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
-    const allPaymentArrays = await Promise.all(paymentPromises);
-    const combinedPayments = allPaymentArrays.flat();
-    return combinedPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
+    try {
+        const q = query(collectionGroup(db, 'payments'), orderBy('paymentDate', 'desc'));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
+    } catch (error: any) {
+         if (error.code === 'failed-precondition') {
+            console.error("Firestore Index Error for 'getAllPayments': ", error.message);
+            throw new Error("A Firestore index is required for this query. Please check the browser console for the link to create it in your Firebase project.");
+        }
+        console.error("Error fetching all payment records: ", error);
+        throw error;
+    }
 }
 
 

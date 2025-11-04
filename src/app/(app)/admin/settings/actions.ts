@@ -2,14 +2,12 @@
 'use server';
 
 import { ai } from '@/lib/genkit';
-import { z } from 'zod';
 import {
   ProjectRevenueInputSchema,
   ProjectRevenueInput,
   ProjectedRevenueOutputSchema,
   ProjectedRevenueOutput,
 } from '@/types';
-import { format, getDaysInMonth } from 'date-fns';
 
 const revenueProjectionPrompt = ai.definePrompt({
   name: 'revenueProjectionPrompt',
@@ -36,7 +34,7 @@ const revenueProjectionPrompt = ai.definePrompt({
   `,
 });
 
-export const projectRevenueFlow = ai.defineFlow(
+const internalProjectRevenueFlow = ai.defineFlow(
   {
     name: 'projectRevenueFlow',
     inputSchema: ProjectRevenueInputSchema,
@@ -44,8 +42,14 @@ export const projectRevenueFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await revenueProjectionPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("Revenue projection failed to produce an output.");
+    }
+    return output;
   }
 );
 
-    
+// Export a regular async function to be used as a Server Action
+export async function projectRevenueFlow(input: ProjectRevenueInput): Promise<ProjectedRevenueOutput> {
+  return await internalProjectRevenueFlow(input);
+}
