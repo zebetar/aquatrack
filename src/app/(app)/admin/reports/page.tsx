@@ -304,7 +304,7 @@ export default function AdminReportsPage() {
                 <BarChart accessibilityLayer data={supplyChartData}>
                   <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                   <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                  <Bar dataKey="supply" fill="var(--color-supply)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="supply" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ChartContainer>
             </div>
@@ -342,7 +342,7 @@ export default function AdminReportsPage() {
                   </defs>
                   <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                   <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                  <Area type="monotone" dataKey="revenue" stroke="var(--color-revenue)" fillOpacity={1} fill="url(#colorRevenueReports)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="revenue" fillOpacity={1} fill="url(#colorRevenueReports)" />
                 </AreaChart>
               </ChartContainer>
             </div>
@@ -418,6 +418,8 @@ export default function AdminReportsPage() {
     </div>
   );
 }
+
+    
 
     
 

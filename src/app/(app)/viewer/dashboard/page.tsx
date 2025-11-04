@@ -322,7 +322,7 @@ export default function ViewerDashboardPage() {
                   <BarChart accessibilityLayer data={usageChartData}>
                     <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                     <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                    <Bar dataKey="usage" fill="var(--color-usage)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="usage" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ChartContainer>
               </div>
@@ -360,7 +360,7 @@ export default function ViewerDashboardPage() {
                     </defs>
                     <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                     <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                    <Area type="monotone" dataKey="cost" stroke="var(--color-cost)" fillOpacity={1} fill="url(#colorCostViewer)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="cost" fillOpacity={1} fill="url(#colorCostViewer)" />
                   </AreaChart>
                 </ChartContainer>
               </div>
@@ -370,5 +370,7 @@ export default function ViewerDashboardPage() {
     </div>
   );
 }
+
+    
 
     
