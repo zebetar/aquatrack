@@ -203,8 +203,9 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 
 async function getAllUsageRecordsFallback(): Promise<WaterUsageRecord[]> {
     const customers = await getAllCustomers();
-    const allRecordsPromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
-    const allRecordsArrays = await Promise.all(allRecordsPromises);
+    const allRecordsArrays = await Promise.all(
+        customers.map(customer => getUsageRecordsByCustomerId(customer.id))
+    );
     const allRecords = allRecordsArrays.flat();
     return allRecords.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 }
@@ -285,8 +286,9 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 async function getAllPaymentsFallback(): Promise<Payment[]> {
     const customers = await getAllCustomers();
-    const allPaymentsPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
-    const allPaymentsArrays = await Promise.all(allPaymentsPromises);
+    const allPaymentsArrays = await Promise.all(
+        customers.map(customer => getPaymentsByCustomerId(customer.id))
+    );
     const allPayments = allPaymentsArrays.flat();
     return allPayments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
 }

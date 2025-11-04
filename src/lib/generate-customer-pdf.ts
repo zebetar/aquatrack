@@ -85,7 +85,7 @@ export async function generateCustomerPdf(
   drawFooter(doc.getNumberOfPages());
 
   const tableConfig = {
-    theme: 'grid',
+    theme: 'grid' as const,
     headStyles: {
       fillColor: [44, 62, 80],
       textColor: [255, 255, 255],
