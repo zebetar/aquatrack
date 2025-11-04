@@ -26,7 +26,7 @@ const fromFirestore = <T extends { [key: string]: any }>(docData: T): T => {
     const data = { ...docData };
     for (const key in data) {
         if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key] && 'nanoseconds' in data[key]) {
-            data[key] = new Timestamp(data[key].seconds, data[key].nanoseconds).toDate();
+            data[key] = new Timestamp(data[key].seconds, data[key].nanoseconds).toDate() as any;
         }
     }
     return data;
