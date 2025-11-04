@@ -66,10 +66,10 @@ export async function generateCustomerPdf(
   let balanceColor: [number, number, number] = [80, 80, 80];
   if (customer.balance > 0) {
     balanceStatus = `PKR ${customer.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-    balanceColor = [231, 76, 60]; // Red for due
+    balanceColor = [231, 76, 60] as const; // Red for due
   } else if (customer.balance < 0) {
     balanceStatus = `PKR ${Math.abs(customer.balance).toLocaleString('en-US', {minimumFractionDigits: 2})} (Credit)`;
-    balanceColor = [39, 174, 96]; // Green for credit
+    balanceColor = [39, 174, 96] as const; // Green for credit
   }
   
   doc.text('Statement Date:', pageWidth / 2 + 10, yPos);
@@ -87,13 +87,13 @@ export async function generateCustomerPdf(
   const tableConfig = {
     theme: 'grid' as const,
     headStyles: {
-      fillColor: [44, 62, 80],
-      textColor: [255, 255, 255],
+      fillColor: [44, 62, 80] as const,
+      textColor: [255, 255, 255] as const,
       fontStyle: 'bold',
     },
     styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' as const },
-    bodyStyles: { fillColor: [248, 249, 249] },
-    alternateRowStyles: { fillColor: [255, 255, 255] },
+    bodyStyles: { fillColor: [248, 249, 249] as const },
+    alternateRowStyles: { fillColor: [255, 255, 255] as const },
     didDrawPage: (data: any) => {
       drawHeader();
       drawFooter(data.pageNumber);
@@ -134,7 +134,7 @@ export async function generateCustomerPdf(
       ...tableConfig,
       // @ts-ignore
       startY: yPos,
-      headStyles: { ...tableConfig.headStyles, fillColor: [41, 128, 185] },
+      headStyles: { ...tableConfig.headStyles, fillColor: [41, 128, 185] as const },
       head: [['Payment Date', 'Amount Paid (PKR)', 'Recorded By']],
       body: payments.map(p => [
         format(new Date(p.paymentDate), 'PP p'),
