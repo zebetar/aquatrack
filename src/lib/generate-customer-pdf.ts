@@ -86,11 +86,11 @@ export async function generateCustomerPdf(
   drawFooter(doc.getNumberOfPages());
 
   const tableConfig = {
-    theme: 'grid',
+    theme: 'grid' as const,
     headStyles: {
       fillColor: [44, 62, 80] as const,
       textColor: [255, 255, 255] as const,
-      fontStyle: 'bold',
+      fontStyle: 'bold' as const,
     },
     styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' as const },
     bodyStyles: { fillColor: [248, 249, 249] as const },
@@ -149,5 +149,3 @@ export async function generateCustomerPdf(
 
   doc.save(`AquaTrack_Statement_${customer.name.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }
-
-    
