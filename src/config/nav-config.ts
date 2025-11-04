@@ -92,7 +92,7 @@ export const viewerNavItems: NavItem[] = [
    {
     title: 'Profile',
     href: '/viewer/profile',
-    icon: Users, 
+    icon: UserCog, 
     role: 'viewer',
   },
 ];

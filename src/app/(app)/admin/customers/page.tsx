@@ -4,7 +4,7 @@
 import { PageHeader } from '@/components/shared/page-header';
 import { AddCustomerDialog } from '@/components/admin/customers/add-customer-dialog';
 import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import type { Customer, Notification as TNotification, WaterUsageRecord } from '@/types';
+import type { Customer, Notification as TNotification } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Droplets, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +33,7 @@ export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { user } = useAuth();
   const { auth } = useFirebase();
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
   
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
@@ -53,9 +54,9 @@ export default function AdminCustomersPage() {
       }));
 
       setCustomers(customersWithUsage);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch customers:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not load customer data.' });
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not load customer data.' });
     } finally {
       setIsLoading(false);
     }
@@ -112,6 +113,16 @@ export default function AdminCustomersPage() {
       (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [customers, searchTerm]);
+  
+  const handleCustomerDeleted = (customerId: string) => {
+    setCustomers(prev => prev.filter(c => c.id !== customerId));
+    setDeletingCustomerId(null);
+  };
+  
+  const handleCustomerUpdated = () => {
+    fetchCustomers(); // Refetch all customers to get the updated data
+  }
+
 
   if (isLoading && customers.length === 0) { 
     return (
@@ -218,9 +229,10 @@ export default function AdminCustomersPage() {
       )}
       <CustomerListTable 
         customers={filteredCustomers} 
-        onCustomerDeleted={() => {}}
-        deletingCustomerId={null} 
-        enableActions={false}
+        onCustomerDeleted={handleCustomerDeleted}
+        onCustomerUpdated={handleCustomerUpdated}
+        deletingCustomerId={deletingCustomerId} 
+        enableActions={true}
       />
     </div>
   );

@@ -231,9 +231,9 @@ export default function AdminDashboardPage() {
         const lastMonthSupply = usageLastMonth.reduce((sum, r) => sum + r.durationHours, 0);
         setSupplyChange(lastMonthSupply > 0 ? ((currentSupply - lastMonthSupply) / lastMonthSupply) * 100 : (currentSupply > 0 ? 100 : 0));
         setRevenueChange(lastMonthRevenueCalc > 0 ? ((currentRevenue - lastMonthRevenueCalc) / lastMonthRevenueCalc) * 100 : (currentRevenue > 0 ? 100 : 0));
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to load dashboard data:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not load dashboard data.' });
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not load dashboard data.' });
     } finally {
         setIsLoading(false);
     }
@@ -257,7 +257,7 @@ export default function AdminDashboardPage() {
             historicalMap.set(monthKey, { supply: 0, revenue: 0 });
         }
         allUsageRecords.forEach(record => {
-            const recordDate = record.date;
+            const recordDate = new Date(record.date);
             const monthKey = format(recordDate, 'yyyy-MM');
             if (historicalMap.has(monthKey)) {
                 const current = historicalMap.get(monthKey)!;
@@ -277,7 +277,7 @@ export default function AdminDashboardPage() {
             dailyMap.set(dayKey, { supply: 0, revenue: 0 });
         }
         allUsageRecords.forEach(record => {
-            const recordDate = record.date;
+            const recordDate = new Date(record.date);
             const dayKey = format(recordDate, 'yyyy-MM-dd');
             if (dailyMap.has(dayKey)) {
                 const current = dailyMap.get(dayKey)!;
@@ -451,7 +451,7 @@ export default function AdminDashboardPage() {
                     <BarChart accessibilityLayer data={supplyChartData}>
                       <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                       <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                      <Bar dataKey="supply" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="supply" radius={[4, 4, 0, 0]} fill="var(--color-supply)" />
                     </BarChart>
                   </ChartContainer>
               </div>

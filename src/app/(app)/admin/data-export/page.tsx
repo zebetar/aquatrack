@@ -16,12 +16,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateCustomerPdf } from '@/lib/generate-customer-pdf';
 import { cn, formatDurationFromHours } from '@/lib/utils';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { getAllCustomers, getUsageRecordsByCustomerId, getPaymentsByCustomerId } from '@/lib/firebase-service';
 
 
@@ -287,5 +281,3 @@ export default function DataExportPage() {
     </div>
   );
 }
-
-    

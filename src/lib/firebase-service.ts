@@ -1,5 +1,4 @@
 
-
 import { db, firebaseAuth } from './firebase-config';
 import { 
     collection, 
@@ -203,16 +202,13 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
     try {
-        const q = query(collectionGroup(db, 'usageRecords'), orderBy('startTime', 'desc'));
-        const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
+        const customers = await getAllCustomers();
+        const promises = customers.map(c => getUsageRecordsByCustomerId(c.id));
+        const results = await Promise.all(promises);
+        return results.flat().sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     } catch (error: any) {
-        if (error.code === 'failed-precondition') {
-            console.error("Firestore Index Error for 'getAllUsageRecords': ", error.message);
-            throw new Error("A Firestore index is required for this query. Please check the browser console for the link to create it in your Firebase project.");
-        }
         console.error("Error fetching all usage records: ", error);
-        throw error;
+        throw new Error("Could not load usage records for all customers.");
     }
 }
 
@@ -274,16 +270,13 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 export async function getAllPayments(): Promise<Payment[]> {
     try {
-        const q = query(collectionGroup(db, 'payments'), orderBy('paymentDate', 'desc'));
-        const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
+        const customers = await getAllCustomers();
+        const promises = customers.map(c => getPaymentsByCustomerId(c.id));
+        const results = await Promise.all(promises);
+        return results.flat().sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
     } catch (error: any) {
-         if (error.code === 'failed-precondition') {
-            console.error("Firestore Index Error for 'getAllPayments': ", error.message);
-            throw new Error("A Firestore index is required for this query. Please check the browser console for the link to create it in your Firebase project.");
-        }
         console.error("Error fetching all payment records: ", error);
-        throw error;
+        throw new Error("Could not load payment records for all customers.");
     }
 }
 
@@ -340,5 +333,3 @@ export async function sendPasswordReset(auth: Auth, email: string): Promise<{suc
         return { success: false, error: error.message };
     }
 }
-
-    

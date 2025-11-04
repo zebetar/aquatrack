@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CORE_WATER_RATE_PER_HOUR, updateCoreWaterRate } from '@/lib/constants';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Droplets, UserCircle, Bot, FileDown, FileUp, Palette, UserCog, Search } from 'lucide-react';
@@ -23,10 +23,6 @@ import {
 } from "@/components/ui/accordion";
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Customer } from '@/types';
-import { CustomerListTable } from '@/components/admin/customers/customer-list-table';
-import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 
 const adminChangeNameSchema = z.object({
   newAdminName: z.string().min(2, { message: "Name must be at least 2 characters." }).trim(),
@@ -37,8 +33,6 @@ const avatarSchema = z.object({
     avatarUrl: z.string().url({ message: "Please enter a valid URL." }).or(z.literal("")),
 });
 type AvatarFormValues = z.infer<typeof avatarSchema>;
-
-type CustomerWithUsage = Customer & { totalUsageHours?: number };
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
@@ -52,42 +46,6 @@ export default function AdminSettingsPage() {
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
   const [isAutomatedRemindersEnabled, setAutomatedRemindersEnabled] = useState(false);
 
-  // User Management States
-  const [customers, setCustomers] = useState<CustomerWithUsage[]>([]);
-  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
-  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const fetchCustomers = useCallback(async () => {
-    setIsLoadingCustomers(true);
-    try {
-      const [storedCustomers, allUsageRecords] = await Promise.all([
-        getAllCustomers(),
-        getAllUsageRecords()
-      ]);
-
-      const usageMap = new Map<string, number>();
-      allUsageRecords.forEach(record => {
-        usageMap.set(record.customerId, (usageMap.get(record.customerId) || 0) + record.durationHours);
-      });
-
-      const customersWithUsage: CustomerWithUsage[] = storedCustomers.map(customer => ({
-        ...customer,
-        totalUsageHours: usageMap.get(customer.id) || 0
-      }));
-      setCustomers(customersWithUsage);
-    } catch (error) {
-      console.error("Failed to fetch customers:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not load customer data.' });
-    } finally {
-      setIsLoadingCustomers(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
-
   useEffect(() => {
     setCurrentRate(CORE_WATER_RATE_PER_HOUR);
     setNewRateInput(String(CORE_WATER_RATE_PER_HOUR));
@@ -97,23 +55,6 @@ export default function AdminSettingsPage() {
     }
   }, []);
 
-  const handleCustomerDeleted = (customerId: string) => {
-    setCustomers(prev => prev.filter(c => c.id !== customerId));
-    setDeletingCustomerId(null);
-  };
-  
-  const handleCustomerUpdated = () => {
-    fetchCustomers(); // Refetch all customers to get the updated data
-  }
-
-  const filteredCustomers = useMemo(() => {
-    if (!searchTerm) return customers;
-    return customers.filter(customer => 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [customers, searchTerm]);
-  
   const handleReminderToggle = (enabled: boolean) => {
     setAutomatedRemindersEnabled(enabled);
     localStorage.setItem('automated_reminders_enabled', String(enabled));
@@ -222,65 +163,10 @@ export default function AdminSettingsPage() {
       toast({ title: "Coming Soon!", description: "Data backup and restore functionality is planned for a future update." });
   }
 
-  const searchInput = (
-    <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-      <Input 
-        placeholder="Search by name or email..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="pl-10"
-      />
-    </div>
-  );
-
   return (
     <>
       <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4 mt-6">
         
-        {/* User Management Section */}
-        <AccordionItem value="user-management" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
-          <AccordionTrigger className="p-4 hover:no-underline w-full text-left">
-            <div className="flex items-center gap-2">
-              <UserCog className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">User Management</h3>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="p-4">
-              <div className="flex justify-end mb-4">
-                 <Dialog>
-                    <DialogTrigger asChild>
-                    <Button variant="outline" size="icon">
-                        <Search className="h-5 w-5" />
-                        <span className="sr-only">Search Customers</span>
-                    </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-xs">
-                    <DialogHeader>
-                        <DialogTitle>Search Customers</DialogTitle>
-                    </DialogHeader>
-                    {searchInput}
-                    </DialogContent>
-                </Dialog>
-              </div>
-              {isLoadingCustomers ? (
-                <div className="flex items-center justify-center h-40">
-                  <Droplets className="h-8 w-8 animate-pulse-subtle text-primary" />
-                  <p className="ml-2">Loading users...</p>
-                </div>
-              ) : (
-                <CustomerListTable 
-                  customers={filteredCustomers} 
-                  onCustomerDeleted={handleCustomerDeleted}
-                  onCustomerUpdated={handleCustomerUpdated}
-                  deletingCustomerId={deletingCustomerId} 
-                  enableActions={true}
-                  className="h-auto max-h-[60vh]"
-                />
-              )}
-          </AccordionContent>
-        </AccordionItem>
-
         {/* Water Rate Section */}
         <AccordionItem value="water-rate" className="border-none rounded-lg overflow-hidden shadow-md glassmorphism-card">
           <AccordionTrigger className="p-4 hover:no-underline w-full text-left">

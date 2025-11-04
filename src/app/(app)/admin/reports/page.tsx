@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
-import { projectRevenueFlow } from '../settings/actions';
+import { projectRevenueFlow } from '@/app/(app)/admin/settings/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const chartConfig = {
@@ -137,7 +137,7 @@ export default function AdminReportsPage() {
         const firstDayOfLastMonth = startOfMonth(lastMonthDate);
         const lastDayOfLastMonth = endOfMonth(lastMonthDate);
         
-        const usageLastMonth = allUsageRecords.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
+        const usageLastMonth = allUsageRecords.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
         const lastMonthRevenue = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
 
         const input = {
@@ -174,8 +174,8 @@ export default function AdminReportsPage() {
         const firstDayOfLastMonth = startOfMonth(lastMonthDate);
         const lastDayOfLastMonth = endOfMonth(lastMonthDate);
 
-        const usageThisMonth = records.filter(r => r.date >= firstDayOfMonth && r.date <= lastDayOfMonth);
-        const usageLastMonth = records.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
+        const usageThisMonth = records.filter(r => new Date(r.date) >= firstDayOfMonth && new Date(r.date) <= lastDayOfMonth);
+        const usageLastMonth = records.filter(r => new Date(r.date) >= firstDayOfLastMonth && new Date(r.date) <= lastDayOfLastMonth);
         
         const currentMonthSupply = usageThisMonth.reduce((sum, r) => sum + r.durationHours, 0);
         const currentMonthRevenue = usageThisMonth.reduce((sum, r) => sum + r.cost, 0);
@@ -204,9 +204,9 @@ export default function AdminReportsPage() {
         setOutstandingBalance(totalOutstanding);
         const activeCustomersThisMonth = customerConsumptionMap.size;
         setAverageConsumption(activeCustomersThisMonth > 0 ? currentMonthSupply / activeCustomersThisMonth : 0);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to load reports data:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not load reports data.' });
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not load reports data.' });
     } finally {
         setIsLoading(false);
     }
@@ -230,7 +230,7 @@ export default function AdminReportsPage() {
               historicalMap.set(monthKey, { supply: 0, revenue: 0 });
           }
           allUsageRecords.forEach(record => {
-              const recordDate = record.date;
+              const recordDate = new Date(record.date);
               const monthKey = format(recordDate, 'yyyy-MM');
               if (historicalMap.has(monthKey)) {
                   const current = historicalMap.get(monthKey)!;
@@ -254,12 +254,12 @@ export default function AdminReportsPage() {
           }
 
           const usageInMonth = allUsageRecords.filter(r => {
-            const rDate = r.date;
+            const rDate = new Date(r.date);
             return rDate >= firstDay && rDate <= lastDay;
           });
 
           usageInMonth.forEach(record => {
-              const dayKey = format(record.date, 'yyyy-MM-dd');
+              const dayKey = format(new Date(record.date), 'yyyy-MM-dd');
               if (dailyMap.has(dayKey)) {
                   const current = dailyMap.get(dayKey)!;
                   current.supply += record.durationHours;
@@ -339,7 +339,7 @@ export default function AdminReportsPage() {
                 <BarChart accessibilityLayer data={supplyChartData}>
                   <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                   <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                  <Bar dataKey="supply" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="supply" radius={[4, 4, 0, 0]} fill="var(--color-supply)" />
                 </BarChart>
               </ChartContainer>
             </div>
@@ -503,5 +503,3 @@ export default function AdminReportsPage() {
     </div>
   );
 }
-
-    

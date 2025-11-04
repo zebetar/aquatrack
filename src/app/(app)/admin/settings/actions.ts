@@ -11,8 +11,8 @@ import {
 
 const revenueProjectionPrompt = ai.definePrompt({
   name: 'revenueProjectionPrompt',
-  input: { schema: ProjectRevenueInputSchema },
-  output: { schema: ProjectedRevenueOutputSchema },
+  inputSchema: ProjectRevenueInputSchema,
+  outputSchema: ProjectedRevenueOutputSchema,
   prompt: `
     You are a financial analyst for a water supply company.
     Your task is to project the total revenue for the upcoming month.
@@ -36,7 +36,7 @@ const revenueProjectionPrompt = ai.definePrompt({
 
 const internalProjectRevenueFlow = ai.defineFlow(
   {
-    name: 'projectRevenueFlow',
+    name: 'internalProjectRevenueFlow',
     inputSchema: ProjectRevenueInputSchema,
     outputSchema: ProjectedRevenueOutputSchema,
   },
