@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
@@ -34,8 +35,8 @@ export default function AdminUsagePage() {
         toast({ 
             variant: 'destructive', 
             title: 'Error Loading Data', 
-            description: error.message || 'Could not load usage records. An index may be required.',
-            duration: 10000
+            description: error.message,
+            duration: 10000 
         });
     } finally {
         setIsLoading(false);

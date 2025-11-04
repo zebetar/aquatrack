@@ -1,4 +1,5 @@
 
+
 import { db, firebaseAuth } from './firebase-config';
 import { 
     collection, 
@@ -202,16 +203,18 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
     try {
-        const customers = await getAllCustomers();
-        const promises = customers.map(c => getUsageRecordsByCustomerId(c.id));
-        const results = await Promise.all(promises);
-        return results.flat().sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+        const usageQuery = query(collectionGroup(db, 'usageRecords'), orderBy('startTime', 'desc'));
+        const querySnapshot = await getDocs(usageQuery);
+        return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
     } catch (error: any) {
+        if (error.code === 'failed-precondition') {
+            console.error("Firestore Index Error:", error.message);
+            throw new Error(`A Firestore index is required for this query. Please check the browser console for a link to create it.`);
+        }
         console.error("Error fetching all usage records: ", error);
-        throw new Error("Could not load usage records for all customers.");
+        throw new Error("Could not load usage records. An unexpected error occurred.");
     }
 }
-
 
 export async function getUsageRecordsByCustomerId(customerId: string): Promise<WaterUsageRecord[]> {
     const q = query(collection(db, `customers/${customerId}/usageRecords`), orderBy('startTime', 'desc'));
@@ -270,13 +273,16 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 export async function getAllPayments(): Promise<Payment[]> {
     try {
-        const customers = await getAllCustomers();
-        const promises = customers.map(c => getPaymentsByCustomerId(c.id));
-        const results = await Promise.all(promises);
-        return results.flat().sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+        const paymentsQuery = query(collectionGroup(db, 'payments'), orderBy('paymentDate', 'desc'));
+        const querySnapshot = await getDocs(paymentsQuery);
+        return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
     } catch (error: any) {
+        if (error.code === 'failed-precondition') {
+            console.error("Firestore Index Error:", error.message);
+            throw new Error(`A Firestore index is required for this query. Please check the browser console for a link to create it.`);
+        }
         console.error("Error fetching all payment records: ", error);
-        throw new Error("Could not load payment records for all customers.");
+        throw new Error("Could not load payment records. An unexpected error occurred.");
     }
 }
 

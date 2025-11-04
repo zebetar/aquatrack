@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { PageHeader } from '@/components/shared/page-header';
@@ -35,7 +36,7 @@ export default function AdminPaymentsPage() {
         toast({ 
             variant: 'destructive', 
             title: 'Error Loading Data', 
-            description: error.message || 'Could not load payment records. An index may be required.',
+            description: error.message,
             duration: 10000 
         });
     } finally {
