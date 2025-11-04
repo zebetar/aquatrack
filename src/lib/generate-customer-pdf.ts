@@ -82,7 +82,7 @@ export async function generateCustomerPdf(
   
   yPos += 25;
   
-  drawFooter(doc.internal.getNumberOfPages());
+  drawFooter(doc.getNumberOfPages());
 
   const tableConfig = {
     theme: 'grid',

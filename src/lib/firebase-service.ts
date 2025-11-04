@@ -206,7 +206,7 @@ async function getAllUsageRecordsFallback(): Promise<WaterUsageRecord[]> {
     const allRecordsPromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
     const allRecordsArrays = await Promise.all(allRecordsPromises);
     const allRecords = allRecordsArrays.flat();
-    return allRecords.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+    return allRecords.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 }
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
@@ -288,7 +288,7 @@ async function getAllPaymentsFallback(): Promise<Payment[]> {
     const allPaymentsPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
     const allPaymentsArrays = await Promise.all(allPaymentsPromises);
     const allPayments = allPaymentsArrays.flat();
-    return allPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
+    return allPayments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
 }
 
 export async function getAllPayments(): Promise<Payment[]> {
