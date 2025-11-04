@@ -491,7 +491,7 @@ export default function AdminDashboardPage() {
                       </defs>
                       <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                       <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                      <Area type="monotone" dataKey="revenue" fillOpacity={1} fill="url(#colorRevenue)" />
+                      <Area type="monotone" dataKey="revenue" fill="url(#colorRevenue)" stroke="var(--color-revenue)" />
                     </AreaChart>
                   </ChartContainer>
               </div>
@@ -556,9 +556,5 @@ export default function AdminDashboardPage() {
     </>
   );
 }
-
-    
-
-    
 
     

@@ -6,15 +6,17 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } f
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth, parseISO, getDaysInMonth } from 'date-fns';
-import type { Customer, WaterUsageRecord, ChartConfig } from '@/types';
+import { format, subMonths, startOfMonth, endOfMonth, parseISO, getDaysInMonth, addMonths } from 'date-fns';
+import type { Customer, WaterUsageRecord, ChartConfig, ProjectedRevenueOutput } from '@/types';
 import { formatDurationFromHours, cn } from '@/lib/utils';
-import { Droplets, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert } from 'lucide-react';
+import { Droplets, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert, Bot } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
+import { projectRevenueFlow } from '../settings/actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const chartConfig = {
   supply: {
@@ -109,6 +111,10 @@ export default function AdminReportsPage() {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [outstandingBalance, setOutstandingBalance] = useState(0);
   const [averageConsumption, setAverageConsumption] = useState(0);
+  
+  // AI Projection State
+  const [isProjecting, setIsProjecting] = useState(false);
+  const [projection, setProjection] = useState<ProjectedRevenueOutput | null>(null);
 
   const monthOptions = useMemo(() => {
     const options = [];
@@ -121,6 +127,34 @@ export default function AdminReportsPage() {
     }
     return options;
   }, []);
+
+  const handleProjection = useCallback(async () => {
+    setIsProjecting(true);
+    setProjection(null);
+    try {
+        const selectedDate = parseISO(selectedMonth);
+        const lastMonthDate = subMonths(selectedDate, 1);
+        const firstDayOfLastMonth = startOfMonth(lastMonthDate);
+        const lastDayOfLastMonth = endOfMonth(lastMonthDate);
+        
+        const usageLastMonth = allUsageRecords.filter(r => r.date >= firstDayOfLastMonth && r.date <= lastDayOfLastMonth);
+        const lastMonthRevenue = usageLastMonth.reduce((sum, r) => sum + r.cost, 0);
+
+        const input = {
+            lastMonthRevenue: lastMonthRevenue,
+            currentMonthRevenue: revenueThisMonth,
+            currentDate: selectedDate.toISOString(),
+        };
+
+        const result = await projectRevenueFlow(input);
+        setProjection(result);
+    } catch(error) {
+        console.error("Error generating revenue projection:", error);
+        toast({ variant: 'destructive', title: 'Projection Failed', description: 'Could not generate AI revenue projection.'});
+    } finally {
+        setIsProjecting(false);
+    }
+  }, [selectedMonth, allUsageRecords, revenueThisMonth, toast]);
 
   const loadReportsData = useCallback(async () => {
     setIsLoading(true);
@@ -180,6 +214,7 @@ export default function AdminReportsPage() {
 
   useEffect(() => {
     loadReportsData();
+    setProjection(null); // Reset projection when month changes
   }, [loadReportsData]);
 
   // Combined Effect for Chart Data
@@ -342,13 +377,63 @@ export default function AdminReportsPage() {
                   </defs>
                   <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                   <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                  <Area type="monotone" dataKey="revenue" fillOpacity={1} fill="url(#colorRevenueReports)" />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--color-revenue)" fill="url(#colorRevenueReports)" />
                 </AreaChart>
               </ChartContainer>
             </div>
           </CardContent>
         </Card>
       </div>
+
+       <Card className="glassmorphism-card ai-summary-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="h-6 w-6 text-primary" />
+              <CardTitle>AI Revenue Projection</CardTitle>
+            </div>
+            <button
+              onClick={handleProjection}
+              disabled={isProjecting}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary/10 text-primary-foreground hover:bg-primary/20 h-9 px-3"
+            >
+              {isProjecting ? (
+                <Droplets className="mr-2 h-4 w-4 animate-pulse-subtle" />
+              ) : (
+                <TrendingUp className="mr-2 h-4 w-4" />
+              )}
+              <span>
+                {isProjecting ? 'Projecting...' : `Project for ${format(addMonths(parseISO(selectedMonth), 1), 'MMMM')}`}
+              </span>
+            </button>
+          </div>
+          <CardDescription>
+            Use historical data to forecast next month's revenue.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isProjecting && (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-1/2" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          )}
+          {projection && (
+            <div>
+              <p className="text-3xl font-bold text-primary">
+                PKR {projection.projectedAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">{projection.reasoning}</p>
+            </div>
+          )}
+          {!isProjecting && !projection && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Click the button to generate an AI-powered revenue projection for the next month.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="glassmorphism-card">
         <CardHeader>
@@ -418,9 +503,5 @@ export default function AdminReportsPage() {
     </div>
   );
 }
-
-    
-
-    
 
     

@@ -26,7 +26,6 @@ const fromFirestore = <T extends { [key: string]: any }>(docData: T): T => {
     const data = { ...docData };
     for (const key in data) {
         if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key] && 'nanoseconds' in data[key]) {
-            // Handle plain JS objects that look like Timestamps and actual Timestamps
             data[key] = new Timestamp(data[key].seconds, data[key].nanoseconds).toDate();
         }
     }
@@ -204,10 +203,10 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
     const customers = await getAllCustomers();
-    const allRecordsPromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
-    const allRecordsArrays = await Promise.all(allRecordsPromises);
-    const allRecords = allRecordsArrays.flat();
-    return allRecords.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+    const usagePromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
+    const allUsageArrays = await Promise.all(usagePromises);
+    const combinedUsage = allUsageArrays.flat();
+    return combinedUsage.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
 }
 
 
@@ -268,10 +267,10 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 export async function getAllPayments(): Promise<Payment[]> {
     const customers = await getAllCustomers();
-    const allPaymentsPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
-    const allPaymentsArrays = await Promise.all(allPaymentsPromises);
-    const allPayments = allPaymentsArrays.flat();
-    return allPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
+    const paymentPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
+    const allPaymentArrays = await Promise.all(paymentPromises);
+    const combinedPayments = allPaymentArrays.flat();
+    return combinedPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
 }
 
 
