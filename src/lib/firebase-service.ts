@@ -205,10 +205,16 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 }
 
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
-    const usageRecordsGroup = collectionGroup(db, 'usageRecords');
-    const q = query(usageRecordsGroup, orderBy('startTime', 'desc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
+    const allCustomers = await getAllCustomers();
+    let allRecords: WaterUsageRecord[] = [];
+
+    for (const customer of allCustomers) {
+        const records = await getUsageRecordsByCustomerId(customer.id);
+        allRecords = allRecords.concat(records);
+    }
+    
+    // Sort records by start time descending after fetching all of them
+    return allRecords.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
 }
 
 
@@ -268,10 +274,16 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 
 export async function getAllPayments(): Promise<Payment[]> {
-    const paymentsGroup = collectionGroup(db, 'payments');
-    const q = query(paymentsGroup, orderBy('paymentDate', 'desc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
+    const allCustomers = await getAllCustomers();
+    let allPayments: Payment[] = [];
+
+    for (const customer of allCustomers) {
+        const payments = await getPaymentsByCustomerId(customer.id);
+        allPayments = allPayments.concat(payments);
+    }
+    
+    // Sort payments by date descending after fetching all of them
+    return allPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
 }
 
 
@@ -327,3 +339,5 @@ export async function sendPasswordReset(auth: Auth, email: string): Promise<{suc
         return { success: false, error: error.message };
     }
 }
+
+    
