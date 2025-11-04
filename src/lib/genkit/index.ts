@@ -1,7 +1,7 @@
 
 'use server';
 
-import { genkit, Plugin, configureGenkit } from 'genkit';
+import { genkit, Plugin, GenkitOptions } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 const googleAIVision = googleAI({
@@ -17,13 +17,12 @@ if (process.env.NODE_ENV === 'development') {
   plugins.push(dotprompt());
 }
 
-configureGenkit({
+const genkitOptions: GenkitOptions = {
   plugins,
   flowStateStore: 'firebase',
   traceStore: 'firebase',
   enableTracingAndMetrics: true,
-});
+};
 
-export const ai = genkit;
-
-    
+// Initialize genkit and export the instance
+export const ai = genkit(genkitOptions);

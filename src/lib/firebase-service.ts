@@ -363,5 +363,3 @@ export async function sendPasswordReset(auth: Auth, email: string): Promise<{suc
         return { success: false, error: error.message };
     }
 }
-
-    
