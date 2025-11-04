@@ -25,8 +25,8 @@ import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, fetchSign
 const fromFirestore = <T extends { [key: string]: any }>(docData: T): T => {
     const data = { ...docData };
     for (const key in data) {
-        if (data[key] && typeof data[key] === 'object' && 'seconds' in data[key] && 'nanoseconds' in data[key]) {
-            data[key] = new Timestamp(data[key].seconds, data[key].nanoseconds).toDate() as any;
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate() as any;
         }
     }
     return data;
@@ -362,3 +362,5 @@ export async function sendPasswordReset(auth: Auth, email: string): Promise<{suc
         return { success: false, error: error.message };
     }
 }
+
+    

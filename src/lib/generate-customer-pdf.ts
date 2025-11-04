@@ -1,4 +1,5 @@
 
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Customer, WaterUsageRecord, Payment } from '@/types';
@@ -66,10 +67,10 @@ export async function generateCustomerPdf(
   let balanceColor: [number, number, number] = [80, 80, 80];
   if (customer.balance > 0) {
     balanceStatus = `PKR ${customer.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-    balanceColor = [231, 76, 60] as const; // Red for due
+    balanceColor = [231, 76, 60]; // Red for due
   } else if (customer.balance < 0) {
     balanceStatus = `PKR ${Math.abs(customer.balance).toLocaleString('en-US', {minimumFractionDigits: 2})} (Credit)`;
-    balanceColor = [39, 174, 96] as const; // Green for credit
+    balanceColor = [39, 174, 96]; // Green for credit
   }
   
   doc.text('Statement Date:', pageWidth / 2 + 10, yPos);
@@ -85,7 +86,7 @@ export async function generateCustomerPdf(
   drawFooter(doc.getNumberOfPages());
 
   const tableConfig = {
-    theme: 'grid' as const,
+    theme: 'grid',
     headStyles: {
       fillColor: [44, 62, 80] as const,
       textColor: [255, 255, 255] as const,
@@ -105,7 +106,6 @@ export async function generateCustomerPdf(
   if (usageRecords.length > 0) {
     autoTable(doc, {
       ...tableConfig,
-      // @ts-ignore
       startY: yPos,
       head: [['Date', 'Time Range', 'Duration', 'Cost (PKR)']],
       body: usageRecords.map(r => [
@@ -132,7 +132,6 @@ export async function generateCustomerPdf(
   if (payments.length > 0) {
     autoTable(doc, {
       ...tableConfig,
-      // @ts-ignore
       startY: yPos,
       headStyles: { ...tableConfig.headStyles, fillColor: [41, 128, 185] as const },
       head: [['Payment Date', 'Amount Paid (PKR)', 'Recorded By']],
@@ -150,3 +149,5 @@ export async function generateCustomerPdf(
 
   doc.save(`AquaTrack_Statement_${customer.name.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }
+
+    
