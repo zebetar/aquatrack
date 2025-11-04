@@ -201,6 +201,14 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
     await batch.commit();
 }
 
+async function getAllUsageRecordsFallback(): Promise<WaterUsageRecord[]> {
+    const customers = await getAllCustomers();
+    const allRecordsPromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
+    const allRecordsArrays = await Promise.all(allRecordsPromises);
+    const allRecords = allRecordsArrays.flat();
+    return allRecords.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+}
+
 export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
     try {
         const usageQuery = query(collectionGroup(db, 'usageRecords'), orderBy('startTime', 'desc'));
@@ -208,8 +216,13 @@ export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
         return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as WaterUsageRecord));
     } catch (error: any) {
         if (error.code === 'failed-precondition') {
-            console.error("Firestore Index Error:", error.message);
-            throw new Error(`A Firestore index is required for this query. Please check the browser console for a link to create it.`);
+            console.warn(
+                'Firestore index not found for collection group query. Falling back to a slower method. \n' +
+                'To improve performance, please create the required index in your Firebase console. The link can be found in the original error message in the browser console: \n',
+                error
+            );
+            // Fallback to fetching per-customer
+            return getAllUsageRecordsFallback();
         }
         console.error("Error fetching all usage records: ", error);
         throw new Error("Could not load usage records. An unexpected error occurred.");
@@ -270,6 +283,13 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
     await batch.commit();
 }
 
+async function getAllPaymentsFallback(): Promise<Payment[]> {
+    const customers = await getAllCustomers();
+    const allPaymentsPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
+    const allPaymentsArrays = await Promise.all(allPaymentsPromises);
+    const allPayments = allPaymentsArrays.flat();
+    return allPayments.sort((a, b) => b.paymentDate.getTime() - a.paymentDate.getTime());
+}
 
 export async function getAllPayments(): Promise<Payment[]> {
     try {
@@ -278,8 +298,12 @@ export async function getAllPayments(): Promise<Payment[]> {
         return querySnapshot.docs.map(doc => fromFirestore({ id: doc.id, ...doc.data() } as Payment));
     } catch (error: any) {
         if (error.code === 'failed-precondition') {
-            console.error("Firestore Index Error:", error.message);
-            throw new Error(`A Firestore index is required for this query. Please check the browser console for a link to create it.`);
+             console.warn(
+                'Firestore index not found for collection group query. Falling back to a slower method. \n' +
+                'To improve performance, please create the required index in your Firebase console. The link can be found in the original error message in the browser console: \n',
+                error
+            );
+            return getAllPaymentsFallback();
         }
         console.error("Error fetching all payment records: ", error);
         throw new Error("Could not load payment records. An unexpected error occurred.");
@@ -339,3 +363,5 @@ export async function sendPasswordReset(auth: Auth, email: string): Promise<{suc
         return { success: false, error: error.message };
     }
 }
+
+    
