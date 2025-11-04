@@ -203,9 +203,8 @@ export async function updateUsageRecord(recordId: string, updatedData: Partial<O
 
 async function getAllUsageRecordsFallback(): Promise<WaterUsageRecord[]> {
     const customers = await getAllCustomers();
-    const allRecordsArrays = await Promise.all(
-        customers.map(customer => getUsageRecordsByCustomerId(customer.id))
-    );
+    const allRecordsPromises = customers.map(customer => getUsageRecordsByCustomerId(customer.id));
+    const allRecordsArrays = await Promise.all(allRecordsPromises);
     const allRecords = allRecordsArrays.flat();
     return allRecords.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 }
@@ -222,11 +221,10 @@ export async function getAllUsageRecords(): Promise<WaterUsageRecord[]> {
                 'To improve performance, please create the required index in your Firebase console. The link can be found in the original error message in the browser console: \n',
                 error
             );
-            // Fallback to fetching per-customer
             return getAllUsageRecordsFallback();
         }
         console.error("Error fetching all usage records: ", error);
-        throw new Error("Could not load usage records. An unexpected error occurred.");
+        throw error;
     }
 }
 
@@ -286,9 +284,8 @@ export async function updatePaymentRecord(paymentId: string, updatedData: Partia
 
 async function getAllPaymentsFallback(): Promise<Payment[]> {
     const customers = await getAllCustomers();
-    const allPaymentsArrays = await Promise.all(
-        customers.map(customer => getPaymentsByCustomerId(customer.id))
-    );
+    const allPaymentsPromises = customers.map(customer => getPaymentsByCustomerId(customer.id));
+    const allPaymentsArrays = await Promise.all(allPaymentsPromises);
     const allPayments = allPaymentsArrays.flat();
     return allPayments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
 }
@@ -308,7 +305,7 @@ export async function getAllPayments(): Promise<Payment[]> {
             return getAllPaymentsFallback();
         }
         console.error("Error fetching all payment records: ", error);
-        throw new Error("Could not load payment records. An unexpected error occurred.");
+        throw error;
     }
 }
 

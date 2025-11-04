@@ -91,7 +91,7 @@ export async function generateCustomerPdf(
       textColor: [255, 255, 255],
       fontStyle: 'bold',
     },
-    styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' },
+    styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' as const },
     bodyStyles: { fillColor: [248, 249, 249] },
     alternateRowStyles: { fillColor: [255, 255, 255] },
     didDrawPage: (data: any) => {
