@@ -190,7 +190,7 @@ export default function DataExportPage() {
                       selected={startDate}
                       onSelect={setStartDate}
                       initialFocus
-                      disabled={(date) => date > new Date() || (endDate && date > endDate)}
+                      disabled={(date) => date > new Date() || !!(endDate && date > endDate)}
                     />
                   </PopoverContent>
                 </Popover>
@@ -218,7 +218,7 @@ export default function DataExportPage() {
                       selected={endDate}
                       onSelect={setEndDate}
                       initialFocus
-                      disabled={(date) => date > new Date() || (startDate && date < startDate)}
+                      disabled={(date) => date > new Date() || !!(startDate && date < startDate)}
                     />
                   </PopoverContent>
                 </Popover>
