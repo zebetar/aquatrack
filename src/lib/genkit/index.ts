@@ -10,13 +10,6 @@ const googleAIVision = googleAI({
 
 const plugins: Plugin[] = [googleAIVision];
 
-if (process.env.NODE_ENV === 'development') {
-  const { devLogger, genkitEval, dotprompt } = require('genkit/dev');
-  plugins.push(devLogger);
-  plugins.push(genkitEval);
-  plugins.push(dotprompt());
-}
-
 const genkitOptions: GenkitOptions = {
   plugins,
   flowStateStore: 'firebase',
