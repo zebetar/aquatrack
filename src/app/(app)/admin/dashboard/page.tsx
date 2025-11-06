@@ -27,7 +27,7 @@ const chartConfig = {
   },
   revenue: {
     label: "Revenue",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig
 
@@ -485,13 +485,13 @@ export default function AdminDashboardPage() {
                     <AreaChart accessibilityLayer data={revenueChartData}>
                       <defs>
                           <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
                           </linearGradient>
                       </defs>
                       <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                       <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                      <Area type="monotone" dataKey="revenue" fill="url(#colorRevenue)" stroke="hsl(var(--chart-2))" />
+                      <Area type="monotone" dataKey="revenue" fill="url(#colorRevenue)" stroke="hsl(var(--chart-1))" />
                     </AreaChart>
                   </ChartContainer>
               </div>
@@ -556,6 +556,8 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+
+    
 
     
 
