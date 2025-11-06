@@ -475,7 +475,7 @@ export default function AdminDashboardPage() {
               </Tabs>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+              <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
               <div className="flex items-center gap-2 mt-1">
                   <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
                   <StatChangeIndicator value={revenueChange} />
@@ -485,13 +485,13 @@ export default function AdminDashboardPage() {
                     <AreaChart accessibilityLayer data={revenueChartData}>
                       <defs>
                           <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
                           </linearGradient>
                       </defs>
                       <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                       <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                      <Area type="monotone" dataKey="revenue" fill="url(#colorRevenue)" stroke="var(--color-revenue)" />
+                      <Area type="monotone" dataKey="revenue" fill="url(#colorRevenue)" stroke="hsl(var(--chart-2))" />
                     </AreaChart>
                   </ChartContainer>
               </div>
@@ -556,5 +556,7 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+
+    
 
     

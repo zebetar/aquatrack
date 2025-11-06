@@ -354,13 +354,13 @@ export default function ViewerDashboardPage() {
                   <AreaChart accessibilityLayer data={costChartData}>
                     <defs>
                         <linearGradient id="colorCostViewer" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-cost)" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="var(--color-cost)" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
                         </linearGradient>
                     </defs>
                     <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={12} stroke="hsl(var(--muted-foreground))" />
                     <ChartTooltip cursor={false} content={<FuturisticTooltip />} />
-                    <Area type="monotone" dataKey="cost" stroke="var(--color-cost)" fill="url(#colorCostViewer)" />
+                    <Area type="monotone" dataKey="cost" stroke="hsl(var(--chart-2))" fill="url(#colorCostViewer)" />
                   </AreaChart>
                 </ChartContainer>
               </div>
@@ -370,3 +370,5 @@ export default function ViewerDashboardPage() {
     </div>
   );
 }
+
+    
