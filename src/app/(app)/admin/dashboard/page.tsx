@@ -475,7 +475,7 @@ export default function AdminDashboardPage() {
               </Tabs>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+              <div className="text-3xl font-bold text-primary">PKR {monthlyRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
               <div className="flex items-center gap-2 mt-1">
                   <p className="text-xs text-muted-foreground">For {currentMonthLabel}</p>
                   <StatChangeIndicator value={revenueChange} />

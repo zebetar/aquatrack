@@ -361,7 +361,7 @@ export default function AdminReportsPage() {
             </Tabs>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">PKR {revenueThisMonth.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+            <div className="text-3xl font-bold text-primary">PKR {revenueThisMonth.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
              <div className="flex items-center gap-2 mt-1">
               <p className="text-xs text-muted-foreground">For {selectedMonthLabel}</p>
               <StatChangeIndicator value={revenueChange} />
