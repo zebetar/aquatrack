@@ -1,0 +1,24 @@
+# Specifies the version of the App Hosting configuration schema.
+version: 1
+
+# Defines the build process for the application.
+build:
+  # Specifies the command to build the Next.js application.
+  # This command compiles the TypeScript/JavaScript code, bundles assets,
+  # and prepares the app for production.
+  run: npm run build
+
+# Defines how the application runs once it's built and deployed.
+run:
+  # Specifies the command to start the Next.js production server.
+  # `npm run start` typically executes `next start -p $PORT`.
+  # The $PORT environment variable is automatically provided by App Hosting.
+  run: npm run start
+
+# Environment configuration.
+env:
+  # The presence of this empty `env` block ensures that App Hosting
+  # correctly recognizes and configures the environment for a Next.js app,
+  # even if no custom environment variables are defined here.
+  # Environment variables like NEXT_PUBLIC_FIREBASE_* should be set in the
+  # Firebase Console for security and flexibility.
