@@ -86,15 +86,15 @@ export async function generateCustomerPdf(
   drawFooter(doc.getNumberOfPages());
 
   const tableConfig = {
-    theme: 'grid' as const,
+    theme: 'grid',
     headStyles: {
-      fillColor: [44, 62, 80],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold' as const,
+      fillColor: [44, 62, 80] as [number, number, number],
+      textColor: [255, 255, 255] as [number, number, number],
+      fontStyle: 'bold',
     },
-    styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' as const },
-    bodyStyles: { fillColor: [248, 249, 249] },
-    alternateRowStyles: { fillColor: [255, 255, 255] },
+    styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' },
+    bodyStyles: { fillColor: [248, 249, 249] as [number, number, number] },
+    alternateRowStyles: { fillColor: [255, 255, 255] as [number, number, number] },
     didDrawPage: (data: any) => {
       drawHeader();
       drawFooter(data.pageNumber);
@@ -133,7 +133,7 @@ export async function generateCustomerPdf(
     autoTable(doc, {
       ...tableConfig,
       startY: yPos,
-      headStyles: { ...tableConfig.headStyles, fillColor: [41, 128, 185] },
+      headStyles: { ...tableConfig.headStyles, fillColor: [41, 128, 185] as [number, number, number] },
       head: [['Payment Date', 'Amount Paid (PKR)', 'Recorded By']],
       body: payments.map(p => [
         format(new Date(p.paymentDate), 'PP p'),
