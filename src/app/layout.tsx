@@ -1,10 +1,10 @@
 
 import type { Metadata, Viewport } from 'next';
-import { Poppins } from 'next/font/google'; // Changed from Roboto to Poppins
+import { Poppins } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Toaster } from '@/components/ui/toaster';
-import { FirebaseProvider } from '@/contexts/firebase-context'; // Import the new provider
+import { FirebaseProvider } from '@/contexts/firebase-context';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -14,7 +14,7 @@ const poppins = Poppins({
 
 const APP_NAME = "AquaTrack";
 const APP_DESCRIPTION = "Tubewell Water Supply Management App";
-const APP_THEME_COLOR_DARK = "#101D2E"; // Example dark theme background
+const APP_THEME_COLOR = "#0ea5e9";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
@@ -52,9 +52,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: APP_THEME_COLOR_DARK,
+  themeColor: APP_THEME_COLOR,
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 
