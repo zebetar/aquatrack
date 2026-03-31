@@ -1,0 +1,11 @@
+
+{
+  "avatars": {
+    "default": {
+      "url": "https://picsum.photos/seed/avatar/40/40",
+      "width": 40,
+      "height": 40,
+      "hint": "person avatar"
+    }
+  }
+}

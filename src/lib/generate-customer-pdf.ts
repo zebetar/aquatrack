@@ -56,14 +56,14 @@ export async function generateCustomerPdf(
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(80);
+  doc.setTextColor(80, 80, 80);
   
   doc.text(customer.name, margin, yPos);
   doc.text(customer.contactInfo || 'N/A', margin, yPos + 6);
   doc.text(`Joined: ${format(new Date(customer.createdAt), 'PPP')}`, margin, yPos + 12);
   
   let balanceStatus = "PKR 0.00";
-  let balanceColor: [number, number, number] = [80, 80, 80];
+  let balanceColor = [80, 80, 80];
   if (customer.balance > 0) {
     balanceStatus = `PKR ${customer.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
     balanceColor = [231, 76, 60]; // Red for due
@@ -77,7 +77,7 @@ export async function generateCustomerPdf(
   
   doc.text('Current Balance:', pageWidth / 2 + 10, yPos + 12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...balanceColor);
+  doc.setTextColor(balanceColor[0], balanceColor[1], balanceColor[2]);
   doc.text(balanceStatus, pageWidth - margin, yPos + 12, { align: 'right' });
   
   yPos += 25;
@@ -85,13 +85,13 @@ export async function generateCustomerPdf(
   drawFooter(doc.getNumberOfPages());
 
   const tableConfig = {
-    theme: 'grid',
+    theme: 'grid' as const,
     headStyles: {
       fillColor: [44, 62, 80],
       textColor: [255, 255, 255],
-      fontStyle: 'bold',
+      fontStyle: 'bold' as const,
     },
-    styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' },
+    styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' as const },
     bodyStyles: { fillColor: [248, 249, 249] },
     alternateRowStyles: { fillColor: [255, 255, 255] },
     didDrawPage: (data: any) => {
@@ -118,6 +118,7 @@ export async function generateCustomerPdf(
   } else {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'italic');
+    doc.setTextColor(127, 140, 141);
     doc.text('No water usage records for this period.', margin, yPos);
     yPos += 10;
   }
@@ -143,6 +144,7 @@ export async function generateCustomerPdf(
   } else {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'italic');
+    doc.setTextColor(127, 140, 141);
     doc.text('No payment records for this period.', margin, yPos);
   }
 

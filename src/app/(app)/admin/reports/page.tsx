@@ -2,11 +2,11 @@
 "use client"; 
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { BarChart, Bar, XAxis, AreaChart, Area } from 'recharts';
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth, parseISO, getDaysInMonth, addMonths } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth, parseISO, addMonths } from 'date-fns';
 import type { Customer, WaterUsageRecord, ChartConfig, ProjectedRevenueOutput } from '@/types';
 import { formatDurationFromHours, cn } from '@/lib/utils';
 import { Droplets, ArrowUp, ArrowDown, ChevronRight, TrendingUp, BadgeAlert, Bot } from 'lucide-react';
@@ -17,6 +17,7 @@ import { getAllCustomers, getAllUsageRecords } from '@/lib/firebase-service';
 import { useToast } from '@/hooks/use-toast';
 import { projectRevenueFlow } from '@/app/(app)/admin/settings/actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import placeholderImages from '@/app/lib/placeholder-images.json';
 
 const chartConfig = {
   supply: {
@@ -449,7 +450,12 @@ export default function AdminReportsPage() {
                   <Link href={`/admin/customers/${customer.id}`} className="flex items-center justify-between p-2 -m-2 rounded-lg hover:bg-muted transition-colors">
                     <div className="flex items-center gap-4">
                        <Avatar>
-                        <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint="person avatar"/>
+                        <AvatarImage 
+                          src={placeholderImages.avatars.default.url} 
+                          width={placeholderImages.avatars.default.width} 
+                          height={placeholderImages.avatars.default.height} 
+                          data-ai-hint={placeholderImages.avatars.default.hint}
+                        />
                         <AvatarFallback>{customer.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
                       </Avatar>
                       <p className="font-semibold">{customer.name}</p>
