@@ -1,22 +1,24 @@
 
 {
-  "name": "AquaTrack Water Supply",
+  "name": "AquaTrack Water Management",
   "short_name": "AquaTrack",
   "description": "Professional Water Supply Management System",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0ea5e9",
+  "background_color": "#ffffff",
   "theme_color": "#0ea5e9",
   "icons": [
     {
-      "src": "https://img.freepik.com/free-vector/water-drop-design-logo-template_1057-2458.jpg",
+      "src": "https://picsum.photos/seed/aqua192/192/192",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://img.freepik.com/free-vector/water-drop-design-logo-template_1057-2458.jpg",
+      "src": "https://picsum.photos/seed/aqua512/512/512",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

@@ -84,6 +84,7 @@ export async function generateCustomerPdf(
   
   yPos += 25;
   
+  // Explicitly typed color tuples to prevent TypeScript errors in Vercel
   const hFill: ColorTuple = [44, 62, 80];
   const hText: ColorTuple = [255, 255, 255];
   const bFill: ColorTuple = [248, 249, 249];
