@@ -6,6 +6,9 @@ import { format } from 'date-fns';
 import { APP_NAME } from './constants';
 import { formatDurationFromHours } from './utils';
 
+// Helper type for RGB colors to satisfy jspdf-autotable strict tuple requirements
+type RGB = [number, number, number];
+
 export async function generateCustomerPdf(
   customer: Customer,
   usageRecords: WaterUsageRecord[],
@@ -46,7 +49,7 @@ export async function generateCustomerPdf(
   drawHeader();
   let yPos = 45;
 
-  // --- CUSTOMER & BILLING SUMMARY (Two-column layout) ---
+  // --- CUSTOMER & BILLING SUMMARY ---
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(44, 62, 80);
@@ -63,7 +66,7 @@ export async function generateCustomerPdf(
   doc.text(`Joined: ${format(new Date(customer.createdAt), 'PPP')}`, margin, yPos + 12);
   
   let balanceStatus = "PKR 0.00";
-  let balanceColor = [80, 80, 80];
+  let balanceColor: RGB = [80, 80, 80];
   if (customer.balance > 0) {
     balanceStatus = `PKR ${customer.balance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
     balanceColor = [231, 76, 60]; // Red for due
@@ -84,22 +87,28 @@ export async function generateCustomerPdf(
   
   drawFooter(doc.getNumberOfPages());
 
+  // Define explicit RGB tuples for the table config
+  const headFill: RGB = [44, 62, 80];
+  const headText: RGB = [255, 255, 255];
+  const bodyFill: RGB = [248, 249, 249];
+  const altFill: RGB = [255, 255, 255];
+  const paymentHeadFill: RGB = [41, 128, 185];
+
   const tableConfig = {
     theme: 'grid' as const,
     headStyles: {
-      fillColor: [44, 62, 80],
-      textColor: [255, 255, 255],
+      fillColor: headFill,
+      textColor: headText,
       fontStyle: 'bold' as const,
     },
     styles: { fontSize: 9, cellPadding: 2.5, overflow: 'linebreak' as const },
-    bodyStyles: { fillColor: [248, 249, 249] },
-    alternateRowStyles: { fillColor: [255, 255, 255] },
+    bodyStyles: { fillColor: bodyFill },
+    alternateRowStyles: { fillColor: altFill },
     didDrawPage: (data: any) => {
       drawHeader();
       drawFooter(data.pageNumber);
-      yPos = 45; // Reset yPos for the new page
     },
-    margin: { top: 10, bottom: 25 },
+    margin: { top: 40, bottom: 25 },
   };
 
   if (usageRecords.length > 0) {
@@ -123,7 +132,6 @@ export async function generateCustomerPdf(
     yPos += 10;
   }
   
-  // Check for overflow before drawing the next table
   if (yPos > pageHeight - 50) {
     doc.addPage();
     yPos = 45; 
@@ -133,12 +141,12 @@ export async function generateCustomerPdf(
     autoTable(doc, {
       ...tableConfig,
       startY: yPos,
-      headStyles: { ...tableConfig.headStyles, fillColor: [41, 128, 185] },
+      headStyles: { ...tableConfig.headStyles, fillColor: paymentHeadFill },
       head: [['Payment Date', 'Amount Paid (PKR)', 'Recorded By']],
       body: payments.map(p => [
         format(new Date(p.paymentDate), 'PP p'),
         p.amountPaid.toLocaleString('en-US', {minimumFractionDigits: 2}),
-        p.recordedBy === 'admin001' ? 'Admin' : p.recordedBy,
+        p.recordedBy === 'admin001' ? 'Admin' : 'Staff',
       ]),
     });
   } else {

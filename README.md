@@ -7,7 +7,7 @@ This is a NextJS management application for Tubewell Water Supply, built in Fire
 
 To host this app for free on Vercel without a credit card, follow these steps:
 
-1.  **Sign Up for Vercel:** Use your GitHub account at [vercel.com](https://vercel.com).
+1.  **Sign Up for Vercel:** Use your GitHub account at [vercomcel.](https://vercel.com).
 2.  **Import Project:** Select your `zebetar/aquatrack` repository.
 3.  **Add Environment Variables:** Copy these from your local `.env` file into the Vercel project settings:
     *   `NEXT_PUBLIC_FIREBASE_API_KEY`
