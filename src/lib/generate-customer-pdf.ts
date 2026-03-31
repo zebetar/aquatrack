@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { APP_NAME } from './constants';
 import { formatDurationFromHours } from './utils';
 
-// Definitive tuple type for RGB colors to satisfy jspdf-autotable
+// Definitive tuple type for RGB colors to satisfy jspdf-autotable strictly
 type ColorTuple = [number, number, number];
 
 export async function generateCustomerPdf(
